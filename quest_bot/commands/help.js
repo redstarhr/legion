@@ -1,6 +1,6 @@
 // commands/help.js
 
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -33,7 +33,7 @@ module.exports = {
 
     await interaction.reply({
       embeds: [embed],
-      ephemeral: true, // コマンド実行者のみに見えるようにする
+      flags: [MessageFlags.Ephemeral], // コマンド実行者のみに見えるようにする
     });
   },
 };

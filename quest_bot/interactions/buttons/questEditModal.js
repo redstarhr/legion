@@ -1,6 +1,6 @@
 // interactions/buttons/questEditModal.js
 
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -9,13 +9,13 @@ module.exports = {
 
   async handle(interaction) {
     if (!(await hasQuestManagerPermission(interaction))) {
-      return interaction.reply({ content: '⚠️ あなたにはこのクエストを修正する権限がありません。', ephemeral: true });
+      return interaction.reply({ content: '⚠️ あなたにはこのクエストを修正する権限がありません。', flags: [MessageFlags.Ephemeral] });
     }
 
     const quest = await questDataManager.getQuest(interaction.guildId, interaction.message.id);
 
     if (!quest) {
-      return interaction.reply({ content: '⚠️ 対象のクエストデータが見つかりません。', ephemeral: true });
+      return interaction.reply({ content: '⚠️ 対象のクエストデータが見つかりません。', flags: [MessageFlags.Ephemeral] });
     }
 
     const modal = new ModalBuilder()

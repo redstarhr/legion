@@ -1,7 +1,7 @@
 // index.js
 
 require('dotenv').config(); // .envファイルを読み込む
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, MessageFlags } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
@@ -100,9 +100,9 @@ client.on('interactionCreate', async interaction => {
   } catch (error) {
     console.error('❌ エラー:', error);
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: '⚠️ エラーが発生しました。', ephemeral: true });
+      await interaction.followUp({ content: '⚠️ エラーが発生しました。', flags: [MessageFlags.Ephemeral] });
     } else {
-      await interaction.reply({ content: '⚠️ エラーが発生しました。', ephemeral: true });
+      await interaction.reply({ content: '⚠️ エラーが発生しました。', flags: [MessageFlags.Ephemeral] });
     }
   }
 });
