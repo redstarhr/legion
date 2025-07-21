@@ -1,13 +1,8 @@
 // utils/questDataManager.js
 
-const { initializeApp } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
+const { db } = require('./firestore'); // Firestoreインスタンスをインポート
 const crypto = require('crypto'); // ユニークID生成用
 
-// .envのGOOGLE_APPLICATION_CREDENTIALSから自動で認証情報を読み込む
-initializeApp();
-
-const db = getFirestore();
 const guildsCollection = db.collection('guilds');
 
 /**

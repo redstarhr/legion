@@ -1,12 +1,10 @@
 // utils/deadlineManager.js
 
 const { EmbedBuilder } = require('discord.js');
-const { getFirestore } = require('firebase-admin/firestore');
+const { db } = require('./firestore'); // Firestoreインスタンスをインポート
 const questDataManager = require('./questDataManager');
 const { logAction } = require('./logger');
 const { updateAllQuestMessages } = require('./messageUpdater');
-
-const db = getFirestore();
 
 /**
  * Checks for and closes any quests that have passed their deadline.
