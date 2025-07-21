@@ -6,7 +6,6 @@ data/
 
 # Configuration file with sensitive data
 config.json
-package-lock.json
 
 # Environment variables file
 .env
