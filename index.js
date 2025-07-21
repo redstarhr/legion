@@ -1,9 +1,9 @@
 // index.js
 
+require('dotenv').config(); // .envファイルを読み込む
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const config = require('./config.json'); // Botトークンなどの設定ファイル
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 
 // Botクライアントを作成（必要なIntentを指定）
@@ -119,4 +119,4 @@ client.once('ready', () => {
 });
 
 // ✅ Discordにログイン
-client.login(config.token);
+client.login(process.env.DISCORD_TOKEN);

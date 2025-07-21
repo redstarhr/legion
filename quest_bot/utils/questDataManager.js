@@ -1,25 +1,41 @@
 // utils/questDataManager.js
 
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 const crypto = require('crypto'); // ユニークID生成用
-const fs = require('fs');
-const path = require('path');
 
-// データベースファイルを保存するディレクトリ
-const dataDir = path.join(__dirname, '..', 'data');
+// .envのGOOGLE_APPLICATION_CREDENTIALSから自動で認証情報を読み込む
+initializeApp();
 
-// データディレクトリが存在しない場合に作成
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+const db = getFirestore();
+const guildsCollection = db.collection('guilds');
 
 /**
- * ギルドIDに対応するDBファイルのパスを取得
+ * ギルドのデータをFirestoreから取得する。ドキュメントが存在しない場合は作成する。
  * @param {string} guildId
- * @returns {string}
+ * @returns {Promise<object>} ギルドのデータオブジェクト
  */
-function getGuildDbPath(guildId) {
+async function getGuildData(guildId) {
   if (!guildId) throw new Error('Guild ID is required.');
-  return path.join(dataDir, `${guildId}.json`);
+  const docRef = guildsCollection.doc(guildId);
+  const docSnap = await docRef.get();
+
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    // ドキュメントが存在しない場合、初期データで作成
+    const initialData = {
+      quests: {},
+      config: {
+        questManagerRoleId: null,
+        logChannelId: null,
+        notificationChannelId: null,
+        embedColor: '#00bfff',
+      },
+    };
+    await docRef.set(initialData);
+    return initialData;
+  }
 }
 
 /**
@@ -27,50 +43,6 @@ function getGuildDbPath(guildId) {
  * @param {string} guildId
  * @returns {object} データベースオブジェクト。失敗した場合は初期オブジェクト。
  */
-function readData(guildId) {
-  const dbPath = getGuildDbPath(guildId);
-  const initialData = { quests: {}, config: { questManagerRoleId: null, logChannelId: null, notificationChannelId: null, embedColor: '#00bfff' } };
-
-  if (!fs.existsSync(dbPath)) {
-    // ファイルが存在しない場合は初期データで作成
-    try {
-      fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
-      return initialData;
-    } catch (error) {
-      console.error(`[${guildId}] DBファイルの初期化に失敗しました:`, error);
-      return initialData; // エラー時も初期データを返す
-    }
-  }
-
-  try {
-    const rawData = fs.readFileSync(dbPath);
-    const data = JSON.parse(rawData);
-    // 古いデータファイルとの互換性のため
-    if (!data.config) {
-      data.config = { questManagerRoleId: null, logChannelId: null, notificationChannelId: null, embedColor: '#00bfff' };
-    } else {
-      if (data.config.logChannelId === undefined) data.config.logChannelId = null;
-      if (data.config.notificationChannelId === undefined) data.config.notificationChannelId = null;
-      if (data.config.embedColor === undefined) data.config.embedColor = '#00bfff';
-    }
-    return data;
-  } catch (error) {
-    console.error(`[${guildId}] DBファイルの読み込みに失敗しました:`, error);
-    return initialData; // エラー時も初期データを返す
-  }
-}
-
-/**
- * ギルドのデータをファイルに書き込む
- * @param {string} guildId
- * @param {object} data
- * @returns {boolean} 成功した場合はtrue、失敗した場合はfalse
- */
-function writeData(guildId, data) {
-  const dbPath = getGuildDbPath(guildId);
-  try {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
-    return true;
   } catch (error) {
     console.error(`[${guildId}] DBファイルの書き込みに失敗しました:`, error);
     return false;
