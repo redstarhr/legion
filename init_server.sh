@@ -79,10 +79,10 @@ npm install --no-audit --no-fund
 
 echo "📡 スラッシュコマンドをDiscordに登録しています..."
 # deploy-commands.js が存在することを前提とします
-if [ -f "deploy-commands.js" ]; then
-    node deploy-commands.js
+if [ -f "devcmdup.js" ]; then
+    node devcmdup.js
 else
-    echo -e "${YELLOW}⚠️ 'deploy-commands.js' が見つかりません。コマンドの登録をスキップします。${NC}"
+    echo -e "${YELLOW}⚠️ 'devcmdup.js' が見つかりません。コマンドの登録をスキップします。${NC}"
 fi
 
 # --- 4. PM2 Setup ---

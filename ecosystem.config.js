@@ -4,7 +4,7 @@ require('dotenv').config();
 module.exports = {
   apps: [
     {
-      name: 'star-kanri-bot',
+      name: 'legion_kanri_bot',
       script: './index.js',
 
       // --- 実行オプション ---
