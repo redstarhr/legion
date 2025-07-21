@@ -90,17 +90,23 @@ else
   fi
 fi
 
-# --- 3. Install Dependencies & Deploy Commands ---
-echo -e "\n${YELLOW}3. 依存関係のインストールとコマンドのデプロイ...${NC}"
+# --- 3. スクリプト権限の再設定 ---
+# git pullで変更された可能性のあるスクリプトの実行権限を再設定します
+echo -e "\n${YELLOW}3. スクリプトの実行権限を更新しています...${NC}"
+find . -type f -name "*.sh" -exec chmod +x {} \;
+echo "✅ 実行権限の更新が完了しました。"
+
+# --- 4. Install Dependencies & Deploy Commands ---
+echo -e "\n${YELLOW}4. 依存関係のインストールとコマンドのデプロイ...${NC}"
 echo "📦 npm パッケージをインストール中..."
 npm install --no-audit --no-fund
 
 echo "📡 スラッシュコマンドをDiscordに登録中..."
 node devcmdup.js
 
-# --- 4. PM2 Restart (if not skipped) ---
+# --- 5. PM2 Restart (if not skipped) ---
 if [ "$SKIP_PM2" = false ]; then
-  echo -e "\n${YELLOW}4. Botプロセスを再起動しています...${NC}"
+  echo -e "\n${YELLOW}5. Botプロセスを再起動しています...${NC}"
   if command -v pm2 > /dev/null 2>&1; then
     if pm2 describe ${PM2_PROCESS_NAME} > /dev/null 2>&1; then
       pm2 restart ${PM2_PROCESS_NAME} --update-env
@@ -115,7 +121,7 @@ if [ "$SKIP_PM2" = false ]; then
     echo "   cd $PROJECT_DIR && node index.js"
   fi
 else
-  echo -e "\n${YELLOW}4. PM2操作をスキップしました。${NC}"
+  echo -e "\n${YELLOW}5. PM2操作をスキップしました。${NC}"
 fi
 
 echo -e "\n${GREEN}✅ Legion管理Bot 更新処理が正常に完了しました。${NC}"
