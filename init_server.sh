@@ -48,6 +48,8 @@ if [ -d "$PROJECT_DIR" ]; then
     exit 1
 fi
 
+# この辺りにssh接続の設定作成を追加
+
 echo "📂 GitHubからリポジトリをクローンします (SSH経由): ${PROJECT_DIR}"
 # SSHキーがサーバーに設定済みであることを前提とします
 git clone git@github.com:star-discord/legion_kanri_bot.git "$PROJECT_DIR"

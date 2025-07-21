@@ -17,18 +17,20 @@ module.exports = {
       max_memory_restart: '256M', // メモリリーク対策
 
       // --- ログ設定 ---
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss.SSS Z', // ミリ秒も表示
       error_file: './logs/error.log', // エラーログのパス
       out_file: './logs/out.log', // 通常ログのパス
       merge_logs: true,
+      log_rotate: true, // ログローテーションを有効化 (pm2-logrotateが必要)
+      max_log_size: '10M', // 10MBごとにログをローテーション
 
       // --- 本番環境用設定 ---
       env: {
         NODE_ENV: 'production',
         DISCORD_TOKEN: process.env.DISCORD_TOKEN,
         CLIENT_ID: process.env.CLIENT_ID,
+        GUILD_ID: process.env.GUILD_ID,
         GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS,
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         // 本番環境ではウォッチモードを無効化
         watch: false,
       },
@@ -36,6 +38,7 @@ module.exports = {
       // --- 開発環境用設定 (pm2 start ecosystem.config.js --env development) ---
       env_development: {
         NODE_ENV: 'development',
+        GUILD_ID: process.env.GUILD_ID,
         // 開発中はファイル変更を監視して自動再起動
         watch: true,
         watch_options: {

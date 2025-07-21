@@ -36,7 +36,7 @@ VS Code（Visual Studio Code）ターミナルで GitHub に SSH 接続して gi
     npm install dotenv
     ```
 ### 🔹 2-2. GitHubへのSSH接続設定
-1.  **キー作成:** `ssh-keygen -t ed25519 -C "your_email@example.com" -f ~/.ssh/legion`
+1.  **キー作成:** `ssh-keygen -t ed25519 -C "star.vesta.legion.kanri@gmail.com" -f ~/.ssh/legion`
 2.  **GitHubに登録:** `cat ~/.ssh/legion.pub` で表示された公開鍵をGitHubのSSHキー設定に追加。
 3.  **SSH設定ファイル作成:** `notepad ~/.ssh/config` を実行し、以下を貼り付けて保存。
     ```
