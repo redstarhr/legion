@@ -20,7 +20,7 @@ module.exports = {
     const userId = interaction.user.id;
 
     // 1. クエストをアーカイブ状態に更新
-    const result = questDataManager.archiveQuest(guildId, originalMessageId);
+    const result = await questDataManager.archiveQuest(guildId, originalMessageId);
 
     if (!result || !result.quest) {
       return interaction.followUp({ content: '⚠️ クエストの完了処理に失敗しました。', ephemeral: true });
@@ -32,6 +32,6 @@ module.exports = {
     await updateAllQuestMessages(interaction.client, quest, userId);
 
     await interaction.followUp({ content: '✅ クエストを完了状態にしました。', ephemeral: true });
-    logAction(interaction, 'クエストを完了', `クエストID: ${originalMessageId}`);
+    await logAction(interaction, 'クエストを完了', `クエストID: ${originalMessageId}`);
   },
 };

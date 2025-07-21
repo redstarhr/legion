@@ -8,7 +8,7 @@ const questDataManager = require('./questDataManager');
  * @param {object} quest - クエストオブジェクト
  * @returns {EmbedBuilder}
  */
-function createQuestEmbed(quest) {
+async function createQuestEmbed(quest) {
   const defaultTitle = '📜｜クエスト掲示板（LEGiON）';
   const archivedPrefix = '【完了】';
 
@@ -19,7 +19,7 @@ function createQuestEmbed(quest) {
   }
 
   // サーバーに設定された色を取得します
-  const embedColor = questDataManager.getEmbedColor(quest.guildId);
+  const embedColor = await questDataManager.getEmbedColor(quest.guildId);
 
   const embed = new EmbedBuilder()
     .setTitle(title)

@@ -11,7 +11,7 @@ const { getLogChannel } = require('./questDataManager');
  * @param {import('discord.js').ColorResolvable} [color='#2f3136'] - Embedの色
  */
 async function logAction(interaction, title, description, color = '#2f3136') {
-  const logChannelId = getLogChannel(interaction.guildId);
+  const logChannelId = await getLogChannel(interaction.guildId);
   if (!logChannelId) return;
 
   try {

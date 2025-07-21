@@ -10,7 +10,7 @@ const { createQuestActionRow } = require('../components/questActionButtons');
  * @param {string} userId - インタラクションを実行したユーザーのID
  */
 async function updateAllQuestMessages(client, quest, userId) {
-  const updatedEmbed = createQuestEmbed(quest);
+  const updatedEmbed = await createQuestEmbed(quest);
   const updatedButtons = createQuestActionRow(quest, userId);
 
   const updatePromises = [];

@@ -28,7 +28,7 @@ module.exports = {
     const guildId = interaction.guildId;
 
     // 1. 連携元のクエストデータを取得
-    const quest = questDataManager.getQuest(guildId, sourceMessageId);
+    const quest = await questDataManager.getQuest(guildId, sourceMessageId);
 
     if (!quest) {
       return interaction.followUp({ content: '⚠️ 指定されたIDのクエスト掲示板が見つかりません。メッセージIDが正しいか確認してください。' });
@@ -36,7 +36,7 @@ module.exports = {
 
     // 2. 連携先にメッセージを送信
     try {
-      const embed = createQuestEmbed(quest);
+      const embed = await createQuestEmbed(quest);
       const buttons = createQuestActionRow(quest, interaction.user.id);
 
       const linkedMessage = await targetChannel.send({
@@ -52,12 +52,12 @@ module.exports = {
 
       const updatedLinkedMessages = [...quest.linkedMessages, newLink];
 
-      questDataManager.updateQuest(guildId, sourceMessageId, {
+      await questDataManager.updateQuest(guildId, sourceMessageId, {
         linkedMessages: updatedLinkedMessages,
       });
 
       await interaction.followUp({ content: `✅ クエスト掲示板を <#${targetChannel.id}> に連携しました。` });
-      logAction(interaction, 'クエストを連携', `元のクエストID: ${sourceMessageId}\n連携先: <#${targetChannel.id}>`);
+      await logAction(interaction, 'クエストを連携', `元のクエストID: ${sourceMessageId}\n連携先: <#${targetChannel.id}>`);
     } catch (error) {
       console.error('連携メッセージの送信に失敗しました:', error);
       await interaction.followUp({ content: '⚠️ 連携メッセージの送信に失敗しました。Botに必要な権限（メッセージの送信・閲覧）があるか確認してください。' });

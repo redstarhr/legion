@@ -156,16 +156,11 @@ function archiveQuest(guildId, messageId) {
   return null;
 }
 
-/**
- * 連携先のメッセージIDから元のクエスト情報を検索する
- * @param {string} guildId
- * @param {string} linkedMessageId - 連携されているメッセージのID
- * @returns {object|null} { originalQuest, linkedMessageInfo } を含むオブジェクト、またはnull
- */
-function findQuestByLinkedMessageId(guildId, linkedMessageId) {
-  const db = readData(guildId);
-  for (const questId in db.quests) {
-    const quest = db.quests[questId];
+// 連携先のメッセージIDから元のクエスト情報を検索する
+async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
+  const data = await getGuildData(guildId);
+  for (const questId in data.quests) {
+    const quest = data.quests[questId];
     const foundLink = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
     if (foundLink) {
       // 元のクエストオブジェクトと、見つかった連携情報の両方を返す
@@ -175,102 +170,66 @@ function findQuestByLinkedMessageId(guildId, linkedMessageId) {
   return null;
 }
 
-/**
- * ギルドのすべてのクエストを取得する
- * @param {string} guildId
- * @returns {object} クエストIDをキーとするクエストオブジェクトのマップ
- */
-function getAllQuests(guildId) {
-  const db = readData(guildId);
-  return db.quests || {};
+// ギルドのすべてのクエストを取得する
+async function getAllQuests(guildId) {
+  const data = await getGuildData(guildId);
+  return data.quests || {};
 }
 
-/**
- * クエスト管理者ロールIDを設定する
- * @param {string} guildId
- * @param {string|null} roleId
- * @returns {boolean}
- */
-function setQuestManagerRole(guildId, roleId) {
-  const db = readData(guildId);
-  db.config.questManagerRoleId = roleId;
-  return writeData(guildId, db);
+// クエスト管理者ロールIDを設定する
+async function setQuestManagerRole(guildId, roleId) {
+  const data = await getGuildData(guildId);
+  data.config.questManagerRoleId = roleId;
+  await guildsCollection.doc(guildId).set(data);
+  return true;
 }
 
-/**
- * クエスト管理者ロールIDを取得する
- * @param {string} guildId
- * @returns {string|null}
- */
-function getQuestManagerRole(guildId) {
-  const db = readData(guildId);
-  return db.config?.questManagerRoleId || null;
+// クエスト管理者ロールIDを取得する
+async function getQuestManagerRole(guildId) {
+  const data = await getGuildData(guildId);
+  return data.config?.questManagerRoleId || null;
 }
 
-/**
- * ログチャンネルIDを設定する
- * @param {string} guildId
- * @param {string|null} channelId
- * @returns {boolean}
- */
-function setLogChannel(guildId, channelId) {
-  const db = readData(guildId);
-  db.config.logChannelId = channelId;
-  return writeData(guildId, db);
+// ログチャンネルIDを設定する
+async function setLogChannel(guildId, channelId) {
+  const data = await getGuildData(guildId);
+  data.config.logChannelId = channelId;
+  await guildsCollection.doc(guildId).set(data);
+  return true;
 }
 
-/**
- * ログチャンネルIDを取得する
- * @param {string} guildId
- * @returns {string|null}
- */
-function getLogChannel(guildId) {
-  const db = readData(guildId);
-  return db.config?.logChannelId || null;
+// ログチャンネルIDを取得する
+async function getLogChannel(guildId) {
+  const data = await getGuildData(guildId);
+  return data.config?.logChannelId || null;
 }
 
-/**
- * クエスト通知チャンネルIDを設定する
- * @param {string} guildId
- * @param {string|null} channelId
- * @returns {boolean}
- */
-function setNotificationChannel(guildId, channelId) {
-  const db = readData(guildId);
-  db.config.notificationChannelId = channelId;
-  return writeData(guildId, db);
+// クエスト通知チャンネルIDを設定する
+async function setNotificationChannel(guildId, channelId) {
+  const data = await getGuildData(guildId);
+  data.config.notificationChannelId = channelId;
+  await guildsCollection.doc(guildId).set(data);
+  return true;
 }
 
-/**
- * クエスト通知チャンネルIDを取得する
- * @param {string} guildId
- * @returns {string|null}
- */
-function getNotificationChannel(guildId) {
-  const db = readData(guildId);
-  return db.config?.notificationChannelId || null;
+// クエスト通知チャンネルIDを取得する
+async function getNotificationChannel(guildId) {
+  const data = await getGuildData(guildId);
+  return data.config?.notificationChannelId || null;
 }
 
-/**
- * Embedの色を設定する
- * @param {string} guildId
- * @param {string} color
- * @returns {boolean}
- */
-function setEmbedColor(guildId, color) {
-  const db = readData(guildId);
-  db.config.embedColor = color;
-  return writeData(guildId, db);
+// Embedの色を設定する
+async function setEmbedColor(guildId, color) {
+  const data = await getGuildData(guildId);
+  data.config.embedColor = color;
+  await guildsCollection.doc(guildId).set(data);
+  return true;
 }
 
-/**
- * Embedの色を取得する
- * @param {string} guildId
- * @returns {import('discord.js').ColorResolvable}
- */
-function getEmbedColor(guildId) {
-  const db = readData(guildId);
-  return db.config?.embedColor || '#00bfff';
+// Embedの色を取得する
+async function getEmbedColor(guildId) {
+  const data = await getGuildData(guildId);
+  return data.config?.embedColor || '#00bfff';
 }
 
 module.exports = {

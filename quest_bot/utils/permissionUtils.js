@@ -14,7 +14,7 @@ async function hasQuestManagerPermission(interaction) {
   }
 
   // 2. 設定されたロールを持っているかチェック
-  const managerRoleId = questDataManager.getQuestManagerRole(interaction.guildId);
+  const managerRoleId = await questDataManager.getQuestManagerRole(interaction.guildId);
   if (managerRoleId && interaction.member.roles.cache.has(managerRoleId)) {
     return true;
   }

@@ -26,7 +26,7 @@ module.exports = {
       isClosed: false,
     };
 
-    const embed = createQuestEmbed(initialQuest);
+    const embed = await createQuestEmbed(initialQuest);
 
     // 初期状態のボタンを作成
     const buttons = createQuestActionRow(initialQuest, interaction.user.id); // 設置者のIDを渡す
@@ -40,7 +40,7 @@ module.exports = {
 
     // 2. 送信したメッセージをクエストとしてDBに登録
     const questData = { ...initialQuest, channelId: interaction.channelId };
-    questDataManager.createQuest(interaction.guildId, message.id, questData);
-    logAction(interaction, 'クエスト掲示板を設置', `チャンネル: <#${interaction.channelId}>`);
+    await questDataManager.createQuest(interaction.guildId, message.id, questData);
+    await logAction(interaction, 'クエスト掲示板を設置', `チャンネル: <#${interaction.channelId}>`);
   },
 };

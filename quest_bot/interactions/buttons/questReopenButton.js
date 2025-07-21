@@ -19,10 +19,10 @@ module.exports = {
     const guildId = interaction.guildId;
 
     // 1. Update the quest to reopen recruitment.
-    questDataManager.updateQuest(guildId, originalMessageId, { isClosed: false });
+    await questDataManager.updateQuest(guildId, originalMessageId, { isClosed: false });
 
     // 2. Get the updated quest data.
-    const quest = questDataManager.getQuest(guildId, originalMessageId);
+    const quest = await questDataManager.getQuest(guildId, originalMessageId);
     if (!quest) {
       return interaction.followUp({ content: '⚠️ クエストデータの特定に失敗しました。', ephemeral: true });
     }
@@ -31,6 +31,6 @@ module.exports = {
     await updateAllQuestMessages(interaction.client, quest, interaction.user.id);
 
     await interaction.followUp({ content: '✅ クエストの募集を再開しました。', ephemeral: true });
-    logAction(interaction, 'クエストを再開', `クエストID: ${originalMessageId}`);
+    await logAction(interaction, 'クエストを再開', `クエストID: ${originalMessageId}`);
   },
 };

@@ -17,7 +17,7 @@ module.exports = {
     await interaction.deferUpdate();
 
     // データを再取得
-    const allQuests = questDataManager.getAllQuests(interaction.guildId);
+    const allQuests = await questDataManager.getAllQuests(interaction.guildId);
     const completedQuests = Object.values(allQuests)
       .filter(q => q.isArchived)
       .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));

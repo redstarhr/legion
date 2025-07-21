@@ -20,7 +20,7 @@ module.exports = {
     const guildId = interaction.guildId;
 
     // 1. 連携先のIDから元のクエストを探す
-    const result = questDataManager.findQuestByLinkedMessageId(guildId, targetMessageId);
+    const result = await questDataManager.findQuestByLinkedMessageId(guildId, targetMessageId);
 
     if (!result) {
       return interaction.followUp({ content: '⚠️ 指定されたIDを持つ連携掲示板が見つかりません。IDが正しいか確認してください。' });
@@ -34,7 +34,7 @@ module.exports = {
     );
 
     // 3. データベースを更新
-    const updateSuccess = questDataManager.updateQuest(guildId, originalQuest.messageId, {
+    const updateSuccess = await questDataManager.updateQuest(guildId, originalQuest.messageId, {
       linkedMessages: updatedLinks,
     });
 
@@ -42,7 +42,7 @@ module.exports = {
       return interaction.followUp({ content: '⚠️ データベースの更新に失敗しました。' });
     }
 
-    logAction(interaction, 'クエスト連携を解除', `連携解除したクエストID: ${targetMessageId}`);
+    await logAction(interaction, 'クエスト連携を解除', `連携解除したクエストID: ${targetMessageId}`);
 
     // 4. Discord上のメッセージを削除
     try {

@@ -12,7 +12,7 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
-    const allQuests = questDataManager.getAllQuests(interaction.guildId);
+    const allQuests = await questDataManager.getAllQuests(interaction.guildId);
     const completedQuests = Object.values(allQuests).filter(q => q.isArchived);
 
     if (completedQuests.length === 0) {

@@ -14,7 +14,7 @@ module.exports = {
     const guildId = interaction.guildId;
     const userId = interaction.user.id;
 
-    const allQuests = questDataManager.getAllQuests(guildId);
+    const allQuests = await questDataManager.getAllQuests(guildId);
     const myAcceptedQuests = [];
 
     // 全てのクエストをスキャンして、自分が受注しているものを探す

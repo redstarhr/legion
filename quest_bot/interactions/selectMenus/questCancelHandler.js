@@ -17,7 +17,7 @@ module.exports = {
     const userId = interaction.user.id;
 
     // 通知のために、取り消される前のクエスト情報を取得
-    const questBeforeCancel = questDataManager.getQuest(guildId, originalMessageId);
+    const questBeforeCancel = await questDataManager.getQuest(guildId, originalMessageId);
     if (!questBeforeCancel) {
       // このケースは稀だが、念のためハンドリング
       return interaction.followUp({ content: '⚠️ クエストデータの特定に失敗しました。', ephemeral: true });
@@ -25,7 +25,7 @@ module.exports = {
     const canceledAcceptance = questBeforeCancel.accepted.find(a => a.id === selectedAcceptanceId);
 
     // 1. データマネージャーで受注を取り消す
-    const result = questDataManager.cancelQuestAcceptance(guildId, originalMessageId, selectedAcceptanceId);
+    const result = await questDataManager.cancelQuestAcceptance(guildId, originalMessageId, selectedAcceptanceId);
 
     if (!result || !result.quest) {
       return interaction.followUp({ content: '⚠️ 受注の取り消しに失敗しました。', ephemeral: true });
@@ -40,7 +40,7 @@ module.exports = {
 
     // もしクローズ状態からオープン状態に戻ったら、フラグを更新
     if (quest.isClosed && isNowOpen) {
-      questDataManager.updateQuest(guildId, originalMessageId, { isClosed: false });
+      await questDataManager.updateQuest(guildId, originalMessageId, { isClosed: false });
       quest.isClosed = false; // 後続のボタン生成で使うため、ローカルのオブジェクトも更新
     }
 
@@ -49,10 +49,10 @@ module.exports = {
 
     await interaction.followUp({ content: '✅ 受注を取り消しました。', ephemeral: true });
 
-    logAction(interaction, '受注を取り消し', `クエストID: ${originalMessageId}\n取り消した受注ID: ${selectedAcceptanceId}`);
+    await logAction(interaction, '受注を取り消し', `クエストID: ${originalMessageId}\n取り消した受注ID: ${selectedAcceptanceId}`);
 
     // 設定されたチャンネルに通知
-    const notificationChannelId = questDataManager.getNotificationChannel(guildId);
+    const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
     if (notificationChannelId && canceledAcceptance) {
       try {
         const notificationChannel = await interaction.client.channels.fetch(notificationChannelId);
@@ -71,7 +71,7 @@ module.exports = {
         }
       } catch (error) {
         console.error(`[${guildId}] クエスト通知チャンネルへの送信（取り消し通知）に失敗しました (Channel ID: ${notificationChannelId}):`, error);
-        logAction(interaction, '通知失敗', `チャンネル <#${notificationChannelId}> への通知送信に失敗しました。`, '#ff0000');
+        await logAction(interaction, '通知失敗', `チャンネル <#${notificationChannelId}> への通知送信に失敗しました。`, '#ff0000');
       }
     }
 

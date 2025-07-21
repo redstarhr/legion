@@ -12,7 +12,7 @@ module.exports = {
       return interaction.reply({ content: '⚠️ あなたにはこのクエストを修正する権限がありません。', ephemeral: true });
     }
 
-    const quest = questDataManager.getQuest(interaction.guildId, interaction.message.id);
+    const quest = await questDataManager.getQuest(interaction.guildId, interaction.message.id);
 
     if (!quest) {
       return interaction.reply({ content: '⚠️ 対象のクエストデータが見つかりません。', ephemeral: true });

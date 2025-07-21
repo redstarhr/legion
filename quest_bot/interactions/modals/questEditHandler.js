@@ -27,7 +27,7 @@ module.exports = {
     }
 
     // 1. データを更新
-    questDataManager.updateQuest(guildId, originalMessageId, {
+    await questDataManager.updateQuest(guildId, originalMessageId, {
       title,
       description,
       teams: teamsNum,
@@ -38,7 +38,7 @@ module.exports = {
     });
 
     // 2. 更新後のクエスト情報を取得
-    const quest = questDataManager.getQuest(guildId, originalMessageId);
+    const quest = await questDataManager.getQuest(guildId, originalMessageId);
     if (!quest) {
       return interaction.followUp({ content: '⚠️ クエストデータの特定に失敗しました。', ephemeral: true });
     }
@@ -48,6 +48,6 @@ module.exports = {
 
     await interaction.followUp({ content: '✅ クエストの内容を修正しました。', ephemeral: true });
 
-    logAction(interaction, 'クエストを修正', `クエストID: ${originalMessageId}`);
+    await logAction(interaction, 'クエストを修正', `クエストID: ${originalMessageId}`);
   },
 };
