@@ -23,6 +23,7 @@ module.exports = {
       issuerId: interaction.user.id, // クエスト設置者を発注者として初期設定
       accepted: [],
       isArchived: false,
+      isClosed: false,
     };
 
     const embed = createQuestEmbed(initialQuest);

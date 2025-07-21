@@ -30,7 +30,7 @@ for (const file of commandFiles) {
 }
 
 // ✅ ボタンの読み込み
-const buttonPath = path.join(__dirname, 'quest_bot', 'interactions', 'buttons'); // 'interacrions' -> 'interactions' に修正推奨
+const buttonPath = path.join(__dirname, 'quest_bot', 'interactions', 'buttons');
 const buttonFiles = fs.readdirSync(buttonPath).filter(file => file.endsWith('.js'));
 for (const file of buttonFiles) {
   const button = require(path.join(buttonPath, file));
@@ -38,7 +38,7 @@ for (const file of buttonFiles) {
 }
 
 // ✅ セレクトメニューの読み込み
-const selectMenuPath = path.join(__dirname, 'quest_bot', 'interactions', 'selectMenus'); // 'interacrions' -> 'interactions' に修正推奨
+const selectMenuPath = path.join(__dirname, 'quest_bot', 'interactions', 'selectMenus');
 const selectMenuFiles = fs.readdirSync(selectMenuPath).filter(file => file.endsWith('.js'));
 for (const file of selectMenuFiles) {
   const selectMenu = require(path.join(selectMenuPath, file));
@@ -46,7 +46,7 @@ for (const file of selectMenuFiles) {
 }
 
 // ✅ モーダルの読み込み
-const modalPath = path.join(__dirname, 'quest_bot', 'interactions', 'modals'); // 'interacrions' -> 'interactions' に修正推奨
+const modalPath = path.join(__dirname, 'quest_bot', 'interactions', 'modals');
 const modalFiles = fs.readdirSync(modalPath).filter(file => file.endsWith('.js'));
 for (const file of modalFiles) {
   const modal = require(path.join(modalPath, file));
