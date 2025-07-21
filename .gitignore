@@ -1,15 +1,11 @@
 # Node.js dependencies
 node_modules/
 
-# Generated data files
-quest_bot/data/
+# Generated data and secret files
+data/
 
 # Configuration file with sensitive data
 config.json
 
 # Environment variables file
 .env
-
-# Log files
-logs/
-data/

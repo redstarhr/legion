@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-PROJECT_DIR="$HOME/star_kanri_bot"
+PROJECT_DIR="$HOME/legion" # プロジェクト名を変更
 
 # --- Error Handling ---
 handle_error() {
@@ -18,7 +18,7 @@ handle_error() {
 }
 trap 'handle_error $LINENO' ERR
 
-echo -e "${GREEN}--- サーバー初期化スクリプト開始 ---${NC}"
+echo -e "${GREEN}--- Legion管理Bot サーバー初期化スクリプト開始 ---${NC}"
 
 # --- 1. System Setup ---
 echo -e "\n${YELLOW}1. システムのセットアップ中...${NC}"
@@ -27,7 +27,7 @@ sudo timedatectl set-timezone Asia/Tokyo
 
 echo "📦 必須パッケージをインストール"
 sudo apt-get update && sudo apt-get upgrade -y
-sudo apt-get install -y git curl rsync jq
+sudo apt-get install -y git curl rsync
 
 echo "📦 Node.js (v18.x) をインストール"
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -48,33 +48,29 @@ if [ -d "$PROJECT_DIR" ]; then
     exit 1
 fi
 
-echo "📂 GitHubからリポジトリをクローンします (HTTPS経由): ${PROJECT_DIR}"
-# HTTPSを使用することで、SSHキーが未設定の環境でもクローンが可能です。
-git clone https://github.com/star-discord/star_kanri_bot.git "$PROJECT_DIR"
+echo "📂 GitHubからリポジトリをクローンします (SSH経由): ${PROJECT_DIR}"
+# SSHキーがサーバーに設定済みであることを前提とします
+git clone git@github.com:star-discord/legion_kanri_bot.git "$PROJECT_DIR"
 
 cd "$PROJECT_DIR"
 
-echo "📝 .env ファイルをセットアップします"
-if [ -f .env.sample ]; then
-    cp .env.sample .env
-    echo -e "${GREEN}✅ '.env.sample' から '.env' を作成しました。${NC}"
-else
-    echo -e "${YELLOW}⚠️ '.env.sample' が見つかりません。空の '.env' を作成します。${NC}"
-    touch .env
-fi
+echo "📝 .env ファイルを作成します"
+touch .env
+echo -e "${GREEN}✅ 空の '.env' を作成しました。${NC}"
 
-echo "📂 ログディレクトリを作成します"
-mkdir -p logs
+echo "📂 data ディレクトリを作成します"
+mkdir -p data
+echo -e "${GREEN}✅ 'data' ディレクトリを作成しました。${NC}"
 
 echo "🔑 スクリプトに実行権限を付与します"
 find . -type f -name "*.sh" -exec chmod +x {} \;
 echo "✅ すべてのシェルスクリプトに実行権限を付与しました。"
 
-echo -e "\n${YELLOW}*** 重要: .env ファイルを編集してください ***${NC}"
-echo "Botのトークンや各種IDを設定する必要があります。"
-echo "エディタでファイルを開いて編集してください: ${GREEN}nano .env${NC}"
-echo "(別のターミナルウィンドウを開いて作業することもできます)"
-read -p "編集が完了したら、Enterキーを押して続行してください..."
+echo -e "\n${YELLOW}*** 重要: .env と data フォルダを設定してください ***${NC}"
+echo "1. Botのトークン等を '.env' ファイルに設定する必要があります。"
+echo "   エディタでファイルを開いて編集してください: ${GREEN}nano .env${NC}"
+echo "2. Google CloudのJSONキーを 'data/legion-gclkey.json' として配置してください。"
+read -p "設定が完了したら、Enterキーを押して続行してください..."
 
 # --- 3. Dependencies & Deployment ---
 echo -e "\n${YELLOW}3. 依存関係のインストールとデプロイ...${NC}"
@@ -82,13 +78,24 @@ echo "📦 npm パッケージをインストールしています (数分かか
 npm install --no-audit --no-fund
 
 echo "📡 スラッシュコマンドをDiscordに登録しています..."
-node devcmdup.js
+# deploy-commands.js が存在することを前提とします
+if [ -f "deploy-commands.js" ]; then
+    node deploy-commands.js
+else
+    echo -e "${YELLOW}⚠️ 'deploy-commands.js' が見つかりません。コマンドの登録をスキップします。${NC}"
+fi
 
 # --- 4. PM2 Setup ---
 echo -e "\n${YELLOW}4. PM2でBotを起動し、自動起動を設定します...${NC}"
 
 echo "🚀 PM2でBotを起動します..."
-pm2 start ecosystem.config.js
+# ecosystem.config.js が存在することを前提とします
+if [ -f "ecosystem.config.js" ]; then
+    pm2 start ecosystem.config.js
+else
+    echo -e "${YELLOW}⚠️ 'ecosystem.config.js' が見つかりません。直接 'index.js' を起動します。${NC}"
+    pm2 start index.js --name "legion_kanri_bot"
+fi
 
 echo "💾 現在のPM2プロセスリストを保存します..."
 pm2 save
@@ -110,9 +117,9 @@ echo "💡 次のステップ:"
 echo "1. 上記の 'sudo ...' で始まるコマンドを実行して、自動起動を有効化してください。"
 echo "2. Botの動作状況は以下のコマンドで確認できます:"
 echo -e "   - ${GREEN}pm2 status${NC} (プロセスの状態確認)"
-echo -e "   - ${GREEN}pm2 logs star-kanri-bot${NC} (ログのリアルタイム表示)"
+echo -e "   - ${GREEN}pm2 logs legion_kanri_bot${NC} (ログのリアルタイム表示)"
 echo ""
 echo "🔧 Botの更新:"
 echo "   今後の更新は、プロジェクトディレクトリ内で以下のコマンドを実行してください:"
-echo -e "   - ${GREEN}cd ~/star_kanri_bot && ./update.sh${NC}"
+echo -e "   - ${GREEN}cd ~/legion && ./update.sh${NC}"
 echo "----------------------------------------"

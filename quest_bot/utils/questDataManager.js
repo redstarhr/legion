@@ -38,59 +38,48 @@ async function getGuildData(guildId) {
   }
 }
 
-/**
- * ギルドのデータをファイルから読み込む
- * @param {string} guildId
- * @returns {object} データベースオブジェクト。失敗した場合は初期オブジェクト。
- */
-  } catch (error) {
-    console.error(`[${guildId}] DBファイルの書き込みに失敗しました:`, error);
-    return false;
-  }
-}
-
 // 新しいクエストを作成して保存
-function createQuest(guildId, messageId, questData) {
-  const db = readData(guildId);
-  db.quests[messageId] = {
+async function createQuest(guildId, messageId, questData) {
+  const data = await getGuildData(guildId);
+  data.quests[messageId] = {
     ...questData,
     messageId: messageId,
     guildId: guildId,
     linkedMessages: [],
     accepted: [],
-    isClosed: false, // 募集が完了したかどうかのフラグ
-    isArchived: false, // クエストが完了（アーカイブ）したかどうかのフラグ
+    isClosed: false,
+    isArchived: false,
   };
-  return writeData(guildId, db);
+  await guildsCollection.doc(guildId).set(data);
+  return true;
 }
 
 // 既存のクエストを更新
-function updateQuest(guildId, messageId, updatedFields) {
-  const db = readData(guildId);
-  if (db.quests[messageId]) {
-    db.quests[messageId] = { ...db.quests[messageId], ...updatedFields };
-    return writeData(guildId, db);
+async function updateQuest(guildId, messageId, updatedFields) {
+  const data = await getGuildData(guildId);
+  if (data.quests[messageId]) {
+    data.quests[messageId] = { ...data.quests[messageId], ...updatedFields };
+    await guildsCollection.doc(guildId).set(data);
+    return true;
   }
-  return false; // 更新対象が見つからない
+  return false;
 }
 
 // 特定のクエスト情報を取得
-function getQuest(guildId, messageId) {
-  const db = readData(guildId);
-  return db.quests[messageId] || null;
+async function getQuest(guildId, messageId) {
+  const data = await getGuildData(guildId);
+  return data.quests[messageId] || null;
 }
 
 // クエストを受注
-function acceptQuest(guildId, messageId, acceptanceData) {
-  const db = readData(guildId);
-  if (db.quests[messageId]) {
-    const quest = db.quests[messageId];
+async function acceptQuest(guildId, messageId, acceptanceData) {
+  const data = await getGuildData(guildId);
+  if (data.quests[messageId]) {
+    const quest = data.quests[messageId];
 
-    // 現在の受注合計を計算
     const currentAcceptedTeams = quest.accepted.reduce((sum, a) => sum + a.teams, 0);
     const currentAcceptedPeople = quest.accepted.reduce((sum, a) => sum + a.people, 0);
 
-    // 今回の受注を加えた場合に募集数を超えないかチェック
     if (currentAcceptedTeams + acceptanceData.teams > quest.teams) {
       return { error: `受注できる組数を超えています。(残り: ${quest.teams - currentAcceptedTeams}組)` };
     }
@@ -98,74 +87,42 @@ function acceptQuest(guildId, messageId, acceptanceData) {
       return { error: `受注できる人数を超えています。(残り: ${quest.people - currentAcceptedPeople}人)` };
     }
 
-    // 受注データにユニークなIDを付与
     const newAcceptance = {
-      id: crypto.randomUUID(), // ユニークIDを生成
+      id: crypto.randomUUID(),
       ...acceptanceData,
     };
     quest.accepted.push(newAcceptance);
-    if (writeData(guildId, db)) {
-      return { quest: quest }; // 成功した場合、更新後のクエスト情報を返す
-    } else {
-      return null; // 書き込み失敗
-    }
+    await guildsCollection.doc(guildId).set(data);
+    return { quest: quest };
   }
-  return null; // クエストが見つからない
+  return null;
 }
 
-/**
- * クエストの特定の受注を取り消す
- * @param {string} guildId
- * @param {string} messageId
- * @param {string} acceptanceId - 取り消す受注のユニークID
- * @returns {object|null} 更新後のクエストオブジェクト、またはnull（失敗時）
- */
-function cancelQuestAcceptance(guildId, messageId, acceptanceId) {
-  const db = readData(guildId);
-  if (db.quests[messageId]) {
-    const quest = db.quests[messageId];
+// クエストの特定の受注を取り消す
+async function cancelQuestAcceptance(guildId, messageId, acceptanceId) {
+  const data = await getGuildData(guildId);
+  if (data.quests[messageId]) {
+    const quest = data.quests[messageId];
     const initialLength = quest.accepted.length;
     quest.accepted = quest.accepted.filter(a => a.id !== acceptanceId);
 
     if (initialLength === quest.accepted.length) {
-      // IDが見つからなかった場合
       return null;
     }
 
-    if (writeData(guildId, db)) {
-      return { quest: quest };
-    }
+    await guildsCollection.doc(guildId).set(data);
+    return { quest: quest };
   }
   return null;
 }
 
-/**
- * クエストを完了（アーカイブ）状態にする
- * @param {string} guildId
- * @param {string} messageId
- * @returns {object|null} 更新後のクエストオブジェクト、またはnull（失敗時）
- */
-function archiveQuest(guildId, messageId) {
-  const db = readData(guildId);
-  if (db.quests[messageId]) {
-    db.quests[messageId].isArchived = true;
-    if (writeData(guildId, db)) {
-      return { quest: db.quests[messageId] };
-    }
-  }
-  return null;
-}
-
-// 連携先のメッセージIDから元のクエスト情報を検索する
-async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
+// クエストを完了（アーカイブ）状態にする
+async function archiveQuest(guildId, messageId) {
   const data = await getGuildData(guildId);
-  for (const questId in data.quests) {
-    const quest = data.quests[questId];
-    const foundLink = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
-    if (foundLink) {
-      // 元のクエストオブジェクトと、見つかった連携情報の両方を返す
-      return { originalQuest: quest, linkedMessageInfo: foundLink };
-    }
+  if (data.quests[messageId]) {
+    data.quests[messageId].isArchived = true;
+    await guildsCollection.doc(guildId).set(data);
+    return { quest: data.quests[messageId] };
   }
   return null;
 }
@@ -250,3 +207,16 @@ module.exports = {
   setEmbedColor,
   getEmbedColor,
 };
+
+// 連携先のメッセージIDから元のクエスト情報を検索する
+async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
+  const data = await getGuildData(guildId);
+  for (const questId in data.quests) {
+    const quest = data.quests[questId];
+    const foundLink = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
+    if (foundLink) {
+      return { originalQuest: quest, linkedMessageInfo: foundLink };
+    }
+  }
+  return null;
+}
