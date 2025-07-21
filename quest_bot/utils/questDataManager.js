@@ -122,6 +122,19 @@ async function archiveQuest(guildId, messageId) {
   return null;
 }
 
+// 連携先のメッセージIDから元のクエスト情報を検索する
+async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
+  const data = await getGuildData(guildId);
+  for (const questId in data.quests) {
+    const quest = data.quests[questId];
+    const foundLink = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
+    if (foundLink) {
+      return { originalQuest: quest, linkedMessageInfo: foundLink };
+    }
+  }
+  return null;
+}
+
 // ギルドのすべてのクエストを取得する
 async function getAllQuests(guildId) {
   const data = await getGuildData(guildId);
@@ -202,16 +215,3 @@ module.exports = {
   setEmbedColor,
   getEmbedColor,
 };
-
-// 連携先のメッセージIDから元のクエスト情報を検索する
-async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
-  const data = await getGuildData(guildId);
-  for (const questId in data.quests) {
-    const quest = data.quests[questId];
-    const foundLink = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
-    if (foundLink) {
-      return { originalQuest: quest, linkedMessageInfo: foundLink };
-    }
-  }
-  return null;
-}
