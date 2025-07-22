@@ -41,7 +41,17 @@ module.exports = {
             };
 
             const updatedAccepted = [...quest.accepted, newAcceptance];
-            await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted });
+
+            // Check if the quest is now full
+            const newTotalTeams = acceptedTeams + teams;
+            const newTotalPlayers = acceptedPlayers + players;
+            const isNowFull = newTotalTeams >= quest.teams && newTotalPlayers >= quest.players;
+
+            const updates = {
+                accepted: updatedAccepted,
+                isClosed: isNowFull ? true : quest.isClosed, // Close if full
+            };
+            await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
             await logAction(interaction, {
                 title: '👍 クエスト受注',
@@ -56,7 +66,10 @@ module.exports = {
 
             await updateDashboard(interaction.client, interaction.guildId);
 
-            await interaction.editReply({ content: `✅ クエスト「${quest.name}」を受注しました。`, components: [] });
+            let replyMessage = `✅ クエスト「${quest.name}」を受注しました。`;
+            if (isNowFull) { replyMessage += '\nℹ️ この受注により、募集が定員に達したため自動的に締め切られました。'; }
+
+            await interaction.editReply({ content: replyMessage, components: [] });
         } catch (error) {
             console.error('クエスト受注処理中にエラーが発生しました:', error);
             await interaction.editReply({ content: '❌ エラーが発生したため、クエストを受注できませんでした。', components: [] }).catch(console.error);

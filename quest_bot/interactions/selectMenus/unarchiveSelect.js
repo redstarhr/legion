@@ -11,7 +11,7 @@ module.exports = {
     try {
       const userId = interaction.customId.split('_')[3];
       if (interaction.user.id !== userId) {
-        return interaction.reply({ content: 'あなたはこのメニューを操作できません。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: 'あなたはこのメニューを操作できません。', flags: MessageFlags.Ephemeral });
       }
 
       await interaction.deferUpdate();
@@ -26,7 +26,7 @@ module.exports = {
       }, interaction.user);
 
       if (!success) {
-        return interaction.followUp({ content: '⚠️ クエストの状態を戻すのに失敗しました。', flags: [MessageFlags.Ephemeral] });
+        return interaction.followUp({ content: '⚠️ クエストの状態を戻すのに失敗しました。', flags: MessageFlags.Ephemeral });
       }
 
       // 2. ダッシュボードを更新
@@ -59,11 +59,11 @@ module.exports = {
       // 5. Notify the user of completion
       await interaction.followUp({
         content: `✅ クエスト「${unarchivedQuest.name || '無題'}」をアクティブな状態に戻しました。`,
-        flags: [MessageFlags.Ephemeral],
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error('クエストの完了状態取消処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストの状態を戻せませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+      await interaction.followUp({ content: 'エラーが発生したため、クエストの状態を戻せませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
     }
   },
 };
