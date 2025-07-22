@@ -115,14 +115,11 @@ npm install --no-audit --no-fund
 if [ "$SKIP_PM2" = false ]; then
   echo -e "\n${YELLOW}5. Botプロセスを再起動しています...${NC}"
   if command -v pm2 > /dev/null 2>&1; then
-    if pm2 describe ${PM2_PROCESS_NAME} > /dev/null 2>&1; then
-      pm2 restart ${PM2_PROCESS_NAME} --update-env
-      pm2 save
-      echo -e "${GREEN}✅ Botが正常に再起動されました。${NC}"
-    else
-      echo -e "${YELLOW}⚠️ PM2プロセスが見つかりません。手動で起動してください:${NC}"
-      echo "   cd $PROJECT_DIR && pm2 start ecosystem.config.js"
-    fi
+    echo "🔄 PM2でプロセスを再起動または起動します..."
+    # 'startOrRestart' を使用して、プロセスの状態に関わらず安全に再起動する
+    pm2 startOrRestart ecosystem.config.js --update-env
+    pm2 save
+    echo -e "${GREEN}✅ Botが正常に再起動されました。${NC}"
   else
     echo -e "${YELLOW}⚠️ PM2がインストールされていません。手動で起動してください:${NC}"
     echo "   cd $PROJECT_DIR && node index.js"
