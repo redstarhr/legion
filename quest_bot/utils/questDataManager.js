@@ -80,7 +80,12 @@ async function getAllQuests(guildId) {
  */
 async function getQuest(guildId, questId) {
   const quests = await getAllQuests(guildId);
-  return quests[questId] || null;
+  const quest = quests[questId];
+  if (quest) {
+    // 他のモジュールで使いやすいように guildId を注入する
+    quest.guildId = guildId;
+  }
+  return quest || null;
 }
 
 /**

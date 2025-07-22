@@ -5,13 +5,15 @@ const { createDashboardActionRows } = require('../components/dashboardActionButt
 
 /**
  * Generates the embeds for the quest dashboard.
+ * @param {string} guildId The ID of the guild to get settings for.
  * @param {object[]} quests - An array of all quest objects.
  * @returns {EmbedBuilder[]}
  */
-function createDashboardEmbeds(quests) {
+async function createDashboardEmbeds(guildId, quests) {
+    const embedColor = await questDataManager.getEmbedColor(guildId);
     // --- クエスト一覧 Embed ---
     const questListEmbed = new EmbedBuilder()
-        .setColor(0x00bfff)
+        .setColor(embedColor)
         .setTitle('📜 クエスト一覧');
 
     const activeQuests = quests.filter(q => !q.isArchived);
@@ -33,7 +35,7 @@ function createDashboardEmbeds(quests) {
 
     // --- 受注一覧 Embed ---
     const acceptedListEmbed = new EmbedBuilder()
-        .setColor(0x2ecc71)
+        .setColor(embedColor)
         .setTitle('👥 受注状況一覧');
 
     const allAccepted = activeQuests.flatMap(q =>
@@ -72,7 +74,7 @@ async function updateDashboard(client, guildId) {
         const message = await channel.messages.fetch(dashboard.messageId);
 
         const allQuests = Object.values(await questDataManager.getAllQuests(guildId));
-        const embeds = createDashboardEmbeds(allQuests);
+        const embeds = await createDashboardEmbeds(guildId, allQuests);
         const components = createDashboardActionRows();
 
         await message.edit({
