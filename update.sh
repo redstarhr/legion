@@ -72,12 +72,9 @@ git fetch origin
 if [ "$FORCE_SYNC" = true ]; then
   echo "⚡ 強制同期モード: ローカルの変更を破棄して同期します。"
   git reset --hard origin/main
-  # .env, data/, node_modules/ などを消さないように注意
-  # git clean -fdx は非常に危険なため、ここでは使用しません。
   echo -e "${GREEN}✅ 強制同期が完了しました。${NC}"
 else
   echo "🔄 通常更新モード: 最新の変更を取り込みます。"
-  # ローカルの変更を一時的に退避させてからpullし、その後で戻す
   git stash
   if git pull origin main --rebase; then
     git stash pop || echo "退避した変更はありませんでした。"
@@ -91,7 +88,6 @@ else
 fi
 
 # --- 3. スクリプト権限の再設定 ---
-# git pullで変更された可能性のあるスクリプトの実行権限を再設定します
 echo -e "\n${YELLOW}3. スクリプトの実行権限を更新しています...${NC}"
 find . -type f -name "*.sh" -exec chmod +x {} \;
 echo "✅ 実行権限の更新が完了しました。"
@@ -101,8 +97,9 @@ echo -e "\n${YELLOW}4. 依存関係のインストールとコマンドのデプ
 echo "📦 npm パッケージをインストール中..."
 npm install --no-audit --no-fund
 
-echo "📡 スラッシュコマンドをDiscordに登録中..."
-node devcmd.js
+# ↓ スラッシュコマンド登録スクリプト（現在未使用のためコメントアウト）
+# echo "📡 スラッシュコマンドをDiscordに登録中..."
+# node devcmd.js
 
 # --- 5. PM2 Restart (if not skipped) ---
 if [ "$SKIP_PM2" = false ]; then
