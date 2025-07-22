@@ -76,15 +76,22 @@ if [ "$FORCE_SYNC" = true ]; then
 else
   echo "🔄 通常更新モード: 最新の変更を取り込みます。"
   git stash
-  if git pull origin main --rebase; then
-    git stash pop || echo "退避した変更はありませんでした。"
-    echo -e "${GREEN}✅ GitHub最新版への更新完了${NC}"
-  else
+  # git pullで失敗した場合
+  if ! git pull origin main --rebase; then
     git stash pop
     echo -e "${RED}⚠️ マージで競合が発生しました${NC}"
     echo "💡 競合を手動で解決するか、'./update.sh -f' で強制同期してください。"
     exit 1
   fi
+
+  # git stash popで失敗した場合
+  if ! git stash pop > /dev/null 2>&1; then
+      echo -e "${RED}⚠️ 退避した変更を戻す際に競合が発生しました (git stash pop)。${NC}"
+      echo "💡 競合を手動で解決する必要があります。'git status'で確認してください。"
+      echo "💡 または、'./update.sh -f' で強制同期してください。"
+      exit 1
+  fi
+  echo -e "${GREEN}✅ GitHub最新版への更新完了${NC}"
 fi
 
 # --- 3. スクリプト権限の再設定 ---
