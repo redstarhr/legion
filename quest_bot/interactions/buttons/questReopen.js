@@ -16,7 +16,7 @@ module.exports = {
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.followUp({ content: '対象のクエストが見つかりませんでした。', flags: [MessageFlags.Ephemeral] });
+        return interaction.followUp({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
       // Permission check: issuer or manager
@@ -24,7 +24,7 @@ module.exports = {
       const isManager = await hasQuestManagerPermission(interaction);
 
       if (!isIssuer && !isManager) {
-        return interaction.followUp({ content: 'クエストの募集再開は、発注者または管理者のみが行えます。', flags: [MessageFlags.Ephemeral] });
+        return interaction.followUp({ content: 'クエストの募集再開は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
       // 1. クエストデータを更新して募集を再開
@@ -55,11 +55,11 @@ module.exports = {
       });
 
       // 4. 実行者に完了を通知
-      await interaction.followUp({ content: '✅ クエストの募集を再開しました。', flags: [MessageFlags.Ephemeral] });
+      await interaction.followUp({ content: '✅ クエストの募集を再開しました。', flags: MessageFlags.Ephemeral });
     } catch (error) {
       console.error('募集再開の処理中にエラーが発生しました:', error);
       // deferUpdate後なので、followUpでエラー通知
-      await interaction.followUp({ content: 'エラーが発生したため、募集を再開できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+      await interaction.followUp({ content: 'エラーが発生したため、募集を再開できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
     }
   },
 };

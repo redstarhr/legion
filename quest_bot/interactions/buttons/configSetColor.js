@@ -1,5 +1,5 @@
 // quest_bot/interactions/buttons/configSetColor.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 
 // ユーザーに提示する色の選択肢
 const colorOptions = [
@@ -31,12 +31,12 @@ module.exports = {
       await interaction.reply({
         content: 'クエスト掲示板の左側に表示される色を選択してください。',
         components: [row],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error('カラー設定UIの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true });
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
       }
     }
   },

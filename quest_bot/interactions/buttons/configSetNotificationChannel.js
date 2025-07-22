@@ -1,5 +1,5 @@
 // quest_bot/interactions/buttons/configSetNotificationChannel.js
-const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 
 module.exports = {
   customId: 'config_open_notificationChannelSelect',
@@ -24,12 +24,12 @@ module.exports = {
       await interaction.reply({
         content: 'クエストの受注や取消があった際に通知を送るテキストチャンネルを選択するか、設定を解除してください。',
         components: [rowWithSelect, rowWithButton],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error('通知チャンネル設定UIの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true });
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
       }
     }
   },

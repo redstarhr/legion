@@ -1,5 +1,5 @@
 // quest_bot/interactions/buttons/configSetRole.js
-const { ActionRowBuilder, RoleSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, RoleSelectMenuBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 
 module.exports = {
   customId: 'config_open_roleSelect',
@@ -23,12 +23,12 @@ module.exports = {
       await interaction.reply({
         content: 'クエストの管理（編集、〆切、完了など）を許可するロールを選択するか、設定を解除してください。',
         components: [rowWithSelect, rowWithButton],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error('管理者ロール設定UIの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true });
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
       }
     }
   },

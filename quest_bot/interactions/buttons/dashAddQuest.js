@@ -26,12 +26,12 @@ module.exports = {
             await interaction.reply({
                 content: '1. **プラ**の募集人数を選択してください。',
                 components: [row],
-                flags: [MessageFlags.Ephemeral],
+                flags: MessageFlags.Ephemeral,
             });
         } catch (error) {
             console.error('クエスト追加UIの表示中にエラーが発生しました:', error);
             if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+                await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
             }
         }
     },

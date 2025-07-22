@@ -9,10 +9,10 @@ module.exports = {
         try {
             const isManager = await hasQuestManagerPermission(interaction);
             if (!isManager) {
-                return interaction.reply({ content: 'クエストの完了は、管理者またはクエスト管理者ロールを持つユーザーのみが行えます。', flags: [MessageFlags.Ephemeral] });
+                return interaction.reply({ content: 'クエストの完了は、管理者またはクエスト管理者ロールを持つユーザーのみが行えます。', flags: MessageFlags.Ephemeral });
             }
 
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const allQuests = await questDataManager.getAllQuests(interaction.guildId);
             const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);

@@ -6,7 +6,7 @@ module.exports = {
     customId: 'dash_open_acceptQuestSelect',
     async handle(interaction) {
         try {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const allQuests = await questDataManager.getAllQuests(interaction.guildId);
             const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);

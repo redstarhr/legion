@@ -12,15 +12,12 @@ const { hasQuestManagerPermission } = require('../utils/permissionUtils');
 async function createConfigPanel(interaction) {
   const guildId = interaction.guildId;
 
-  // Fetch all current settings at once for efficiency
-  const config = await questDataManager.getGuildConfig(guildId);
-  const {
-    logChannelId = null,
-    notificationChannelId = null,
-    questManagerRoleId: managerRoleId = null,
-    embedColor = '#00bfff', // Default from questDataManager
-    buttonOrder = ['accept', 'cancel', 'edit', 'dm'], // Default from questDataManager
-  } = config;
+  // Fetch all current settings
+  const logChannelId = await questDataManager.getLogChannel(guildId);
+  const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
+  const managerRoleId = await questDataManager.getQuestManagerRole(guildId);
+  const embedColor = await questDataManager.getEmbedColor(guildId);
+  const buttonOrder = await questDataManager.getButtonOrder(guildId);
 
   const buttonNameMap = {
     accept: '受注',
@@ -53,8 +50,7 @@ async function createConfigPanel(interaction) {
   const row2 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('config_open_colorSelect').setLabel('Embed色設定').setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId('config_open_buttonOrderSelect').setLabel('ボタン順設定').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('config_open_unlinkSelect').setLabel('掲示板連携解除').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('config_open_deleteDashboardPrompt').setLabel('ダッシュボード削除').setStyle(ButtonStyle.Danger)
+    new ButtonBuilder().setCustomId('config_open_unlinkSelect').setLabel('掲示板連携解除').setStyle(ButtonStyle.Danger)
   );
 
   return { embeds: [embed], components: [row1, row2], ephemeral: true };

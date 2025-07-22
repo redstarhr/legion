@@ -37,12 +37,12 @@ module.exports = {
       await interaction.reply({
         content: `本当にクエスト「${quest.title || '無題'}」の受注（合計 ${totalAcceptedTeams}組 / ${totalAcceptedPeople}人）を取り消しますか？`,
         components: [confirmationRow],
-        flags: [MessageFlags.Ephemeral],
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error('受注取消UIの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
       }
     }
   },
