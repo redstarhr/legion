@@ -6,7 +6,7 @@ const { logAction } = require('../../utils/logger');
 
 module.exports = {
   customId: 'quest_cancel_confirm',
-  async handle(interaction) {
+  async handle (interaction) {
     try {
       await interaction.deferUpdate();
 

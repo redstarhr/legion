@@ -7,7 +7,7 @@ const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 module.exports = {
   customId: 'quest_edit_modal',
 
-  async handle(interaction) {
+  async handle (interaction) {
     if (!(await hasQuestManagerPermission(interaction))) {
       return interaction.reply({ content: '⚠️ あなたにはこのクエストを修正する権限がありません。', flags: [MessageFlags.Ephemeral] });
     }

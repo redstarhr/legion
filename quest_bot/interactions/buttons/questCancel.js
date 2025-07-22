@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
   customId: 'quest_cancel',
-  async handle(interaction) {
+  async handle (interaction) {
     try {
       const questId = interaction.customId.split('_')[2];
       const quest = await questDataManager.getQuest(interaction.guildId, questId);

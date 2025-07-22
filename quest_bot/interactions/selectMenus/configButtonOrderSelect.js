@@ -18,8 +18,8 @@ const buttonNameMap = {
 };
 
 module.exports = {
-  customId: 'config_button_order_select_', // Prefix match
-  async handle(interaction) {
+  customId: 'config_select_buttonOrder_', // Prefix match
+  async handle (interaction) {
     try {
       await interaction.deferUpdate();
 
@@ -39,7 +39,7 @@ module.exports = {
       // 4回目の選択までは、次の選択肢を提示
       if (nextStep <= 4) {
           const remainingOptions = allButtonOptions.filter(opt => !selectedOrder.includes(opt.value));
-          const newCustomId = `config_button_order_select_${nextStep}_${interactionId}_${selectedOrder.join('_')}`;
+          const newCustomId = `config_select_buttonOrder_${nextStep}_${interactionId}_${selectedOrder.join('_')}`;
 
           const selectMenu = new StringSelectMenuBuilder()
               .setCustomId(newCustomId)

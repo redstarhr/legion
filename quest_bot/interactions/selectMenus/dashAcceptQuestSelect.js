@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
     customId: 'accept_quest_select_', // Prefix match
-    async handle(interaction) {
+    async handle (interaction) {
         try {
             const questId = interaction.values[0];
             const quest = await questDataManager.getQuest(interaction.guildId, questId);

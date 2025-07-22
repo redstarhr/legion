@@ -6,7 +6,7 @@ const { logAction } = require('../../utils/logger');
 
 module.exports = {
   customId: 'quest_download_csv',
-  async handle(interaction) {
+  async handle (interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     const questId = interaction.customId.split('_')[3]; // quest_download_csv_QUESTID

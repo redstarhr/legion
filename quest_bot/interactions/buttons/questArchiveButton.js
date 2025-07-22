@@ -8,7 +8,7 @@ const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 module.exports = {
   customId: 'quest_archive_button',
 
-  async handle(interaction) {
+  async handle (interaction) {
     await interaction.deferUpdate();
 
     if (!(await hasQuestManagerPermission(interaction))) {

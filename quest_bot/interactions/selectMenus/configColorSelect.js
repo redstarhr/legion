@@ -17,8 +17,8 @@ const colorOptions = [
 ];
 
 module.exports = {
-  customId: 'config_color_', // Prefix match
-  async handle(interaction) {
+  customId: 'config_select_color_', // Prefix match
+  async handle (interaction) {
     try {
       await interaction.deferUpdate();
 

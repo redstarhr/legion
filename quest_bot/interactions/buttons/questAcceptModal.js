@@ -6,7 +6,7 @@ const questDataManager = require('../../utils/questDataManager');
 module.exports = {
   customId: 'quest_accept_modal',
 
-  async handle(interaction) {
+  async handle (interaction) {
     const quest = await questDataManager.getQuest(interaction.guildId, interaction.message.id);
 
     if (!quest) {

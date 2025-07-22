@@ -6,7 +6,7 @@ const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
   customId: 'quest_reopen',
-  async handle(interaction) {
+  async handle (interaction) {
     await interaction.deferUpdate();
 
     const questId = interaction.customId.split('_')[2];

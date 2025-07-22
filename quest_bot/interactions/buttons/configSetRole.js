@@ -2,18 +2,18 @@
 const { ActionRowBuilder, RoleSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
-  customId: 'config_set_role',
-  async handle(interaction) {
+  customId: 'config_open_roleSelect',
+  async handle (interaction) {
     try {
       // 他のユーザーの操作と競合しないように、インタラクションIDを含んだユニークなIDを生成
-      const uniqueId = `config_role_${interaction.id}`;
+      const uniqueId = `config_select_role_${interaction.id}`;
 
       const selectMenu = new RoleSelectMenuBuilder()
-        .setCustomId(`${uniqueId}_select`)
+        .setCustomId(uniqueId)
         .setPlaceholder('管理権限を付与するロールを選択してください');
 
       const removeButton = new ButtonBuilder()
-        .setCustomId(`${uniqueId}_remove`)
+        .setCustomId(`config_action_removeRole_${uniqueId}`)
         .setLabel('設定を解除')
         .setStyle(ButtonStyle.Danger);
 

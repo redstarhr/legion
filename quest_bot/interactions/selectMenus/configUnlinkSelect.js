@@ -3,8 +3,8 @@ const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'config_unlink_select_', // Prefix match
-  async handle(interaction) {
+  customId: 'config_select_unlink_', // Prefix match
+  async handle (interaction) {
     try {
       await interaction.deferUpdate();
 

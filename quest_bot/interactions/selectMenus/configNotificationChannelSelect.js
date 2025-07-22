@@ -3,8 +3,8 @@ const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'config_notification_channel_', // Prefix match
-  async handle(interaction) {
+  customId: 'config_select_notificationChannel_', // Prefix match
+  async handle (interaction) {
     try {
       await interaction.deferUpdate();
 

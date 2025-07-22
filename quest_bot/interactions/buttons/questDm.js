@@ -5,7 +5,7 @@ const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
   customId: 'quest_dm',
-  async handle(interaction) {
+  async handle (interaction) {
     const questId = interaction.customId.split('_')[2];
     const quest = await questDataManager.getQuest(interaction.guildId, questId);
 

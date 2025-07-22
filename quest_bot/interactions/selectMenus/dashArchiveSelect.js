@@ -5,7 +5,7 @@ const { logAction } = require('../../utils/logger');
 
 module.exports = {
     customId: 'archive_quest_select_', // Prefix match
-    async handle(interaction) {
+    async handle (interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });
 

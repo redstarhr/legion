@@ -6,7 +6,7 @@ const { logAction } = require('../../utils/logger');
 
 module.exports = {
   customId: 'quest_setup_channels_', // Prefix match
-  async handle(interaction) {
+  async handle (interaction) {
     // このハンドラは確認ボタン専用
     if (!interaction.customId.endsWith('_confirm')) return;
 

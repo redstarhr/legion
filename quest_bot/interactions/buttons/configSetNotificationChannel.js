@@ -9,11 +9,12 @@ module.exports = {
       const uniqueId = `config_select_notificationChannel_${interaction.id}`;
 
       const selectMenu = new ChannelSelectMenuBuilder()
+        .setCustomId(uniqueId)
         .setPlaceholder('受注/取消通知を送るチャンネルを選択してください')
         .addChannelTypes(ChannelType.GuildText); // テキストチャンネルのみに限定
 
       const removeButton = new ButtonBuilder()
-        .setCustomId(`${uniqueId}_remove`)
+        .setCustomId(`config_action_removeNotificationChannel_${uniqueId}`)
         .setLabel('設定を解除')
         .setStyle(ButtonStyle.Danger);
 
