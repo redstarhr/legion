@@ -1,0 +1,57 @@
+// quest_bot/interactions/buttons/configDeleteDashboardConfirm.js
+const { RESTJSONErrorCodes } = require('discord.js');
+const questDataManager = require('../../utils/questDataManager');
+const { logAction } = require('../../utils/logger');
+
+module.exports = {
+  customId: 'config_confirm_deleteDashboard',
+  async handle(interaction) {
+    try {
+      await interaction.deferUpdate();
+
+      const dashboard = await questDataManager.getDashboard(interaction.guildId);
+
+      if (!dashboard) {
+        return interaction.editReply({
+          content: '✅ ダッシュボードは既に削除されているか、見つかりませんでした。',
+          components: [],
+        });
+      }
+
+      // 1. Discord上のメッセージを削除
+      try {
+        const channel = await interaction.client.channels.fetch(dashboard.channelId);
+        await channel.messages.delete(dashboard.messageId);
+      } catch (error) {
+        // メッセージが既に削除されている場合はエラーを無視して続行
+        if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
+          throw error; // その他のエラーは上位のcatchに投げる
+        }
+        console.warn(`[DashboardDelete] ダッシュボードメッセージ (ID: ${dashboard.messageId}) は既に削除されていました。`);
+      }
+
+      // 2. データベースからダッシュボード設定を削除
+      await questDataManager.setDashboard(interaction.guildId, null, null);
+
+      // 3. アクションをログに記録
+      await logAction(interaction, {
+        title: '🗑️ ダッシュボード削除',
+        color: '#e74c3c',
+        description: 'クエストダッシュボードが削除されました。',
+      });
+
+      // 4. 確認メッセージを更新
+      await interaction.editReply({
+        content: '✅ クエストダッシュボードを削除しました。',
+        components: [],
+      });
+
+    } catch (error) {
+      console.error('ダッシュボードの削除処理中にエラーが発生しました:', error);
+      await interaction.editReply({
+        content: '❌ エラーが発生したため、ダッシュボードを削除できませんでした。Botの権限などを確認してください。',
+        components: [],
+      }).catch(console.error);
+    }
+  },
+};
