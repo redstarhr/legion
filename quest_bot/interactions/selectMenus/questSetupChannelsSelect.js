@@ -1,12 +1,12 @@
 // quest_bot/interactions/selectMenus/questSetupChannelsSelect.js
 
 module.exports = {
-  customId: 'quest_setup_channels_', // Prefix match
+  customId: 'quest_select_setupChannels_', // Prefix match
   async handle(interaction) {
     try {
       // このインタラクションは、選択状態を一時データに保存するだけ。
       // 実際の掲示板作成は「✅ 掲示板を作成」ボタンで行う。
-      const interactionId = interaction.customId.split('_')[3];
+      const interactionId = interaction.customId.split('_')[3]; // quest_select_setupChannels_INTERACTIONID
       const tempQuestData = interaction.client.tempQuestData.get(interactionId);
 
       if (!tempQuestData) {

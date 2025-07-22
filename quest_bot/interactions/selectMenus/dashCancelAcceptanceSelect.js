@@ -4,7 +4,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-    customId: 'cancel_acceptance_select_', // Prefix match
+    customId: 'dash_select_cancelAcceptance_', // Prefix match
     async handle(interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });

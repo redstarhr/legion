@@ -3,10 +3,12 @@
 const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
 
 module.exports = {
-  customId: 'pagination_list-completed_', // 完了クエスト一覧のページネーションを処理
+  customId: 'list_completed_', // 完了クエスト一覧のページネーションを処理
 
   async handle(interaction) {
-    const [ , , action, userId] = interaction.customId.split('_');
+    // list_completed_prevPage_userId or list_completed_nextPage_userId
+    const [ , , actionWithTarget, userId] = interaction.customId.split('_');
+    const action = actionWithTarget.replace('Page', ''); // prevPage -> prev, nextPage -> next
 
     // コマンドを実行した本人以外は操作できないようにする
     if (interaction.user.id !== userId) {

@@ -3,7 +3,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = req
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-    customId: 'edit_quest_select_', // Prefix match
+    customId: 'dash_select_editQuest_', // Prefix match
     async handle(interaction) {
         try {
             const questId = interaction.values[0];
@@ -14,7 +14,7 @@ module.exports = {
             }
 
             const modal = new ModalBuilder()
-                .setCustomId(`edit_quest_modal_${questId}_${interaction.id}`)
+                .setCustomId(`dash_submit_editQuestModal_${questId}_${interaction.id}`)
                 .setTitle(`クエスト修正: ${quest.name}`);
 
             const nameInput = new TextInputBuilder()

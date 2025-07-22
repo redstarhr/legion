@@ -3,7 +3,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-  customId: 'config_unlink_quest',
+  customId: 'config_open_unlinkSelect',
   async handle(interaction) {
     try {
       await interaction.deferReply({ ephemeral: true });
@@ -40,7 +40,7 @@ module.exports = {
         return interaction.followUp({ content: '現在、連携されているクエストはありません。' });
       }
 
-      const uniqueId = `config_unlink_select_${interaction.id}`;
+      const uniqueId = `config_select_unlink_${interaction.id}`;
       const selectMenu = new StringSelectMenuBuilder().setCustomId(uniqueId).setPlaceholder('連携を解除するクエストを選択してください').addOptions(linkedQuestsOptions.slice(0, 25)); // セレクトメニューのオプション上限(25)を考慮
       const row = new ActionRowBuilder().addComponents(selectMenu);
 

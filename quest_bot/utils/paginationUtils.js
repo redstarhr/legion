@@ -50,7 +50,7 @@ function generateUnarchiveSelectMenu(questsOnPage, userId) {
 
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
-      .setCustomId(`unarchive_select_${userId}`)
+      .setCustomId(`list_select_unarchive_${userId}`)
       .setPlaceholder('完了状態から戻すクエストを選択...')
       .addOptions(options)
   );
@@ -59,12 +59,12 @@ function generateUnarchiveSelectMenu(questsOnPage, userId) {
 function generatePaginationButtons(page, totalPages, userId) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`pagination_list-completed_prev_${userId}`)
+      .setCustomId(`list_completed_prevPage_${userId}`)
       .setLabel('◀️ 前へ')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(page === 1),
     new ButtonBuilder()
-      .setCustomId(`pagination_list-completed_next_${userId}`)
+      .setCustomId(`list_completed_nextPage_${userId}`)
       .setLabel('次へ ▶️')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(page === totalPages)

@@ -5,9 +5,9 @@ const { logAction } = require('../../utils/logger');
 const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
 
 module.exports = {
-  customId: 'unarchive_select',
+  customId: 'list_select_unarchive_', // Prefix match
   async handle(interaction) {
-    const userId = interaction.customId.split('_')[2];
+    const userId = interaction.customId.split('_')[3];
     if (interaction.user.id !== userId) {
       return interaction.reply({ content: 'あなたはこのメニューを操作できません。', ephemeral: true });
     }
