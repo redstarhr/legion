@@ -1,5 +1,5 @@
 // quest_bot/interactions/selectMenus/dashEditQuestSelect.js
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
@@ -10,7 +10,7 @@ module.exports = {
             const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
             if (!quest) {
-                return interaction.reply({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', ephemeral: true });
+                return interaction.reply({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', flags: [MessageFlags.Ephemeral] });
             }
 
             const modal = new ModalBuilder()
@@ -48,7 +48,7 @@ module.exports = {
         } catch (error) {
             console.error('クエスト修正モーダルの表示中にエラーが発生しました:', error);
             if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true });
+                await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
             }
         }
     },
