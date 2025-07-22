@@ -3,7 +3,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-    customId: 'dash_complete_quest',
+    customId: 'dash_open_completeQuestSelect',
     async handle(interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });
@@ -32,7 +32,7 @@ module.exports = {
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`complete_quest_select_${interaction.id}`)
+                .setCustomId(`dash_select_completeQuest_${interaction.id}`)
                 .setPlaceholder('討伐完了した受注エントリーを選択してください')
                 .addOptions(acceptanceOptions.slice(0, 25));
 

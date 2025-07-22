@@ -3,7 +3,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = req
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-    customId: 'dash_add_quest',
+    customId: 'dash_open_addQuestModal',
     async handle(interaction) {
         try {
             const isManager = await hasQuestManagerPermission(interaction);
@@ -12,7 +12,7 @@ module.exports = {
             }
 
             const modal = new ModalBuilder()
-                .setCustomId(`add_quest_modal_${interaction.id}`)
+                .setCustomId(`dash_submit_addQuestModal_${interaction.id}`)
                 .setTitle('新規クエストの追加');
 
             const nameInput = new TextInputBuilder()

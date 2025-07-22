@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'quest_dm_submit',
+  customId: 'quest_submit_dmModal_', // Prefix match
   async handle(interaction) {
     await interaction.deferReply({ ephemeral: true });
 

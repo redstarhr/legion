@@ -5,7 +5,7 @@ const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'quest_download_csv',
+  customId: 'quest_action_downloadCsv_', // Prefix match
   async handle (interaction) {
     await interaction.deferReply({ ephemeral: true });
 

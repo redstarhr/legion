@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_edit',
+  customId: 'quest_open_editModal_', // Prefix match
   async handle (interaction) {
     try {
       const questId = interaction.customId.split('_')[2];
@@ -23,7 +23,7 @@ module.exports = {
       }
 
       const modal = new ModalBuilder()
-        .setCustomId(`quest_edit_submit_${questId}`)
+        .setCustomId(`quest_submit_editModal_${questId}`)
         .setTitle('クエスト内容の編集');
 
       const titleInput = new TextInputBuilder()
@@ -69,7 +69,7 @@ module.exports = {
       modal.addComponents(
         new ActionRowBuilder().addComponents(titleInput),
         new ActionRowBuilder().addComponents(descriptionInput),
-        new ActionRowRowBuilder().addComponents(teamsInput),
+        new ActionRowBuilder().addComponents(teamsInput),
         new ActionRowBuilder().addComponents(peopleInput),
         new ActionRowBuilder().addComponents(deadlineInput)
       );

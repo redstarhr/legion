@@ -3,7 +3,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-    customId: 'dash_cancel_acceptance',
+    customId: 'dash_open_cancelAcceptanceSelect',
     async handle(interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });
@@ -32,7 +32,7 @@ module.exports = {
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`cancel_acceptance_select_${interaction.id}`)
+                .setCustomId(`dash_select_cancelAcceptance_${interaction.id}`)
                 .setPlaceholder('取り消す受注を選択してください')
                 .addOptions(acceptanceOptions.slice(0, 25));
 

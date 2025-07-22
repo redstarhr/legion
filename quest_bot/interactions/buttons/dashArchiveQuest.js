@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-    customId: 'dash_archive_quest',
+    customId: 'dash_open_archiveQuestSelect',
     async handle(interaction) {
         try {
             const isManager = await hasQuestManagerPermission(interaction);
@@ -28,7 +28,7 @@ module.exports = {
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`archive_quest_select_${interaction.id}`)
+                .setCustomId(`dash_select_archiveQuest_${interaction.id}`)
                 .setPlaceholder('完了（アーカイブ）するクエストを選択してください')
                 .addOptions(questOptions.slice(0, 25));
 

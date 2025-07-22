@@ -5,7 +5,7 @@ const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_close_confirm',
+  customId: 'quest_confirm_close_', // Prefix match
   async handle (interaction) {
     // 確認メッセージを更新する準備
     await interaction.deferUpdate();

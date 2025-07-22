@@ -5,7 +5,7 @@ const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_archive_confirm',
+  customId: 'quest_confirm_archive_', // Prefix match
   async handle (interaction) {
     await interaction.deferUpdate();
 

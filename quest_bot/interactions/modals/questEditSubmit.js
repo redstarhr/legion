@@ -4,7 +4,7 @@ const { updateAllQuestMessages } = require('../../utils/messageUpdater');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'quest_edit_submit',
+  customId: 'quest_submit_editModal_', // Prefix match
   async handle(interaction) {
     try {
       await interaction.deferReply({ ephemeral: true });

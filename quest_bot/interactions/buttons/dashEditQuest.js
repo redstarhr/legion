@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-    customId: 'dash_edit_quest',
+    customId: 'dash_open_editQuestSelect',
     async handle(interaction) {
         try {
             const isManager = await hasQuestManagerPermission(interaction);
@@ -28,7 +28,7 @@ module.exports = {
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`edit_quest_select_${interaction.id}`)
+                .setCustomId(`dash_select_editQuest_${interaction.id}`)
                 .setPlaceholder('修正するクエストを選択してください')
                 .addOptions(questOptions.slice(0, 25));
 

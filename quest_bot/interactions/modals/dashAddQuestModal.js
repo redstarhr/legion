@@ -4,7 +4,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-    customId: 'add_quest_modal_', // Prefix match
+    customId: 'dash_submit_addQuestModal_', // Prefix match
     async handle(interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });

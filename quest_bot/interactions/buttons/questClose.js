@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_close',
+  customId: 'quest_open_closeConfirm_', // Prefix match
   async handle (interaction) {
     const questId = interaction.customId.split('_')[2];
     const quest = await questDataManager.getQuest(interaction.guildId, questId);
@@ -24,11 +24,11 @@ module.exports = {
     const confirmationRow = new ActionRowBuilder()
       .addComponents(
         new ButtonBuilder()
-          .setCustomId(`quest_close_confirm_${questId}`)
+          .setCustomId(`quest_confirm_close_${questId}`)
           .setLabel('はい、締め切ります')
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId(`quest_close_cancel_${questId}`)
+          .setCustomId(`quest_cancel_close_${questId}`)
           .setLabel('いいえ')
           .setStyle(ButtonStyle.Secondary)
       );

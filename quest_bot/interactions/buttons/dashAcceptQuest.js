@@ -3,7 +3,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-    customId: 'dash_accept_quest',
+    customId: 'dash_open_acceptQuestSelect',
     async handle(interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });
@@ -22,7 +22,7 @@ module.exports = {
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`accept_quest_select_${interaction.id}`)
+                .setCustomId(`dash_select_acceptQuest_${interaction.id}`)
                 .setPlaceholder('受注するクエストを選択してください')
                 .addOptions(questOptions.slice(0, 25)); // Discordのセレクトメニューは25個まで
 

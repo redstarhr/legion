@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_archive',
+  customId: 'quest_open_archiveConfirm_', // Prefix match
   async handle (interaction) {
     const questId = interaction.customId.split('_')[2];
     const quest = await questDataManager.getQuest(interaction.guildId, questId);
@@ -24,11 +24,11 @@ module.exports = {
     const confirmationRow = new ActionRowBuilder()
       .addComponents(
         new ButtonBuilder()
-          .setCustomId(`quest_archive_confirm_${questId}`)
+          .setCustomId(`quest_confirm_archive_${questId}`)
           .setLabel('はい、完了します')
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId(`quest_archive_cancel_${questId}`)
+          .setCustomId(`quest_cancel_archive_${questId}`)
           .setLabel('いいえ')
           .setStyle(ButtonStyle.Secondary)
       );

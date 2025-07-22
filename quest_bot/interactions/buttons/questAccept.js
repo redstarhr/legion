@@ -3,7 +3,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = req
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-  customId: 'quest_accept',
+  customId: 'quest_open_acceptModal_', // Prefix match
   async handle (interaction) {
     try {
       const questId = interaction.customId.split('_')[2];
@@ -33,7 +33,7 @@ module.exports = {
       }
 
       const modal = new ModalBuilder()
-        .setCustomId(`quest_accept_submit_${questId}`)
+        .setCustomId(`quest_submit_acceptModal_${questId}`)
         .setTitle('クエストの受注');
 
       const teamsInput = new TextInputBuilder()

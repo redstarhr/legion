@@ -3,7 +3,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-  customId: 'quest_cancel',
+  customId: 'quest_open_cancelConfirm_', // Prefix match
   async handle (interaction) {
     try {
       const questId = interaction.customId.split('_')[2];
@@ -25,7 +25,7 @@ module.exports = {
       const confirmationRow = new ActionRowBuilder()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId(`quest_cancel_confirm_${questId}`)
+            .setCustomId(`quest_confirm_cancel_${questId}`)
             .setLabel('はい、取り消します')
             .setStyle(ButtonStyle.Danger),
           new ButtonBuilder()

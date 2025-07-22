@@ -5,7 +5,7 @@ const { updateAllQuestMessages } = require('../../utils/messageUpdater');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'quest_cancel_confirm',
+  customId: 'quest_confirm_cancel_', // Prefix match
   async handle (interaction) {
     try {
       await interaction.deferUpdate();

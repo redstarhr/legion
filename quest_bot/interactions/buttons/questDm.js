@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_dm',
+  customId: 'quest_open_dmModal_', // Prefix match
   async handle (interaction) {
     const questId = interaction.customId.split('_')[2];
     const quest = await questDataManager.getQuest(interaction.guildId, questId);
@@ -27,7 +27,7 @@ module.exports = {
     }
 
     const modal = new ModalBuilder()
-      .setCustomId(`quest_dm_submit_${questId}`)
+      .setCustomId(`quest_submit_dmModal_${questId}`)
       .setTitle('参加者への一斉連絡');
 
     const messageInput = new TextInputBuilder()

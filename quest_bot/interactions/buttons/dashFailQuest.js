@@ -3,7 +3,7 @@ const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-    customId: 'dash_fail_quest',
+    customId: 'dash_open_failQuestSelect',
     async handle(interaction) {
         try {
             await interaction.deferReply({ ephemeral: true });
@@ -32,7 +32,7 @@ module.exports = {
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`fail_quest_select_${interaction.id}`)
+                .setCustomId(`dash_select_failQuest_${interaction.id}`)
                 .setPlaceholder('失敗した受注エントリーを選択してください')
                 .addOptions(acceptanceOptions.slice(0, 25));
 

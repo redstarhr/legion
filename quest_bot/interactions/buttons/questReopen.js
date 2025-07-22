@@ -5,7 +5,7 @@ const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
-  customId: 'quest_reopen',
+  customId: 'quest_toggle_reopen_', // Prefix match
   async handle (interaction) {
     await interaction.deferUpdate();
 

@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/questCancelCancel.js
 
 module.exports = {
-  customId: 'quest_cancel_cancel',
+  customId: 'quest_cancel_cancel_', // Prefix match
   async handle (interaction) {
     try {
       // 確認メッセージを更新して操作がキャンセルされたことを通知し、ボタンを削除する

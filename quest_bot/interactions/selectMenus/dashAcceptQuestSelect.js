@@ -3,7 +3,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = req
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
-    customId: 'accept_quest_select_', // Prefix match
+    customId: 'dash_
     async handle (interaction) {
         try {
             const questId = interaction.values[0];
