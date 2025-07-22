@@ -102,7 +102,7 @@ echo "📦 npm パッケージをインストール中..."
 npm install --no-audit --no-fund
 
 echo "📡 スラッシュコマンドをDiscordに登録中..."
-node devcmdup.js
+node devcmd.js
 
 # --- 5. PM2 Restart (if not skipped) ---
 if [ "$SKIP_PM2" = false ]; then
