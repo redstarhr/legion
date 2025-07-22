@@ -2,7 +2,7 @@
 
 const { SlashCommandBuilder } = require('discord.js');
 const questDataManager = require('../utils/questDataManager');
-const { generateCompletedQuestsEmbed, generatePaginationButtons, QUESTS_PER_PAGE } = require('../utils/paginationUtils');
+const { generateCompletedQuestsView } = require('../utils/paginationUtils');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -12,26 +12,17 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
+    // Check if there are any completed quests first to avoid unnecessary view generation
     const allQuests = await questDataManager.getAllQuests(interaction.guildId);
     const completedQuests = Object.values(allQuests).filter(q => q.isArchived);
-
     if (completedQuests.length === 0) {
       return interaction.followUp({ content: '完了済みのクエストはありません。' });
     }
 
-    // 完了日時が新しい順にソート
-    completedQuests.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-    const guildId = interaction.guildId;
-    const totalPages = Math.ceil(completedQuests.length / QUESTS_PER_PAGE);
-    const questsOnFirstPage = completedQuests.slice(0, QUESTS_PER_PAGE);
-
-    const embed = generateCompletedQuestsEmbed(1, totalPages, questsOnFirstPage, guildId);
-    const buttons = generatePaginationButtons(1, totalPages, interaction.user.id);
+    const view = await generateCompletedQuestsView(interaction, 1);
 
     await interaction.followUp({
-      embeds: [embed],
-      components: [buttons],
+      ...view,
       ephemeral: true,
     });
   },

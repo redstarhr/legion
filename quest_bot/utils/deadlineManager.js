@@ -1,7 +1,6 @@
 // utils/deadlineManager.js
 
 const { EmbedBuilder } = require('discord.js');
-const { db } = require('./firestore'); // Firestoreインスタンスをインポート
 const questDataManager = require('./questDataManager');
 const { logAction } = require('./logger');
 const { updateAllQuestMessages } = require('./messageUpdater');
@@ -12,15 +11,13 @@ const { updateAllQuestMessages } = require('./messageUpdater');
  */
 async function checkAndCloseExpiredQuests(client) {
   try {
-    const guildsSnapshot = await db.collection('guilds').get();
-    if (guildsSnapshot.empty) {
+    const guildIds = await questDataManager.getAllGuildIds();
+    if (guildIds.length === 0) {
       return;
     }
 
-    for (const doc of guildsSnapshot.docs) {
-      const guildId = doc.id;
-      const guildData = doc.data();
-      const allQuests = guildData.quests || {};
+    for (const guildId of guildIds) {
+      const allQuests = await questDataManager.getAllQuests(guildId);
 
       for (const questId in allQuests) {
         const quest = allQuests[questId];
@@ -51,7 +48,14 @@ async function checkAndCloseExpiredQuests(client) {
 
               // 4. Log the action.
               const pseudoInteraction = { client, guildId, user: client.user };
-              await logAction(pseudoInteraction, 'クエスト期限切れ', `クエストID: ${questId} が期限切れのため自動クローズされました。`);
+              await logAction(pseudoInteraction, {
+                title: '⏰ クエスト期限切れ',
+                color: '#e67e22',
+                details: {
+                  'クエストタイトル': updatedQuest.title || '無題',
+                  'クエストID': questId,
+                },
+              });
             }
           } catch (e) {
             console.error(`[${guildId}] Deadline check failed for quest ${questId}:`, e);

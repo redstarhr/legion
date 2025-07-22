@@ -54,10 +54,18 @@ module.exports = {
 
       await questDataManager.updateQuest(guildId, sourceMessageId, {
         linkedMessages: updatedLinkedMessages,
-      });
+      }, interaction.user);
 
       await interaction.followUp({ content: `✅ クエスト掲示板を <#${targetChannel.id}> に連携しました。` });
-      await logAction(interaction, 'クエストを連携', `元のクエストID: ${sourceMessageId}\n連携先: <#${targetChannel.id}>`);
+      await logAction(interaction, {
+        title: '🔗 クエスト連携',
+        color: '#3498db',
+        details: {
+          '元クエストID': sourceMessageId,
+          '連携先チャンネル': `<#${targetChannel.id}>`,
+          '連携後メッセージID': linkedMessage.id,
+        },
+      });
     } catch (error) {
       console.error('連携メッセージの送信に失敗しました:', error);
       await interaction.followUp({ content: '⚠️ 連携メッセージの送信に失敗しました。Botに必要な権限（メッセージの送信・閲覧）があるか確認してください。' });

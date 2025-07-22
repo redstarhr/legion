@@ -41,21 +41,42 @@ module.exports = {
       await questDataManager.setQuestManagerRole(guildId, role?.id || null);
       const replyMessage = role ? `✅ クエスト管理者ロールを **${role.name}** に設定しました。` : '✅ クエスト管理者ロールの設定を解除しました。';
       await interaction.followUp({ content: replyMessage });
-      await logAction(interaction, '管理者ロール設定', replyMessage);
+      await logAction(interaction, {
+        title: '⚙️ 管理者ロール設定',
+        description: replyMessage,
+        color: '#95a5a6',
+        details: {
+          '設定ロール': role ? `${role.name} (${role.id})` : '解除',
+        },
+      });
 
     } else if (subcommand === 'ログ設定') {
       const channel = interaction.options.getChannel('チャンネル');
       await questDataManager.setLogChannel(guildId, channel?.id || null);
       const replyMessage = channel ? `✅ ログ出力チャンネルを <#${channel.id}> に設定しました。` : '✅ ログ出力チャンネルの設定を解除しました。';
       await interaction.followUp({ content: replyMessage });
-      await logAction(interaction, 'ログチャンネル設定', replyMessage);
+      await logAction(interaction, {
+        title: '⚙️ ログチャンネル設定',
+        description: replyMessage,
+        color: '#95a5a6',
+        details: {
+          '設定チャンネル': channel ? `<#${channel.id}>` : '解除',
+        },
+      });
 
     } else if (subcommand === '通知設定') {
       const channel = interaction.options.getChannel('チャンネル');
       await questDataManager.setNotificationChannel(guildId, channel?.id || null);
       const replyMessage = channel ? `✅ クエスト通知チャンネルを <#${channel.id}> に設定しました。` : '✅ クエスト通知チャンネルの設定を解除しました。';
       await interaction.followUp({ content: replyMessage });
-      await logAction(interaction, '通知チャンネル設定', replyMessage);
+      await logAction(interaction, {
+        title: '⚙️ 通知チャンネル設定',
+        description: replyMessage,
+        color: '#95a5a6',
+        details: {
+          '設定チャンネル': channel ? `<#${channel.id}>` : '解除',
+        },
+      });
 
     } else if (subcommand === '色設定') {
       const color = interaction.options.getString('カラーコード');
@@ -66,7 +87,14 @@ module.exports = {
       await questDataManager.setEmbedColor(guildId, color);
       const replyMessage = `✅ Embedの色を **${color}** に設定しました。`;
       await interaction.followUp({ content: replyMessage });
-      await logAction(interaction, 'Embedカラー設定', replyMessage);
+      await logAction(interaction, {
+        title: '⚙️ Embedカラー設定',
+        description: replyMessage,
+        color: '#95a5a6',
+        details: {
+          '設定カラー': color,
+        },
+      });
     }
   },
 };

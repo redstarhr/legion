@@ -36,13 +36,21 @@ module.exports = {
     // 3. データベースを更新
     const updateSuccess = await questDataManager.updateQuest(guildId, originalQuest.messageId, {
       linkedMessages: updatedLinks,
-    });
+    }, interaction.user);
 
     if (!updateSuccess) {
       return interaction.followUp({ content: '⚠️ データベースの更新に失敗しました。' });
     }
 
-    await logAction(interaction, 'クエスト連携を解除', `連携解除したクエストID: ${targetMessageId}`);
+    await logAction(interaction, {
+      title: '🗑️ クエスト連携 解除',
+      color: '#e74c3c',
+      details: {
+        '元クエストID': originalQuest.messageId,
+        '解除対象メッセージID': targetMessageId,
+        '解除対象チャンネル': `<#${linkedMessageInfo.channelId}>`,
+      },
+    });
 
     // 4. Discord上のメッセージを削除
     try {

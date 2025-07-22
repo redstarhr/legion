@@ -54,9 +54,11 @@ async function createQuestEmbed(quest) {
     embed.addFields({ name: '受注状況', value: acceptedList });
   }
 
-  // アーカイブされていないクエストに、便利なコマンドのヒントをフッターとして追加
-  if (!quest.isArchived) {
-    embed.setFooter({ text: '💡 ヒント: `/受注中クエスト一覧` で自分が参加しているクエストを確認できます。' });
+  // Add footer with last update information
+  if (quest.lastUpdatedAt && quest.lastUpdatedBy) {
+    const timestamp = Math.floor(new Date(quest.lastUpdatedAt).getTime() / 1000);
+    const footerText = `最終更新: ${quest.lastUpdatedBy.tag} | <t:${timestamp}:R>`;
+    embed.setFooter({ text: footerText });
   }
 
   return embed;

@@ -1,217 +1,244 @@
-// utils/questDataManager.js
+// quest_bot/utils/questDataManager.js
 
-const { db } = require('./firestore'); // Firestoreインスタンスをインポート
-const crypto = require('crypto'); // ユニークID生成用
+const fs = require('fs/promises');
+const path = require('path');
 
-const guildsCollection = db.collection('guilds');
+// __dirname は .../quest_bot/utils なので、2階層上がってプロジェクトルートを指定
+const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const QUESTS_FILE = 'quests.json';
+const CONFIG_FILE = 'config.json';
 
 /**
- * ギルドのデータをFirestoreから取得する。ドキュメントが存在しない場合は作成する。
+ * 指定されたギルドのデータディレクトリが存在することを確認し、なければ作成する
  * @param {string} guildId
- * @returns {Promise<object>} ギルドのデータオブジェクト
  */
-async function getGuildData(guildId) {
-  if (!guildId) throw new Error('Guild ID is required.');
-  const docRef = guildsCollection.doc(guildId);
-  const docSnap = await docRef.get();
-
-  if (docSnap.exists()) {
-    return docSnap.data();
-  } else {
-    // ドキュメントが存在しない場合、初期データで作成
-    const initialData = {
-      quests: {},
-      config: {
-        questManagerRoleId: null,
-        logChannelId: null,
-        notificationChannelId: null,
-        embedColor: '#00bfff',
-      },
-    };
-    await docRef.set(initialData);
-    return initialData;
+async function ensureGuildDir(guildId) {
+  const guildDir = path.join(DATA_DIR, guildId);
+  try {
+    await fs.mkdir(guildDir, { recursive: true });
+  } catch (error) {
+    console.error(`Error creating directory for guild ${guildId}:`, error);
+    throw error;
   }
 }
 
-// 新しいクエストを作成して保存
-async function createQuest(guildId, messageId, questData) {
-  const data = await getGuildData(guildId);
-  data.quests[messageId] = {
-    ...questData,
-    messageId: messageId,
-    guildId: guildId,
-    linkedMessages: [],
-    accepted: [],
-    isClosed: false,
-    isArchived: false,
-  };
-  await guildsCollection.doc(guildId).set(data);
-  return true;
-}
-
-// 既存のクエストを更新
-async function updateQuest(guildId, messageId, updatedFields) {
-  const data = await getGuildData(guildId);
-  if (data.quests[messageId]) {
-    data.quests[messageId] = { ...data.quests[messageId], ...updatedFields };
-    await guildsCollection.doc(guildId).set(data);
-    return true;
-  }
-  return false;
-}
-
-// 特定のクエスト情報を取得
-async function getQuest(guildId, messageId) {
-  const data = await getGuildData(guildId);
-  return data.quests[messageId] || null;
-}
-
-// クエストを受注
-async function acceptQuest(guildId, messageId, acceptanceData) {
-  const data = await getGuildData(guildId);
-  if (data.quests[messageId]) {
-    const quest = data.quests[messageId];
-
-    const currentAcceptedTeams = quest.accepted.reduce((sum, a) => sum + a.teams, 0);
-    const currentAcceptedPeople = quest.accepted.reduce((sum, a) => sum + a.people, 0);
-
-    if (currentAcceptedTeams + acceptanceData.teams > quest.teams) {
-      return { error: `受注できる組数を超えています。(残り: ${quest.teams - currentAcceptedTeams}組)` };
+/**
+ * ギルドのJSONファイルを読み込む汎用関数
+ * @param {string} guildId
+ * @param {string} fileName
+ * @param {object} defaultValue ファイルが存在しない場合のデフォルト値
+ * @returns {Promise<object>}
+ */
+async function readGuildFile(guildId, fileName, defaultValue = {}) {
+  const filePath = path.join(DATA_DIR, guildId, fileName);
+  try {
+    const data = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return defaultValue; // ファイルが存在しない場合はデフォルト値を返す
     }
-    if (currentAcceptedPeople + acceptanceData.people > quest.people) {
-      return { error: `受注できる人数を超えています。(残り: ${quest.people - currentAcceptedPeople}人)` };
-    }
-
-    const newAcceptance = {
-      id: crypto.randomUUID(),
-      ...acceptanceData,
-    };
-    quest.accepted.push(newAcceptance);
-    await guildsCollection.doc(guildId).set(data);
-    return { quest: quest };
+    console.error(`Error reading file ${filePath}:`, error);
+    throw error;
   }
-  return null;
 }
 
-// クエストの特定の受注を取り消す
-async function cancelQuestAcceptance(guildId, messageId, acceptanceId) {
-  const data = await getGuildData(guildId);
-  if (data.quests[messageId]) {
-    const quest = data.quests[messageId];
-    const initialLength = quest.accepted.length;
-    quest.accepted = quest.accepted.filter(a => a.id !== acceptanceId);
-
-    if (initialLength === quest.accepted.length) {
-      return null;
-    }
-
-    await guildsCollection.doc(guildId).set(data);
-    return { quest: quest };
+/**
+ * ギルドのJSONファイルに書き込む汎用関数
+ * @param {string} guildId
+ * @param {string} fileName
+ * @param {object} data
+ */
+async function writeGuildFile(guildId, fileName, data) {
+  await ensureGuildDir(guildId);
+  const filePath = path.join(DATA_DIR, guildId, fileName);
+  try {
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+  } catch (error) {
+    console.error(`Error writing file ${filePath}:`, error);
+    throw error;
   }
-  return null;
 }
 
-// クエストを完了（アーカイブ）状態にする
-async function archiveQuest(guildId, messageId) {
-  const data = await getGuildData(guildId);
-  if (data.quests[messageId]) {
-    data.quests[messageId].isArchived = true;
-    await guildsCollection.doc(guildId).set(data);
-    return { quest: data.quests[messageId] };
-  }
-  return null;
-}
+// --- Quest Data Functions ---
 
-// 連携先のメッセージIDから元のクエスト情報を検索する
-async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
-  const data = await getGuildData(guildId);
-  for (const questId in data.quests) {
-    const quest = data.quests[questId];
-    const foundLink = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
-    if (foundLink) {
-      return { originalQuest: quest, linkedMessageInfo: foundLink };
-    }
-  }
-  return null;
-}
-
-// ギルドのすべてのクエストを取得する
+/**
+ * ギルドのすべてのクエストを取得する
+ * @param {string} guildId
+ * @returns {Promise<object>} クエストIDをキーとするクエストオブジェクトのマップ
+ */
 async function getAllQuests(guildId) {
-  const data = await getGuildData(guildId);
-  return data.quests || {};
+  return await readGuildFile(guildId, QUESTS_FILE, {});
 }
 
-// クエスト管理者ロールIDを設定する
-async function setQuestManagerRole(guildId, roleId) {
-  const data = await getGuildData(guildId);
-  data.config.questManagerRoleId = roleId;
-  await guildsCollection.doc(guildId).set(data);
+/**
+ * 特定のクエストを取得する
+ * @param {string} guildId
+ * @param {string} questId
+ * @returns {Promise<object|null>}
+ */
+async function getQuest(guildId, questId) {
+  const quests = await getAllQuests(guildId);
+  return quests[questId] || null;
+}
+
+/**
+ * 新しいクエストを作成する
+ * @param {string} guildId
+ * @param {string} questId
+ * @param {object} questData
+ * @param {import('discord.js').User} user - The user who created the quest.
+ */
+async function createQuest(guildId, questId, questData, user) {
+  const quests = await getAllQuests(guildId);
+  quests[questId] = {
+    ...questData,
+    messageId: questId,
+    guildId: guildId,
+    linkedMessages: questData.linkedMessages || [],
+    // Add creation/update info
+    lastUpdatedAt: new Date().toISOString(),
+    lastUpdatedBy: {
+      id: user.id,
+      tag: user.tag,
+    },
+  };
+  await writeGuildFile(guildId, QUESTS_FILE, quests);
+}
+
+/**
+ * クエストを更新する
+ * @param {string} guildId
+ * @param {string} questId
+ * @param {object} updates 更新するデータ
+ * @param {import('discord.js').User} [user] - The user performing the update. Optional for system updates.
+ * @returns {Promise<boolean>} 成功したかどうか
+ */
+async function updateQuest(guildId, questId, updates, user) {
+  const quests = await getAllQuests(guildId);
+  if (!quests[questId]) {
+    console.warn(`[updateQuest] Quest not found: ${questId} in guild ${guildId}`);
+    return false;
+  }
+
+  const updatedQuest = { ...quests[questId], ...updates };
+
+  // Update timestamp and user info only if a user is provided
+  if (user) {
+    updatedQuest.lastUpdatedAt = new Date().toISOString();
+    updatedQuest.lastUpdatedBy = {
+      id: user.id,
+      tag: user.tag,
+    };
+  }
+
+  quests[questId] = updatedQuest;
+  await writeGuildFile(guildId, QUESTS_FILE, quests);
   return true;
 }
 
-// クエスト管理者ロールIDを取得する
+/**
+ * 連携メッセージIDから元のクエストを探す
+ * @param {string} guildId
+ * @param {string} linkedMessageId
+ * @returns {Promise<{originalQuest: object, linkedMessageInfo: object}|null>}
+ */
+async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
+  const allQuests = await getAllQuests(guildId);
+  for (const questId in allQuests) {
+    const quest = allQuests[questId];
+    if (quest.linkedMessages && Array.isArray(quest.linkedMessages)) {
+      const linkedInfo = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
+      if (linkedInfo) {
+        return { originalQuest: quest, linkedMessageInfo: linkedInfo };
+      }
+    }
+  }
+  return null;
+}
+
+// --- Config Data Functions ---
+
+async function getGuildConfig(guildId) {
+  return await readGuildFile(guildId, CONFIG_FILE, {});
+}
+
+async function updateGuildConfig(guildId, updates) {
+  const config = await getGuildConfig(guildId);
+  const newConfig = { ...config, ...updates };
+  await writeGuildFile(guildId, CONFIG_FILE, newConfig);
+}
+
 async function getQuestManagerRole(guildId) {
-  const data = await getGuildData(guildId);
-  return data.config?.questManagerRoleId || null;
+  const config = await getGuildConfig(guildId);
+  return config.questManagerRoleId || null;
 }
 
-// ログチャンネルIDを設定する
-async function setLogChannel(guildId, channelId) {
-  const data = await getGuildData(guildId);
-  data.config.logChannelId = channelId;
-  await guildsCollection.doc(guildId).set(data);
-  return true;
+async function setQuestManagerRole(guildId, roleId) {
+  await updateGuildConfig(guildId, { questManagerRoleId: roleId });
 }
 
-// ログチャンネルIDを取得する
 async function getLogChannel(guildId) {
-  const data = await getGuildData(guildId);
-  return data.config?.logChannelId || null;
+  const config = await getGuildConfig(guildId);
+  return config.logChannelId || null;
 }
 
-// クエスト通知チャンネルIDを設定する
-async function setNotificationChannel(guildId, channelId) {
-  const data = await getGuildData(guildId);
-  data.config.notificationChannelId = channelId;
-  await guildsCollection.doc(guildId).set(data);
-  return true;
+async function setLogChannel(guildId, channelId) {
+  await updateGuildConfig(guildId, { logChannelId: channelId });
 }
 
-// クエスト通知チャンネルIDを取得する
 async function getNotificationChannel(guildId) {
-  const data = await getGuildData(guildId);
-  return data.config?.notificationChannelId || null;
+  const config = await getGuildConfig(guildId);
+  return config.notificationChannelId || null;
 }
 
-// Embedの色を設定する
-async function setEmbedColor(guildId, color) {
-  const data = await getGuildData(guildId);
-  data.config.embedColor = color;
-  await guildsCollection.doc(guildId).set(data);
-  return true;
+async function setNotificationChannel(guildId, channelId) {
+  await updateGuildConfig(guildId, { notificationChannelId: channelId });
 }
 
-// Embedの色を取得する
 async function getEmbedColor(guildId) {
-  const data = await getGuildData(guildId);
-  return data.config?.embedColor || '#00bfff';
+  const config = await getGuildConfig(guildId);
+  return config.embedColor || '#00bfff'; // デフォルト色
+}
+
+async function setEmbedColor(guildId, color) {
+  await updateGuildConfig(guildId, { embedColor: color });
+}
+
+// --- Utility for Deadline Manager ---
+
+/**
+ * データが存在するすべてのギルドIDのリストを取得する
+ * @returns {Promise<string[]>}
+ */
+async function getAllGuildIds() {
+  try {
+    // dataディレクトリ直下のディレクトリ名をギルドIDとして取得
+    const entries = await fs.readdir(DATA_DIR, { withFileTypes: true });
+    return entries.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return []; // dataディレクトリ自体が存在しない場合は空配列
+    }
+    console.error('Error reading guild directories:', error);
+    throw error;
+  }
 }
 
 module.exports = {
+  getAllQuests,
+  getQuest,
   createQuest,
   updateQuest,
-  getQuest,
-  acceptQuest,
-  cancelQuestAcceptance,
-  archiveQuest,
   findQuestByLinkedMessageId,
-  getAllQuests,
-  setQuestManagerRole,
+  getGuildConfig,
   getQuestManagerRole,
-  setLogChannel,
+  setQuestManagerRole,
   getLogChannel,
-  setNotificationChannel,
+  setLogChannel,
   getNotificationChannel,
-  setEmbedColor,
+  setNotificationChannel,
   getEmbedColor,
+  setEmbedColor,
+  getAllGuildIds, // deadlineManagerのためにエクスポート
 };

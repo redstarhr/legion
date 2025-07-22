@@ -1,6 +1,7 @@
 // utils/paginationUtils.js
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const questDataManager = require('./questDataManager');
 
 const QUESTS_PER_PAGE = 5;
 
@@ -13,14 +14,39 @@ function generateCompletedQuestsEmbed(page, totalPages, questsOnPage, guildId) {
   if (questsOnPage.length === 0) {
     embed.setDescription('このページに表示するクエストはありません。');
   } else {
-    questsOnPage.forEach(quest => {
-      const title = quest.title || `クエスト (ID: ${quest.messageId.slice(0, 8)}...)`;
+    const questList = questsOnPage.map(quest => {
+      const title = quest.title || `無題のクエスト`;
       const questUrl = `https://discord.com/channels/${guildId}/${quest.channelId}/${quest.messageId}`;
-      const description = `元の掲示板へ`;
-      embed.addFields({ name: title, value: description });
-    });
+      const completedDate = quest.timestamp ? `<t:${Math.floor(quest.timestamp / 1000)}:f>` : '不明';
+      return `**${title}**\n> 完了日時: ${completedDate}\n> ID: \`${quest.messageId}\``;
+    }).join('\n\n');
+    embed.setDescription(questList);
   }
   return embed;
+}
+
+function generateUnarchiveSelectMenu(questsOnPage, userId) {
+  if (!questsOnPage || questsOnPage.length === 0) {
+    return null;
+  }
+
+  const options = questsOnPage.map(quest => {
+    const title = quest.title || `無題のクエスト`;
+    // Discordのラベル文字数制限(100)を考慮
+    const truncatedTitle = title.length > 80 ? `${title.substring(0, 77)}...` : title;
+    return {
+      label: truncatedTitle,
+      description: `ID: ${quest.messageId}`,
+      value: quest.messageId,
+    };
+  });
+
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId(`unarchive_select_${userId}`)
+      .setPlaceholder('完了状態から戻すクエストを選択...')
+      .addOptions(options)
+  );
 }
 
 function generatePaginationButtons(page, totalPages, userId) {
@@ -38,4 +64,39 @@ function generatePaginationButtons(page, totalPages, userId) {
   );
 }
 
-module.exports = { generateCompletedQuestsEmbed, generatePaginationButtons, QUESTS_PER_PAGE };
+/**
+ * Generates the full view (embeds and components) for the completed quests list.
+ * @param {import('discord.js').Interaction} interaction
+ * @param {number} page The page number to display.
+ * @returns {Promise<{embeds: import('discord.js').EmbedBuilder[], components: import('discord.js').ActionRowBuilder[]}>}
+ */
+async function generateCompletedQuestsView(interaction, page) {
+  const guildId = interaction.guildId;
+  const userId = interaction.user.id;
+
+  // Fetch and sort data
+  const allQuests = await questDataManager.getAllQuests(guildId);
+  const completedQuests = Object.values(allQuests)
+    .filter(q => q.isArchived)
+    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  const totalPages = Math.ceil(completedQuests.length / QUESTS_PER_PAGE) || 1;
+  const currentPage = Math.max(1, Math.min(page, totalPages)); // Ensure page is within bounds
+
+  const start = (currentPage - 1) * QUESTS_PER_PAGE;
+  const questsOnPage = completedQuests.slice(start, start + QUESTS_PER_PAGE);
+
+  // Generate components
+  const embed = generateCompletedQuestsEmbed(currentPage, totalPages, questsOnPage, guildId);
+  const components = [];
+  const selectMenu = generateUnarchiveSelectMenu(questsOnPage, userId);
+  if (selectMenu) {
+    components.push(selectMenu);
+  }
+  const paginationButtons = generatePaginationButtons(currentPage, totalPages, userId);
+  components.push(paginationButtons);
+
+  return { embeds: [embed], components };
+}
+
+module.exports = { generateCompletedQuestsEmbed, generatePaginationButtons, generateUnarchiveSelectMenu, QUESTS_PER_PAGE, generateCompletedQuestsView };
