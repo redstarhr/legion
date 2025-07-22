@@ -115,9 +115,20 @@ npm install --no-audit --no-fund
 if [ "$SKIP_PM2" = false ]; then
   echo -e "\n${YELLOW}5. Botプロセスを再起動しています...${NC}"
   if command -v pm2 > /dev/null 2>&1; then
-    echo "🔄 PM2でプロセスを再起動または起動します..."
-    # 'startOrRestart' を使用して、プロセスの状態に関わらず安全に再起動する
-    pm2 startOrRestart ecosystem.config.js --update-env
+    # PM2の "Process not found" エラーは、PM2の内部状態が破損している場合に発生することがある。
+    # startOrRestartでも失敗する場合があるため、より堅牢な再起動ロジックを実装する。
+    echo "🔄 PM2プロセス '${PM2_PROCESS_NAME}' を再起動します..."
+    if pm2 describe ${PM2_PROCESS_NAME} > /dev/null 2>&1; then
+      # プロセスがリストに存在する場合、restartを試みる
+      pm2 restart ${PM2_PROCESS_NAME} --update-env || {
+        echo -e "${YELLOW}⚠️ 'pm2 restart' に失敗しました。プロセスを削除して再作成します...${NC}"
+        pm2 delete ${PM2_PROCESS_NAME} && pm2 start ecosystem.config.js --update-env
+      }
+    else
+      # プロセスがリストに存在しない場合、startを実行する
+      echo "ℹ️ プロセス '${PM2_PROCESS_NAME}' が見つからないため、新規に起動します..."
+      pm2 start ecosystem.config.js --update-env
+    fi
     pm2 save
     echo -e "${GREEN}✅ Botが正常に再起動されました。${NC}"
   else
