@@ -53,7 +53,8 @@ async function createConfigPanel(interaction) {
   const row2 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('config_open_colorSelect').setLabel('Embed色設定').setStyle(ButtonStyle.Secondary),
     new ButtonBuilder().setCustomId('config_open_buttonOrderSelect').setLabel('ボタン順設定').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('config_open_unlinkSelect').setLabel('掲示板連携解除').setStyle(ButtonStyle.Danger)
+    new ButtonBuilder().setCustomId('config_open_unlinkSelect').setLabel('掲示板連携解除').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId('config_open_deleteDashboardPrompt').setLabel('ダッシュボード削除').setStyle(ButtonStyle.Danger)
   );
 
   return { embeds: [embed], components: [row1, row2], ephemeral: true };

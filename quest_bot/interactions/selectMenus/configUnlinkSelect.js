@@ -1,4 +1,5 @@
 // quest_bot/interactions/selectMenus/configUnlinkSelect.js
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 
@@ -53,7 +54,7 @@ module.exports = {
         await channel.messages.delete(linkedMessageId);
       } catch (error) {
         console.error('連携解除メッセージの削除に失敗:', error);
-        await interaction.followUp({ content: '⚠️ データベースからの連携解除には成功しましたが、Discord上のメッセージ削除に失敗しました。お手数ですが手動で削除してください。', ephemeral: true });
+        await interaction.followUp({ content: '⚠️ データベースからの連携解除には成功しましたが、Discord上のメッセージ削除に失敗しました。お手数ですが手動で削除してください。', flags: [MessageFlags.Ephemeral] });
       }
 
       await interaction.editReply({ content: `✅ <#${linkedMessageInfo.channelId}> の掲示板の連携を解除しました。`, components: [] });

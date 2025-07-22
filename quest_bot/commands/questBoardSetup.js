@@ -12,14 +12,15 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+      // 修正1: flagsは配列ではなく直接値を渡す
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const existingDashboard = await questDataManager.getDashboard(interaction.guildId);
       if (existingDashboard) {
-          return interaction.editReply({ content: '既にこのサーバーにはクエストダッシュボードが設置されています。' });
+          return interaction.editReply({ content: '⚠️ 既にこのサーバーにはクエストダッシュボードが設置されています。' });
       }
 
-        const message = await interaction.channel.send({ content: 'ダッシュボードを生成中...' });
+        const message = await interaction.channel.send({ content: '📡 ダッシュボードを生成中...' });
         await questDataManager.setDashboard(interaction.guildId, message.id, interaction.channelId);
 
         // 初回更新
@@ -27,11 +28,13 @@ module.exports = {
 
         await interaction.editReply({ content: '✅ クエストダッシュボードをこのチャンネルに設置しました。' });
     } catch (error) {
-        console.error('ダッシュボードの設置に失敗しました:', error);
-        if (interaction.replied || interaction.deferred) {
-            await interaction.editReply({ content: '❌ ダッシュボードの設置に失敗しました。Botに必要な権限（メッセージの送信・編集）があるか確認してください。' }).catch(console.error);
+        console.error('❌ ダッシュボードの設置に失敗しました:', error);
+        const errorMessage = '❌ ダッシュボードの設置に失敗しました。Botに必要な権限（メッセージの送信・編集）があるか確認してください。';
+
+        if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({ content: errorMessage }).catch(console.error);
         } else {
-            await interaction.reply({ content: '❌ ダッシュボードの設置に失敗しました。Botに必要な権限（メッセージの送信・編集）があるか確認してください。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+            await interaction.reply({ content: errorMessage, flags: MessageFlags.Ephemeral }).catch(console.error);
         }
     }
   },
