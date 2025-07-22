@@ -1,6 +1,7 @@
 // quest_bot/interactions/buttons/questReopen.js
 const questDataManager = require('../../utils/questDataManager');
-const { updateAllQuestMessages } = require('../../utils/messageUpdater');
+const { createQuestEmbed } = require('../../utils/embeds');
+const { createQuestActionRows } = require('../../components/questActionButtons');
 const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -29,7 +30,17 @@ module.exports = {
 
     // 2. 更新後のクエストを取得し、全てのメッセージを更新
     const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-    await updateAllQuestMessages(interaction.client, updatedQuest);
+    // 元のクエストメッセージのみ更新
+    try {
+      const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
+      const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
+      const newEmbed = await createQuestEmbed(updatedQuest);
+      const newButtons = await createQuestActionRows(updatedQuest);
+      await questMessage.edit({ embeds: [newEmbed], components: newButtons });
+    } catch (e) {
+      console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
+      // ログには残すが、ユーザーへの通知は続行
+    }
 
     // 3. アクションをログに記録
     await logAction(interaction, {

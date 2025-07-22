@@ -1,6 +1,6 @@
 // quest_bot/interactions/buttons/questSetupConfirm.js
 const { createQuestEmbed } = require('../../utils/embeds');
-const { createQuestActionRows } = require('../../utils/questActionButtons');
+const { createQuestActionRows } = require('../../components/questActionButtons');
 const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 

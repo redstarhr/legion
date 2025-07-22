@@ -3,6 +3,8 @@
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('./questDataManager');
 const { logAction } = require('./logger');
+const { createQuestEmbed } = require('./embeds');
+const { createQuestActionRows } = require('../components/questActionButtons');
 
 /**
  * Checks for and closes any quests that have passed their deadline.
@@ -34,8 +36,17 @@ async function checkAndCloseExpiredQuests(client) {
               const updatedQuest = await questDataManager.getQuest(guildId, questId);
               if (!updatedQuest) continue;
 
-              // 2. 共通関数を使って全ての関連メッセージを更新
-              await updateAllQuestMessages(client, updatedQuest);
+              // 2. 元のクエストメッセージのみ更新
+              try {
+                const questChannel = await client.channels.fetch(updatedQuest.channelId);
+                const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
+                const newEmbed = await createQuestEmbed(updatedQuest);
+                const newButtons = await createQuestActionRows(updatedQuest);
+                await questMessage.edit({ embeds: [newEmbed], components: newButtons });
+              } catch (e) {
+                console.error(`[MessageUpdate][Deadline] Failed to update original quest message ${updatedQuest.messageId}:`, e);
+                // ログには残すが、処理は続行
+              }
 
               // 3. Send a notification to the notification channel.
               const notificationChannelId = await questDataManager.getNotificationChannel(guildId);

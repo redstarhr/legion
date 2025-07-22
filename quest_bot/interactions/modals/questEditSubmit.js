@@ -1,6 +1,7 @@
 // quest_bot/interactions/modals/questEditSubmit.js
 const questDataManager = require('../../utils/questDataManager');
-const { updateAllQuestMessages } = require('../../utils/messageUpdater');
+const { createQuestEmbed } = require('../../utils/embeds');
+const { createQuestActionRows } = require('../../components/questActionButtons');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
@@ -50,7 +51,17 @@ module.exports = {
 
       // 4. Update all messages
       const updatedQuest = await questDataManager.getQuest(guildId, questId);
-      await updateAllQuestMessages(interaction.client, updatedQuest);
+      // 元のクエストメッセージのみ更新
+      try {
+        const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
+        const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
+        const newEmbed = await createQuestEmbed(updatedQuest);
+        const newButtons = await createQuestActionRows(updatedQuest);
+        await questMessage.edit({ embeds: [newEmbed], components: newButtons });
+      } catch (e) {
+        console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
+        // ログには残すが、ユーザーへの通知は続行
+      }
 
       // 5. Log action
       await logAction(interaction, {
@@ -58,7 +69,7 @@ module.exports = {
         color: '#f1c40f', // yellow
         details: {
           'クエストタイトル': updatedQuest.title || '無題',
-          'クエストID': updatedQuest.messageId, // メッセージ再投稿後の新しいIDを使用
+          'クエストID': updatedQuest.messageId,
         },
       });
 
