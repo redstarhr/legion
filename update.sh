@@ -84,12 +84,15 @@ else
     exit 1
   fi
 
-  # git stash popで失敗した場合
-  if ! git stash pop > /dev/null 2>&1; then
-      echo -e "${RED}⚠️ 退避した変更を戻す際に競合が発生しました (git stash pop)。${NC}"
-      echo "💡 競合を手動で解決する必要があります。'git status'で確認してください。"
-      echo "💡 または、'./update.sh -f' で強制同期してください。"
-      exit 1
+  # git stash popで競合が発生した場合のハンドリング
+  # `set -e` が有効なため、if文でエラーを補足して専用メッセージを表示する
+  if ! git stash pop; then
+    echo -e "${RED}⚠️ 更新を取り込みましたが、ローカルの変更を戻す際に競合が発生しました (git stash pop)。${NC}"
+    echo "ファイル 'package.json' が競合しています。"
+    echo -e "\n💡 以下のいずれかの方法で解決してください:"
+    echo "   1. (推奨) ローカルの変更を破棄して強制同期する: ${GREEN}./update.sh -f${NC}"
+    echo "   2. (上級者向け) 競合を手動で解決し、'git stash drop' を実行する。"
+    exit 1
   fi
   echo -e "${GREEN}✅ GitHub最新版への更新完了${NC}"
 fi
