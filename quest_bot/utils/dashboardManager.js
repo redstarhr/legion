@@ -1,5 +1,5 @@
 // quest_bot/utils/dashboardManager.js
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, RESTJSONErrorCodes } = require('discord.js');
 const questDataManager = require('./questDataManager');
 const { createDashboardActionRows } = require('../components/dashboardActionButtons');
 
@@ -83,6 +83,12 @@ async function updateDashboard(client, guildId) {
             components: components,
         });
     } catch (error) {
+        // メッセージが存在しないエラー(削除された場合など)を検知したら、DBからダッシュボード設定を削除する
+        if (error.code === RESTJSONErrorCodes.UnknownMessage) {
+            console.warn(`[Dashboard] ダッシュボードメッセージ (ID: ${dashboard.messageId}) が見つからなかったため、設定をリセットします。`);
+            await questDataManager.setDashboard(guildId, null, null);
+            return;
+        }
         console.error(`[Dashboard] ダッシュボードの更新に失敗しました (Guild: ${guildId}):`, error);
     }
 }

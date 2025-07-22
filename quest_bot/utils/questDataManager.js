@@ -254,7 +254,8 @@ async function getDashboard(guildId) {
 }
 
 async function setDashboard(guildId, messageId, channelId) {
-    await updateGuildConfig(guildId, { dashboard: { messageId, channelId } });
+    const dashboardData = (messageId && channelId) ? { messageId, channelId } : null;
+    await updateGuildConfig(guildId, { dashboard: dashboardData });
 }
 
 // --- Utility for Deadline Manager ---
