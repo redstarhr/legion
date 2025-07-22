@@ -15,10 +15,17 @@ function generateCompletedQuestsEmbed(page, totalPages, questsOnPage, guildId) {
     embed.setDescription('このページに表示するクエストはありません。');
   } else {
     const questList = questsOnPage.map(quest => {
-      const title = quest.title || `無題のクエスト`;
-      const questUrl = `https://discord.com/channels/${guildId}/${quest.channelId}/${quest.messageId}`;
-      const completedDate = quest.timestamp ? `<t:${Math.floor(quest.timestamp / 1000)}:f>` : '不明';
-      return `**${title}**\n> 完了日時: ${completedDate}\n> ID: \`${quest.messageId}\``;
+      const title = quest.name || `無題のクエスト`;
+      const completedDate = quest.completedAt ? `<t:${Math.floor(new Date(quest.completedAt).getTime() / 1000)}:f>` : '不明';
+
+      const failedParticipants = quest.accepted?.filter(a => a.status === 'failed');
+      let resultText = `> 完了日時: ${completedDate}\n> ID: \`${quest.id}\``;
+
+      if (failedParticipants && failedParticipants.length > 0) {
+          const failedList = failedParticipants.map(p => `>   - ${p.userTag} (${p.teams}組/${p.players}人)`).join('\n');
+          resultText += `\n> **失敗した参加者:**\n${failedList}`;
+      }
+      return `**${title}**\n${resultText}`;
     }).join('\n\n');
     embed.setDescription(questList);
   }
@@ -31,13 +38,13 @@ function generateUnarchiveSelectMenu(questsOnPage, userId) {
   }
 
   const options = questsOnPage.map(quest => {
-    const title = quest.title || `無題のクエスト`;
+    const title = quest.name || `無題のクエスト`;
     // Discordのラベル文字数制限(100)を考慮
     const truncatedTitle = title.length > 80 ? `${title.substring(0, 77)}...` : title;
     return {
       label: truncatedTitle,
-      description: `ID: ${quest.messageId}`,
-      value: quest.messageId,
+      description: `ID: ${quest.id}`,
+      value: quest.id,
     };
   });
 
@@ -78,7 +85,7 @@ async function generateCompletedQuestsView(interaction, page) {
   const allQuests = await questDataManager.getAllQuests(guildId);
   const completedQuests = Object.values(allQuests)
     .filter(q => q.isArchived)
-    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    .sort((a, b) => (new Date(b.completedAt) || 0) - (new Date(a.completedAt) || 0));
 
   const totalPages = Math.ceil(completedQuests.length / QUESTS_PER_PAGE) || 1;
   const currentPage = Math.max(1, Math.min(page, totalPages)); // Ensure page is within bounds

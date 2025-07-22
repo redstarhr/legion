@@ -1,5 +1,6 @@
 // quest_bot/utils/questDataManager.js
 
+const { nanoid } = require('nanoid');
 const fs = require('fs/promises');
 const path = require('path');
 
@@ -86,24 +87,22 @@ async function getQuest(guildId, questId) {
  * 新しいクエストを作成する
  * @param {string} guildId
  * @param {string} questId
- * @param {object} questData
+ * @param {object} questDetails - The details of the new quest (name, players, teams).
  * @param {import('discord.js').User} user - The user who created the quest.
+ * @returns {Promise<object>} The newly created quest object.
  */
-async function createQuest(guildId, questId, questData, user) {
+async function createQuest(guildId, questDetails, user) {
   const quests = await getAllQuests(guildId);
-  quests[questId] = {
-    ...questData,
-    messageId: questId,
-    guildId: guildId,
-    linkedMessages: questData.linkedMessages || [],
-    // Add creation/update info
-    lastUpdatedAt: new Date().toISOString(),
-    lastUpdatedBy: {
-      id: user.id,
-      tag: user.tag,
-    },
+  const newQuestId = `q_${nanoid(8)}`;
+  const newQuest = {
+    id: newQuestId,
+    ...questDetails, // name, players, teams
+    issuerId: user.id,
+    accepted: [],
   };
+  quests[newQuestId] = newQuest;
   await writeGuildFile(guildId, QUESTS_FILE, quests);
+  return newQuest;
 }
 
 /**
@@ -229,6 +228,22 @@ async function setButtonOrder(guildId, order) {
   await updateGuildConfig(guildId, { buttonOrder: order });
 }
 
+// --- Dashboard Config ---
+
+/**
+ * ダッシュボードの情報を取得する
+ * @param {string} guildId
+ * @returns {Promise<{messageId: string, channelId: string}|null>}
+ */
+async function getDashboard(guildId) {
+    const config = await getGuildConfig(guildId);
+    return config.dashboard || null;
+}
+
+async function setDashboard(guildId, messageId, channelId) {
+    await updateGuildConfig(guildId, { dashboard: { messageId, channelId } });
+}
+
 // --- Utility for Deadline Manager ---
 
 /**
@@ -267,4 +282,6 @@ module.exports = {
   getButtonOrder,
   setButtonOrder,
   getAllGuildIds, // deadlineManagerのためにエクスポート
+  getDashboard,
+  setDashboard,
 };

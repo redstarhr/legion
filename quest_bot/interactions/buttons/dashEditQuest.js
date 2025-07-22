@@ -1,0 +1,46 @@
+// quest_bot/interactions/buttons/dashEditQuest.js
+const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const questDataManager = require('../../utils/questDataManager');
+const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+
+module.exports = {
+    customId: 'dash_edit_quest',
+    async handle(interaction) {
+        try {
+            const isManager = await hasQuestManagerPermission(interaction);
+            if (!isManager) {
+                return interaction.reply({ content: 'クエストの修正は、管理者またはクエスト管理者ロールを持つユーザーのみが行えます。', ephemeral: true });
+            }
+
+            await interaction.deferReply({ ephemeral: true });
+
+            const allQuests = await questDataManager.getAllQuests(interaction.guildId);
+            const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
+
+            if (activeQuests.length === 0) {
+                return interaction.followUp({ content: '現在、修正可能なクエストはありません。' });
+            }
+
+            const questOptions = activeQuests.map(quest => ({
+                label: quest.name,
+                description: `ID: ${quest.id}`,
+                value: quest.id,
+            }));
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId(`edit_quest_select_${interaction.id}`)
+                .setPlaceholder('修正するクエストを選択してください')
+                .addOptions(questOptions.slice(0, 25));
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+
+            await interaction.followUp({
+                content: 'どのクエストを修正しますか？',
+                components: [row],
+            });
+        } catch (error) {
+            console.error('クエスト修正UIの表示中にエラーが発生しました:', error);
+            await interaction.followUp({ content: '❌ エラーが発生したため、UIを表示できませんでした。' });
+        }
+    },
+};

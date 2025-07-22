@@ -30,7 +30,6 @@ module.exports = {
         DISCORD_TOKEN: process.env.DISCORD_TOKEN,
         CLIENT_ID: process.env.CLIENT_ID,
         GUILD_ID: process.env.GUILD_ID,
-        // 本番環境ではウォッチモードを無効化
         watch: false,
       },
 
@@ -38,7 +37,6 @@ module.exports = {
       env_development: {
         NODE_ENV: 'development',
         GUILD_ID: process.env.GUILD_ID,
-        // 開発中はファイル変更を監視して自動再起動
         watch: true,
         watch_options: {
           ignore_watch: ['node_modules', 'data', 'logs', '*.bak', '*.md'],

@@ -70,9 +70,7 @@ echo "✅ すべてのシェルスクリプトに実行権限を付与しまし�
 
 echo -e "\n${YELLOW}*** 重要: .env と data フォルダを設定してください ***${NC}"
 echo "1. Botのトークン等を '.env' ファイルに設定する必要があります。"
-echo "   エディタでファイルを開いて編集してください: ${GREEN}nano .env${NC}"
-echo "2. Google CloudのJSONキーを 'data/legion-gclkey.json' として配置してください。"
-read -p "設定が完了したら、Enterキーを押して続行してください..."
+echo "   エディタでファイルを開き、必要な情報を入力してください: ${GREEN}nano .env${NC}" read -p ".envファイルの設定が完了したら、Enterキーを押して続行してください..."
 
 # --- 3. Dependencies & Deployment ---
 echo -e "\n${YELLOW}3. 依存関係のインストールとデプロイ...${NC}"
@@ -81,10 +79,10 @@ npm install --no-audit --no-fund
 
 echo "📡 スラッシュコマンドをDiscordに登録しています..."
 # deploy-commands.js が存在することを前提とします
-if [ -f "devcmdup.js" ]; then
-    node devcmdup.js
+if [ -f "devcmd.js" ]; then
+    node devcmd.js
 else
-    echo -e "${YELLOW}⚠️ 'devcmdup.js' が見つかりません。コマンドの登録をスキップします。${NC}"
+    echo -e "${YELLOW}⚠️ 'devcmd.js' が見つかりません。コマンドの登録をスキップします。${NC}"
 fi
 
 # --- 4. PM2 Setup ---
