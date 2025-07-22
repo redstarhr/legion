@@ -3,7 +3,6 @@
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('./questDataManager');
 const { logAction } = require('./logger');
-const { updateAllQuestMessages } = require('./messageUpdater');
 
 /**
  * Checks for and closes any quests that have passed their deadline.
