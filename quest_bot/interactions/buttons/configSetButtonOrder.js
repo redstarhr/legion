@@ -9,12 +9,12 @@ const buttonOptions = [
 ];
 
 module.exports = {
-  customId: 'config_set_button_order',
+  customId: 'config_open_buttonOrderSelect',
   async handle(interaction) {
     try {
       // 状態管理とユーザー識別のため、ユニークなIDを生成
       // 形式: config_button_order_select_ステップ番号_インタラクションID
-      const uniqueId = `config_button_order_select_1_${interaction.id}`;
+      const uniqueId = `config_select_buttonOrder_1_${interaction.id}`;
 
       const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(uniqueId)

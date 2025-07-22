@@ -2,19 +2,19 @@
 const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
-  customId: 'config_set_log_channel',
+  customId: 'config_open_logChannelSelect',
   async handle(interaction) {
     try {
       // 他のユーザーの操作と競合しないように、インタラクションIDを含んだユニークなIDを生成
-      const uniqueId = `config_log_channel_${interaction.id}`;
+      const uniqueId = `config_select_logChannel_${interaction.id}`;
 
       const selectMenu = new ChannelSelectMenuBuilder()
-        .setCustomId(`${uniqueId}_select`)
+        .setCustomId(uniqueId)
         .setPlaceholder('操作ログを出力するチャンネルを選択してください')
         .addChannelTypes(ChannelType.GuildText); // テキストチャンネルのみに限定
 
       const removeButton = new ButtonBuilder()
-        .setCustomId(`${uniqueId}_remove`)
+        .setCustomId(`config_action_removeLogChannel_${uniqueId}`)
         .setLabel('設定を解除')
         .setStyle(ButtonStyle.Danger);
 

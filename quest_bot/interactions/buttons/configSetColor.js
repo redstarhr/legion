@@ -16,13 +16,13 @@ const colorOptions = [
 ];
 
 module.exports = {
-  customId: 'config_set_color',
+  customId: 'config_open_colorSelect',
   async handle(interaction) {
     try {
-      const uniqueId = `config_color_${interaction.id}`;
+      const uniqueId = `config_select_color_${interaction.id}`;
 
       const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`${uniqueId}_select`)
+        .setCustomId(uniqueId)
         .setPlaceholder('クエスト掲示板のEmbedの色を選択してください')
         .addOptions(colorOptions);
 

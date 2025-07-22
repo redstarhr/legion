@@ -2,14 +2,13 @@
 const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
-  customId: 'config_set_notification_channel',
+  customId: 'config_open_notificationChannelSelect',
   async handle(interaction) {
     try {
       // 他のユーザーの操作と競合しないように、インタラクションIDを含んだユニークなIDを生成
-      const uniqueId = `config_notification_channel_${interaction.id}`;
+      const uniqueId = `config_select_notificationChannel_${interaction.id}`;
 
       const selectMenu = new ChannelSelectMenuBuilder()
-        .setCustomId(`${uniqueId}_select`)
         .setPlaceholder('受注/取消通知を送るチャンネルを選択してください')
         .addChannelTypes(ChannelType.GuildText); // テキストチャンネルのみに限定
 

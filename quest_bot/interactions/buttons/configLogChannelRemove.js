@@ -3,7 +3,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
-  customId: 'config_log_channel_', // Prefix match
+  customId: 'config_action_removeLogChannel_', // Prefix match
   async handle(interaction) {
     try {
       // このハンドラは解除ボタン専用

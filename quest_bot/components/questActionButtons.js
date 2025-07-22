@@ -15,22 +15,22 @@ async function createQuestActionRows(quest) {
   // Define all possible main action buttons
   const allButtons = {
     accept: new ButtonBuilder()
-      .setCustomId(`quest_accept_${quest.messageId}`)
+      .setCustomId(`quest_open_acceptModal_${quest.messageId}`)
       .setLabel('受注する')
       .setStyle(ButtonStyle.Success)
       .setDisabled(isClosed),
     cancel: new ButtonBuilder()
-      .setCustomId(`quest_cancel_${quest.messageId}`)
+      .setCustomId(`quest_open_cancelConfirm_${quest.messageId}`)
       .setLabel('受注取消')
       .setStyle(ButtonStyle.Danger)
       .setDisabled(isClosed),
     edit: new ButtonBuilder()
-      .setCustomId(`quest_edit_${quest.messageId}`)
+      .setCustomId(`quest_open_editModal_${quest.messageId}`)
       .setLabel('編集')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(isClosed),
     dm: new ButtonBuilder()
-      .setCustomId(`quest_dm_${quest.messageId}`)
+      .setCustomId(`quest_open_dmModal_${quest.messageId}`)
       .setLabel('参加者に連絡')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(isClosed || !quest.accepted || quest.accepted.length === 0),
@@ -62,11 +62,11 @@ async function createQuestActionRows(quest) {
     // 〆切済みの場合は、「募集再開」と「クエスト完了」ボタンを表示
     stateManagementRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`quest_reopen_${quest.messageId}`)
+        .setCustomId(`quest_toggle_reopen_${quest.messageId}`)
         .setLabel('募集再開')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`quest_archive_${quest.messageId}`)
+        .setCustomId(`quest_open_archiveConfirm_${quest.messageId}`)
         .setLabel('クエスト完了')
         .setStyle(ButtonStyle.Secondary)
     );
@@ -74,7 +74,7 @@ async function createQuestActionRows(quest) {
     // 募集中の場合は、「募集〆切」ボタンを表示
     stateManagementRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`quest_close_${quest.messageId}`)
+        .setCustomId(`quest_open_closeConfirm_${quest.messageId}`)
         .setLabel('募集〆切')
         .setStyle(ButtonStyle.Secondary)
     );
@@ -84,7 +84,7 @@ async function createQuestActionRows(quest) {
   if (!quest.isArchived) {
     stateManagementRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`quest_download_csv_${quest.messageId}`)
+        .setCustomId(`quest_action_downloadCsv_${quest.messageId}`)
         .setLabel('参加者リストDL')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!quest.accepted || quest.accepted.length === 0)

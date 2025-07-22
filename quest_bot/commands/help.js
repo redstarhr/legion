@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js'
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('help')
+    .setName('legion-help')
     .setDescription('利用可能なすべてのコマンドの一覧を表示します。'),
 
   async execute(interaction) {
@@ -16,7 +16,7 @@ module.exports = {
     embed.addFields(
       { name: '`/クエスト掲示板設置`', value: 'このチャンネルに新しいクエスト掲示板を設置します。' },
       { name: '`/完了クエスト一覧`', value: '完了（アーカイブ）済みのクエストを一覧表示します。' },
-      { name: '`/help`', value: 'このヘルプメッセージを表示します。' }
+      { name: '`/legion-help`', value: 'このヘルプメッセージを表示します。' }
     );
 
     embed.addFields({
