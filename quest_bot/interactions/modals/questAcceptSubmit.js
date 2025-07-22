@@ -1,5 +1,5 @@
 // quest_bot/interactions/modals/questAcceptSubmit.js
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { createQuestEmbed } = require('../../utils/embeds');
 const { createQuestActionRows } = require('../../components/questActionButtons');
@@ -9,7 +9,7 @@ module.exports = {
   customId: 'quest_submit_acceptModal_', // Prefix match
   async handle(interaction) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
       const questId = interaction.customId.split('_')[3];
       const guildId = interaction.guildId;
@@ -24,19 +24,19 @@ module.exports = {
       const peopleNum = parseInt(peopleStr, 10);
 
       if (isNaN(teamsNum) || isNaN(peopleNum) || teamsNum <= 0 || peopleNum <= 0) {
-        return interaction.followUp({ content: '⚠️ 組数と人数には1以上の半角数字を入力してください。', ephemeral: true });
+        return interaction.editReply({ content: '⚠️ 組数と人数には1以上の半角数字を入力してください。' });
       }
 
       // 3. Re-fetch quest data to prevent race conditions
       const quest = await questDataManager.getQuest(guildId, questId);
       if (!quest || quest.isClosed || quest.isArchived) {
-        return interaction.followUp({ content: '⚠️ このクエストは現在募集を締め切っているか、見つかりませんでした。', ephemeral: true });
+        return interaction.editReply({ content: '⚠️ このクエストは現在募集を締め切っているか、見つかりませんでした。' });
       }
 
       // レースコンディション対策で、ここでも重複受注をチェック
       const hasAlreadyAccepted = quest.accepted?.some(a => a.userId === interaction.user.id);
       if (hasAlreadyAccepted) {
-          return interaction.followUp({ content: '⚠️ あなたは既にこのクエストを受注済みです。', ephemeral: true });
+          return interaction.editReply({ content: '⚠️ あなたは既にこのクエストを受注済みです。' });
       }
 
       // 4. Check for available slots
@@ -46,7 +46,7 @@ module.exports = {
       const remainingPeople = quest.people - currentAcceptedPeople;
 
       if (teamsNum > remainingTeams || peopleNum > remainingPeople) {
-        return interaction.followUp({ content: `⚠️ 募集枠を超えています。残り: ${remainingTeams}組 / ${remainingPeople}人`, ephemeral: true });
+        return interaction.editReply({ content: `⚠️ 募集枠を超えています。残り: ${remainingTeams}組 / ${remainingPeople}人` });
       }
 
       // 5. Prepare update data
@@ -75,7 +75,7 @@ module.exports = {
       // 6. Update quest data
       const success = await questDataManager.updateQuest(guildId, questId, updates, interaction.user);
       if (!success) {
-        return interaction.followUp({ content: '⚠️ クエストデータの更新に失敗しました。', ephemeral: true });
+        return interaction.editReply({ content: '⚠️ クエストデータの更新に失敗しました。' });
       }
 
       // 7. Update all messages
@@ -120,10 +120,14 @@ module.exports = {
       // 10. Final reply to user
       let replyMessage = '✅ クエストを受注しました！';
       if (isNowFull) { replyMessage += '\nℹ️ この受注により、募集が定員に達したため自動的に締め切られました。'; }
-      await interaction.followUp({ content: replyMessage, ephemeral: true });
+      await interaction.editReply({ content: replyMessage });
     } catch (error) {
       console.error('クエスト受注の処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストを受注できませんでした。', ephemeral: true }).catch(console.error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply({ content: 'エラーが発生したため、クエストを受注できませんでした。' }).catch(console.error);
+      } else {
+        await interaction.reply({ content: 'エラーが発生したため、クエストを受注できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+      }
     }
   },
 };

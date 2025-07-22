@@ -1,12 +1,12 @@
 // quest_bot/interactions/buttons/configUnlink.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
   customId: 'config_open_unlinkSelect',
   async handle(interaction) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
       const allQuests = await questDataManager.getAllQuests(interaction.guildId);
       const linkedQuestsOptions = [];
@@ -37,21 +37,22 @@ module.exports = {
       }
 
       if (linkedQuestsOptions.length === 0) {
-        return interaction.followUp({ content: '現在、連携されているクエストはありません。' });
+        return interaction.editReply({ content: '現在、連携されているクエストはありません。' });
       }
 
       const uniqueId = `config_select_unlink_${interaction.id}`;
       const selectMenu = new StringSelectMenuBuilder().setCustomId(uniqueId).setPlaceholder('連携を解除するクエストを選択してください').addOptions(linkedQuestsOptions.slice(0, 25)); // セレクトメニューのオプション上限(25)を考慮
       const row = new ActionRowBuilder().addComponents(selectMenu);
 
-      await interaction.followUp({
+      await interaction.editReply({
         content: '連携を解除したいクエスト掲示板を選択してください。選択すると、連携先のメッセージが削除され、連携が解除されます。',
         components: [row],
-        ephemeral: true,
       });
     } catch (error) {
       console.error('連携解除UIの表示中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、UIを表示できませんでした。' });
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply({ content: 'エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
+      }
     }
   },
 };

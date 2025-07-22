@@ -1,18 +1,18 @@
 // quest_bot/interactions/buttons/dashAcceptQuest.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
     customId: 'dash_open_acceptQuestSelect',
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const allQuests = await questDataManager.getAllQuests(interaction.guildId);
             const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
 
             if (activeQuests.length === 0) {
-                return interaction.followUp({ content: '現在、受注可能なクエストはありません。' });
+                return interaction.editReply({ content: '現在、受注可能なクエストはありません。' });
             }
 
             const questOptions = activeQuests.map(quest => ({
@@ -28,13 +28,15 @@ module.exports = {
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            await interaction.followUp({
+            await interaction.editReply({
                 content: 'どのクエストを受注しますか？',
                 components: [row],
             });
         } catch (error) {
             console.error('クエスト受注UIの表示中にエラーが発生しました:', error);
-            await interaction.followUp({ content: '❌ エラーが発生したため、UIを表示できませんでした。' });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
+            }
         }
     },
 };

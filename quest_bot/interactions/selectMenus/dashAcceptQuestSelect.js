@@ -1,5 +1,5 @@
 // quest_bot/interactions/selectMenus/dashAcceptQuestSelect.js
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
@@ -10,13 +10,13 @@ module.exports = {
             const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
             if (!quest) {
-                return interaction.reply({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', ephemeral: true });
+                return interaction.update({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', components: [] });
             }
 
             // ユーザーが既にこのクエストを受注しているか確認
             const hasAccepted = quest.accepted.some(a => a.userId === interaction.user.id);
             if (hasAccepted) {
-                return interaction.reply({ content: `⚠️ あなたは既にクエスト「${quest.name}」を受注済みです。変更する場合は、一度討伐/失敗報告をしてから再度受注してください。`, ephemeral: true });
+                return interaction.update({ content: `⚠️ あなたは既にクエスト「${quest.name}」を受注済みです。変更する場合は、一度討伐/失敗報告をしてから再度受注してください。`, components: [] });
             }
 
             const acceptedPlayers = quest.accepted.reduce((sum, p) => sum + p.players, 0);
@@ -24,33 +24,31 @@ module.exports = {
             const remainingPlayers = quest.players - acceptedPlayers;
             const remainingTeams = quest.teams - acceptedTeams;
 
-            const modal = new ModalBuilder()
-                .setCustomId(`dash_submit_acceptQuestModal_${questId}_${interaction.id}`)
-                .setTitle(`クエスト受注: ${quest.name}`);
-
-            const teamsInput = new TextInputBuilder()
-                .setCustomId('accept_teams')
-                .setLabel(`受注する組数 (残り: ${remainingTeams}組)`)
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true);
-
-            const playersInput = new TextInputBuilder()
-                .setCustomId('accept_players')
-                .setLabel(`受注する人数 (残り: ${remainingPlayers}人)`)
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true);
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(teamsInput),
-                new ActionRowBuilder().addComponents(playersInput)
-            );
-
-            await interaction.showModal(modal);
-        } catch (error) {
-            console.error('クエスト受注モーダルの表示中にエラーが発生しました:', error);
-            if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true });
+            if (remainingTeams <= 0 || remainingPlayers <= 0) {
+                 return interaction.update({ content: '⚠️ このクエストは既に定員に達しています。', components: [] });
             }
+
+            // 募集中の組数（最大25個）の選択肢を生成
+            const teamOptionsCount = Math.min(remainingTeams, 24) + 1; // 0を含むため+1
+            const teamOptions = Array.from({ length: teamOptionsCount }, (_, i) => ({
+                label: `${i}組`,
+                value: `${i}`,
+            }));
+
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId(`dash_select_acceptTeams_${questId}_${interaction.id}`)
+                .setPlaceholder('受注する組数を選択してください')
+                .addOptions(teamOptions);
+
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+
+            await interaction.update({
+                content: `**クエスト「${quest.name}」を受注します。**\n1. 受注する**組数**を選択してください。`,
+                components: [row],
+            });
+        } catch (error) {
+            console.error('クエスト受注UI(1/2)の表示中にエラーが発生しました:', error);
+            await interaction.update({ content: 'エラーが発生したため、受注プロセスを開始できませんでした。', components: [] }).catch(console.error);
         }
     },
 };

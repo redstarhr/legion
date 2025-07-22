@@ -1,12 +1,12 @@
 // quest_bot/interactions/buttons/dashCompleteQuest.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
     customId: 'dash_open_completeQuestSelect',
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const allQuests = await questDataManager.getAllQuests(interaction.guildId);
             const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
@@ -22,7 +22,7 @@ module.exports = {
             );
 
             if (allAccepted.length === 0) {
-                return interaction.followUp({ content: '現在、受注されているクエストはありません。' });
+                return interaction.editReply({ content: '現在、受注されているクエストはありません。' });
             }
 
             const acceptanceOptions = allAccepted.map(acc => ({
@@ -38,13 +38,17 @@ module.exports = {
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            await interaction.followUp({
+            await interaction.editReply({
                 content: '誰のクエスト討伐を報告しますか？',
                 components: [row],
             });
         } catch (error) {
             console.error('討伐報告UIの表示中にエラーが発生しました:', error);
-            await interaction.followUp({ content: '❌ エラーが発生したため、UIを表示できませんでした。' });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
+            } else {
+                await interaction.reply({ content: '❌ エラーが発生したため、UIを表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+            }
         }
     },
 };

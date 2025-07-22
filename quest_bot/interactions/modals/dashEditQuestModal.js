@@ -1,4 +1,5 @@
 // quest_bot/interactions/modals/dashEditQuestModal.js
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
@@ -7,7 +8,7 @@ module.exports = {
     customId: 'dash_submit_editQuestModal_', // Prefix match
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const [,,, questId] = interaction.customId.split('_');
 
@@ -19,7 +20,7 @@ module.exports = {
             const teams = parseInt(teamsStr, 10);
 
             if (isNaN(players) || isNaN(teams) || players < 0 || teams < 0) {
-                return interaction.followUp({ content: '⚠️ 人数と組数には0以上の半角数字を入力してください。' });
+                return interaction.editReply({ content: '⚠️ 人数と組数には0以上の半角数字を入力してください。' });
             }
 
             const updates = { name, players, teams };
@@ -39,11 +40,15 @@ module.exports = {
             // ダッシュボードを更新
             await updateDashboard(interaction.client, interaction.guildId);
 
-            await interaction.followUp({ content: `✅ クエスト「${name}」を修正しました。` });
+            await interaction.editReply({ content: `✅ クエスト「${name}」を修正しました。` });
 
         } catch (error) {
             console.error('クエスト修正処理中にエラーが発生しました:', error);
-            await interaction.followUp({ content: '❌ エラーが発生したため、クエストを修正できませんでした。' });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({ content: '❌ エラーが発生したため、クエストを修正できませんでした。' }).catch(console.error);
+            } else {
+                await interaction.reply({ content: '❌ エラーが発生したため、クエストを修正できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+            }
         }
     },
 };

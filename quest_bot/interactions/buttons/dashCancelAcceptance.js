@@ -1,12 +1,12 @@
 // quest_bot/interactions/buttons/dashCancelAcceptance.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
     customId: 'dash_open_cancelAcceptanceSelect',
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const allQuests = await questDataManager.getAllQuests(interaction.guildId);
             const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
@@ -22,7 +22,7 @@ module.exports = {
             );
 
             if (myAcceptances.length === 0) {
-                return interaction.followUp({ content: '現在、あなたが受注しているクエストはありません。' });
+                return interaction.editReply({ content: '現在、あなたが受注しているクエストはありません。' });
             }
 
             const acceptanceOptions = myAcceptances.map(acc => ({
@@ -38,13 +38,15 @@ module.exports = {
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            await interaction.followUp({
+            await interaction.editReply({
                 content: 'どのクエストの受注を取り消しますか？',
                 components: [row],
             });
         } catch (error) {
             console.error('受注取消UIの表示中にエラーが発生しました:', error);
-            await interaction.followUp({ content: '❌ エラーが発生したため、UIを表示できませんでした。' });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
+            }
         }
     },
 };

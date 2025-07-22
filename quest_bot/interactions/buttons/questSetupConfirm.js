@@ -59,7 +59,7 @@ module.exports = {
       await Promise.all(editPromises);
 
       // --- 4. データベースに保存 ---
-      await questDataManager.createQuest(interaction.guildId, questData.messageId, questData, interaction.user);
+      await questDataManager.createQuest(interaction.guildId, questData, interaction.user, questData.messageId);
 
       // --- 5. ログ記録と完了通知 ---
       await logAction(interaction, {

@@ -1,4 +1,5 @@
 // quest_bot/interactions/selectMenus/unarchiveSelect.js
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
@@ -7,57 +8,62 @@ const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
 module.exports = {
   customId: 'list_select_unarchive_', // Prefix match
   async handle(interaction) {
-    const userId = interaction.customId.split('_')[3];
-    if (interaction.user.id !== userId) {
-      return interaction.reply({ content: 'あなたはこのメニューを操作できません。', ephemeral: true });
+    try {
+      const userId = interaction.customId.split('_')[3];
+      if (interaction.user.id !== userId) {
+        return interaction.reply({ content: 'あなたはこのメニューを操作できません。', flags: [MessageFlags.Ephemeral] });
+      }
+
+      await interaction.deferUpdate();
+
+      const questIdToUnarchive = interaction.values[0];
+      const guildId = interaction.guildId;
+
+      // 1. Update quest status (unarchive, reopen for recruitment)
+      const success = await questDataManager.updateQuest(guildId, questIdToUnarchive, {
+        isArchived: false,
+        completedAt: null, // Clear the completion timestamp
+      }, interaction.user);
+
+      if (!success) {
+        return interaction.followUp({ content: '⚠️ クエストの状態を戻すのに失敗しました。', flags: [MessageFlags.Ephemeral] });
+      }
+
+      // 2. ダッシュボードを更新
+      await updateDashboard(interaction.client, guildId);
+
+      // 3. Log the action
+      const unarchivedQuest = await questDataManager.getQuest(guildId, questIdToUnarchive);
+      await logAction(interaction, {
+        title: '↩️ クエスト完了状態の取消',
+        color: '#3498db', // blue
+        details: {
+          'クエスト名': unarchivedQuest.name || '無題',
+          'クエストID': questIdToUnarchive,
+        },
+      });
+
+      // 4. Refresh the completed quests list view
+      const footerText = interaction.message.embeds[0].footer.text;
+      let currentPage = parseInt(footerText.match(/ページ (\d+) \/ \d+/)[1], 10);
+
+      // The list has changed, so we need to generate the view again.
+      // The page number might be out of bounds if it was the last item on the page,
+      // but generateCompletedQuestsView handles this.
+      const newView = await generateCompletedQuestsView(interaction, currentPage);
+
+      await interaction.editReply({
+        ...newView,
+      });
+
+      // 5. Notify the user of completion
+      await interaction.followUp({
+        content: `✅ クエスト「${unarchivedQuest.name || '無題'}」をアクティブな状態に戻しました。`,
+        flags: [MessageFlags.Ephemeral],
+      });
+    } catch (error) {
+      console.error('クエストの完了状態取消処理中にエラーが発生しました:', error);
+      await interaction.followUp({ content: 'エラーが発生したため、クエストの状態を戻せませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
     }
-
-    await interaction.deferUpdate();
-
-    const questIdToUnarchive = interaction.values[0];
-    const guildId = interaction.guildId;
-
-    // 1. Update quest status (unarchive, reopen for recruitment)
-    const success = await questDataManager.updateQuest(guildId, questIdToUnarchive, {
-      isArchived: false,
-      completedAt: null, // Clear the completion timestamp
-    }, interaction.user);
-
-    if (!success) {
-      return interaction.followUp({ content: '⚠️ クエストの状態を戻すのに失敗しました。', ephemeral: true });
-    }
-
-    // 2. ダッシュボードを更新
-    await updateDashboard(interaction.client, guildId);
-
-    // 3. Log the action
-    const unarchivedQuest = await questDataManager.getQuest(guildId, questIdToUnarchive);
-    await logAction(interaction, {
-      title: '↩️ クエスト完了状態の取消',
-      color: '#3498db', // blue
-      details: {
-        'クエスト名': unarchivedQuest.name || '無題',
-        'クエストID': questIdToUnarchive,
-      },
-    });
-
-    // 4. Refresh the completed quests list view
-    const footerText = interaction.message.embeds[0].footer.text;
-    let currentPage = parseInt(footerText.match(/ページ (\d+) \/ \d+/)[1], 10);
-
-    // The list has changed, so we need to generate the view again.
-    // The page number might be out of bounds if it was the last item on the page,
-    // but generateCompletedQuestsView handles this.
-    const newView = await generateCompletedQuestsView(interaction, currentPage);
-
-    await interaction.editReply({
-      ...newView,
-    });
-
-    // 5. Notify the user of completion
-    await interaction.followUp({
-      content: `✅ クエスト「${unarchivedQuest.name || '無題'}」をアクティブな状態に戻しました。`,
-      ephemeral: true,
-    });
   },
 };

@@ -1,4 +1,5 @@
 // quest_bot/interactions/modals/questEditSubmit.js
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { createQuestEmbed } = require('../../utils/embeds');
 const { createQuestActionRows } = require('../../components/questActionButtons');
@@ -8,7 +9,7 @@ module.exports = {
   customId: 'quest_submit_editModal_', // Prefix match
   async handle(interaction) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
       const questId = interaction.customId.split('_')[3];
       const guildId = interaction.guildId;
@@ -25,13 +26,13 @@ module.exports = {
       const people = parseInt(peopleStr, 10);
 
       if (isNaN(teams) || isNaN(people) || teams < 0 || people < 0) {
-        return interaction.followUp({ content: '⚠️ 組数と人数には0以上の半角数字を入力してください。', ephemeral: true });
+        return interaction.editReply({ content: '⚠️ 組数と人数には0以上の半角数字を入力してください。' });
       }
 
       if (deadline) {
         const deadlineRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
         if (!deadlineRegex.test(deadline)) {
-          return interaction.followUp({ content: '⚠️ 期限の形式が正しくありません。「YYYY-MM-DD HH:MM」の形式で入力してください。(例: 2024-12-31 23:59)', ephemeral: true });
+          return interaction.editReply({ content: '⚠️ 期限の形式が正しくありません。「YYYY-MM-DD HH:MM」の形式で入力してください。(例: 2024-12-31 23:59)' });
         }
       }
 
@@ -46,7 +47,7 @@ module.exports = {
 
       const success = await questDataManager.updateQuest(guildId, questId, updates, interaction.user);
       if (!success) {
-        return interaction.followUp({ content: '⚠️ クエストデータの更新に失敗しました。', ephemeral: true });
+        return interaction.editReply({ content: '⚠️ クエストデータの更新に失敗しました。' });
       }
 
       // 4. Update all messages
@@ -73,10 +74,14 @@ module.exports = {
         },
       });
 
-      await interaction.followUp({ content: '✅ クエストの内容を更新しました。', ephemeral: true });
+      await interaction.editReply({ content: '✅ クエストの内容を更新しました。' });
     } catch (error) {
       console.error('クエスト編集の処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストを編集できませんでした。', ephemeral: true }).catch(console.error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply({ content: 'エラーが発生したため、クエストを編集できませんでした。' }).catch(console.error);
+      } else {
+        await interaction.reply({ content: 'エラーが発生したため、クエストを編集できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+      }
     }
   },
 };

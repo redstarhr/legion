@@ -1,4 +1,5 @@
 // quest_bot/interactions/selectMenus/dashCancelAcceptanceSelect.js
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
@@ -7,19 +8,19 @@ module.exports = {
     customId: 'dash_select_cancelAcceptance_', // Prefix match
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const questId = interaction.values[0];
             const userId = interaction.user.id;
 
             const quest = await questDataManager.getQuest(interaction.guildId, questId);
             if (!quest) {
-                return interaction.followUp({ content: '⚠️ 対象のクエストが見つかりませんでした。' });
+                return interaction.editReply({ content: '⚠️ 対象のクエストが見つかりませんでした。' });
             }
 
             const acceptance = quest.accepted.find(a => a.userId === userId);
             if (!acceptance) {
-                return interaction.followUp({ content: '⚠️ 対象の受注情報が見つかりませんでした。既に取り消し済みの可能性があります。' });
+                return interaction.editReply({ content: '⚠️ 対象の受注情報が見つかりませんでした。既に取り消し済みの可能性があります。' });
             }
 
             // 受注リストから対象のユーザーを削除
@@ -40,11 +41,15 @@ module.exports = {
             // ダッシュボードを更新
             await updateDashboard(interaction.client, interaction.guildId);
 
-            await interaction.followUp({ content: `✅ クエスト「${quest.name}」の受注を取り消しました。` });
+            await interaction.editReply({ content: `✅ クエスト「${quest.name}」の受注を取り消しました。` });
 
         } catch (error) {
             console.error('受注取消処理中にエラーが発生しました:', error);
-            await interaction.followUp({ content: '❌ エラーが発生したため、受注を取り消しできませんでした。' });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({ content: '❌ エラーが発生したため、受注を取り消しできませんでした。' }).catch(console.error);
+            } else {
+                await interaction.reply({ content: '❌ エラーが発生したため、受注を取り消しできませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+            }
         }
     },
 };

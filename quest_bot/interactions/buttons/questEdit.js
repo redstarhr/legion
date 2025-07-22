@@ -1,5 +1,5 @@
 // quest_bot/interactions/buttons/questEdit.js
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -11,7 +11,7 @@ module.exports = {
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', ephemeral: true });
+        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: [MessageFlags.Ephemeral] });
       }
 
       // Permission check: issuer or manager
@@ -19,7 +19,7 @@ module.exports = {
       const isManager = await hasQuestManagerPermission(interaction);
 
       if (!isIssuer && !isManager) {
-        return interaction.reply({ content: 'クエストの編集は、発注者または管理者のみが行えます。', ephemeral: true });
+        return interaction.reply({ content: 'クエストの編集は、発注者または管理者のみが行えます。', flags: [MessageFlags.Ephemeral] });
       }
 
       const modal = new ModalBuilder()
@@ -78,7 +78,7 @@ module.exports = {
     } catch (error) {
       console.error('クエスト編集モーダルの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、編集を開始できませんでした。', ephemeral: true }).catch(console.error);
+        await interaction.reply({ content: 'エラーが発生したため、編集を開始できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
       }
     }
   },
