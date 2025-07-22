@@ -80,6 +80,17 @@ async function createQuestActionRows(quest) {
     );
   }
 
+  // アーカイブされていないクエストには、ユーティリティボタンを追加
+  if (!quest.isArchived) {
+    stateManagementRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`quest_download_csv_${quest.messageId}`)
+        .setLabel('参加者リストDL')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(!quest.accepted || quest.accepted.length === 0)
+    );
+  }
+
   const rows = [];
   if (mainActionRow.components.length > 0) {
     rows.push(mainActionRow);

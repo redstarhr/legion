@@ -34,7 +34,7 @@ module.exports = {
 
     // 2. Fetch updated quest and update all messages
     const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-    await updateAllQuestMessages(interaction.client, updatedQuest, interaction.user.id);
+    await updateAllQuestMessages(interaction.client, updatedQuest);
 
     // 3. Log the action
     await logAction(interaction, {

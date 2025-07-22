@@ -3,7 +3,7 @@
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const questDataManager = require('../utils/questDataManager');
 const { createQuestEmbed } = require('../utils/embeds');
-const { createQuestActionRow } = require('../components/questActionButtons');
+const { createQuestActionRows } = require('../components/questActionButtons');
 const { logAction } = require('../utils/logger');
 
 module.exports = {
@@ -37,11 +37,11 @@ module.exports = {
     // 2. 連携先にメッセージを送信
     try {
       const embed = await createQuestEmbed(quest);
-      const buttons = createQuestActionRow(quest, interaction.user.id);
+      const buttons = await createQuestActionRows(quest);
 
       const linkedMessage = await targetChannel.send({
         embeds: [embed],
-        components: [buttons],
+        components: buttons,
       });
 
       // 3. 連携情報をDBに保存

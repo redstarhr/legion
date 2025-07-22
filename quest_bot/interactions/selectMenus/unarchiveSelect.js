@@ -30,7 +30,7 @@ module.exports = {
 
     // 2. Update all quest board messages
     const updatedQuest = await questDataManager.getQuest(guildId, questIdToUnarchive);
-    await updateAllQuestMessages(interaction.client, updatedQuest, interaction.user.id);
+    await updateAllQuestMessages(interaction.client, updatedQuest);
 
     // 3. Log the action
     await logAction(interaction, {

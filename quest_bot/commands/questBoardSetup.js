@@ -3,7 +3,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { createQuestEmbed } = require('../utils/embeds');
 const { logAction } = require('../utils/logger');
-const { createQuestActionRow } = require('../components/questActionButtons');
+const { createQuestActionRows } = require('../components/questActionButtons');
 const questDataManager = require('../utils/questDataManager');
 
 module.exports = {
@@ -29,11 +29,11 @@ module.exports = {
     const embed = await createQuestEmbed(initialQuest);
 
     // 初期状態のボタンを作成
-    const buttons = createQuestActionRow(initialQuest, interaction.user.id);
+    const buttons = await createQuestActionRows(initialQuest);
 
     const message = await interaction.reply({
       embeds: [embed],
-      components: [buttons],
+      components: buttons,
       fetchReply: true,
     });
 

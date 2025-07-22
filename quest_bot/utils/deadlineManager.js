@@ -36,7 +36,7 @@ async function checkAndCloseExpiredQuests(client) {
               if (!updatedQuest) continue;
 
               // 2. 共通関数を使って全ての関連メッセージを更新
-              await updateAllQuestMessages(client, updatedQuest, null);
+              await updateAllQuestMessages(client, updatedQuest);
 
               // 3. Send a notification to the notification channel.
               const notificationChannelId = await questDataManager.getNotificationChannel(guildId);

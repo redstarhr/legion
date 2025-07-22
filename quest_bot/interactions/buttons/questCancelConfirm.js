@@ -40,7 +40,7 @@ module.exports = {
 
     // Update all messages
     const updatedQuest = await questDataManager.getQuest(guildId, questId);
-    await updateAllQuestMessages(interaction.client, updatedQuest, userId);
+    await updateAllQuestMessages(interaction.client, updatedQuest);
 
     // Log action
     await logAction(interaction, {
