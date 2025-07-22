@@ -28,7 +28,21 @@ module.exports = {
       subcommand
         .setName('色設定')
         .setDescription('クエスト掲示板のEmbedの色を設定します。')
-        .addStringOption(option => option.setName('カラーコード').setDescription('16進数カラーコード (例: #00bfff)').setRequired(true))),
+        .addStringOption(option => option.setName('カラーコード').setDescription('16進数カラーコード (例: #00bfff)').setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('ボタン順設定')
+        .setDescription('クエスト掲示板の主要ボタンの並び順を設定します。')
+        .addStringOption(option =>
+          option.setName('順序')
+            .setDescription('ボタンの表示順を選択してください。左から順に表示されます。')
+            .setRequired(true)
+            .addChoices(
+              { name: '受注 > 取消 > 編集 > 連絡 (デフォルト)', value: 'accept,cancel,edit,dm' },
+              { name: '受注 > 編集 > 連絡 > 取消', value: 'accept,edit,dm,cancel' },
+              { name: '編集 > 受注 > 連絡 > 取消', value: 'edit,accept,dm,cancel' },
+              { name: '連絡 > 編集 > 受注 > 取消', value: 'dm,edit,accept,cancel' }
+            ))),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
@@ -93,6 +107,30 @@ module.exports = {
         color: '#95a5a6',
         details: {
           '設定カラー': color,
+        },
+      });
+    } else if (subcommand === 'ボタン順設定') {
+      const orderString = interaction.options.getString('順序');
+      const orderArray = orderString.split(',');
+
+      await questDataManager.setButtonOrder(guildId, orderArray);
+
+      const buttonNameMap = {
+        accept: '受注',
+        cancel: '受注取消',
+        edit: '編集',
+        dm: '参加者に連絡'
+      };
+      const friendlyOrder = orderArray.map(key => `\`${buttonNameMap[key]}\``).join(' > ');
+
+      const replyMessage = `✅ ボタンの表示順を **${friendlyOrder}** に設定しました。`;
+      await interaction.followUp({ content: replyMessage });
+      await logAction(interaction, {
+        title: '⚙️ ボタン順設定',
+        description: replyMessage,
+        color: '#95a5a6',
+        details: {
+          '設定順': `[${orderString}]`,
         },
       });
     }

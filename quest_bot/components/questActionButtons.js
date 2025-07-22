@@ -1,58 +1,57 @@
 // quest_bot/components/questActionButtons.js
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const questDataManager = require('../utils/questDataManager');
 
 /**
  * クエストの現在の状態に基づいてアクションボタンの行を生成します。
  * @param {object} quest - クエストオブジェクト
- * @param {string} userId - インタラクションを実行したユーザーのID (主にボタンの有効/無効のヒントに使う)
- * @returns {ActionRowBuilder}
+ * @returns {Promise<ActionRowBuilder[]>} An array of action rows.
  */
-function createQuestActionRow(quest, userId) {
+async function createQuestActionRows(quest) {
   const isClosed = quest.isClosed || quest.isArchived;
+  const guildId = quest.guildId;
 
-  const row = new ActionRowBuilder();
-
-  // 受注ボタン
-  row.addComponents(
-    new ButtonBuilder()
+  // Define all possible main action buttons
+  const allButtons = {
+    accept: new ButtonBuilder()
       .setCustomId(`quest_accept_${quest.messageId}`)
       .setLabel('受注する')
       .setStyle(ButtonStyle.Success)
-      .setDisabled(isClosed)
-  );
-
-  // 受注取消ボタン
-  row.addComponents(
-    new ButtonBuilder()
+      .setDisabled(isClosed),
+    cancel: new ButtonBuilder()
       .setCustomId(`quest_cancel_${quest.messageId}`)
       .setLabel('受注取消')
       .setStyle(ButtonStyle.Danger)
-      .setDisabled(isClosed)
-  );
-
-  // 編集ボタン
-  row.addComponents(
-    new ButtonBuilder()
+      .setDisabled(isClosed),
+    edit: new ButtonBuilder()
       .setCustomId(`quest_edit_${quest.messageId}`)
       .setLabel('編集')
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(isClosed) // 実際の権限チェックはボタンハンドラ側で行う
-  );
-
-  // 参加者に連絡ボタン
-  row.addComponents(
-    new ButtonBuilder()
+      .setDisabled(isClosed),
+    dm: new ButtonBuilder()
       .setCustomId(`quest_dm_${quest.messageId}`)
       .setLabel('参加者に連絡')
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(isClosed || !quest.accepted || quest.accepted.length === 0)
-  );
+      .setDisabled(isClosed || !quest.accepted || quest.accepted.length === 0),
+  };
 
-  // 募集〆切/募集再開/アーカイブボタン
+  // Get custom order from the database
+  const buttonOrder = await questDataManager.getButtonOrder(guildId);
+
+  // Build the first row based on the custom order
+  const mainActionRow = new ActionRowBuilder();
+  for (const key of buttonOrder) {
+    if (allButtons[key]) {
+      mainActionRow.addComponents(allButtons[key]);
+    }
+  }
+
+  // Build the second row for state management
+  const stateManagementRow = new ActionRowBuilder();
   if (quest.isArchived) {
     // アーカイブ済みの場合は、無効化されたボタンを表示
-    row.addComponents(
+    stateManagementRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`quest_archived_${quest.messageId}`)
         .setLabel('アーカイブ済')
@@ -60,13 +59,12 @@ function createQuestActionRow(quest, userId) {
         .setDisabled(true)
     );
   } else if (quest.isClosed) {
-    // 〆切済みの場合は、「募集再開」ボタンを表示
-    row.addComponents(
+    // 〆切済みの場合は、「募集再開」と「クエスト完了」ボタンを表示
+    stateManagementRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`quest_reopen_${quest.messageId}`)
         .setLabel('募集再開')
         .setStyle(ButtonStyle.Primary),
-      // 〆切済みの場合は、「クエスト完了」ボタンも表示
       new ButtonBuilder()
         .setCustomId(`quest_archive_${quest.messageId}`)
         .setLabel('クエスト完了')
@@ -74,7 +72,7 @@ function createQuestActionRow(quest, userId) {
     );
   } else {
     // 募集中の場合は、「募集〆切」ボタンを表示
-    row.addComponents(
+    stateManagementRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`quest_close_${quest.messageId}`)
         .setLabel('募集〆切')
@@ -82,7 +80,15 @@ function createQuestActionRow(quest, userId) {
     );
   }
 
-  return row;
+  const rows = [];
+  if (mainActionRow.components.length > 0) {
+    rows.push(mainActionRow);
+  }
+  if (stateManagementRow.components.length > 0) {
+    rows.push(stateManagementRow);
+  }
+
+  return rows;
 }
 
-module.exports = { createQuestActionRow };
+module.exports = { createQuestActionRows };

@@ -205,6 +205,30 @@ async function setEmbedColor(guildId, color) {
   await updateGuildConfig(guildId, { embedColor: color });
 }
 
+// --- Button Order Config ---
+
+const DEFAULT_BUTTON_ORDER = ['accept', 'cancel', 'edit', 'dm'];
+
+/**
+ * ギルドのボタン表示順設定を取得する
+ * @param {string} guildId
+ * @returns {Promise<string[]>}
+ */
+async function getButtonOrder(guildId) {
+  const config = await getGuildConfig(guildId);
+  // 設定がなければデフォルト順を返す
+  return config.buttonOrder || DEFAULT_BUTTON_ORDER;
+}
+
+/**
+ * ギルドのボタン表示順を設定する
+ * @param {string} guildId
+ * @param {string[]} order
+ */
+async function setButtonOrder(guildId, order) {
+  await updateGuildConfig(guildId, { buttonOrder: order });
+}
+
 // --- Utility for Deadline Manager ---
 
 /**
@@ -240,5 +264,7 @@ module.exports = {
   setNotificationChannel,
   getEmbedColor,
   setEmbedColor,
+  getButtonOrder,
+  setButtonOrder,
   getAllGuildIds, // deadlineManagerのためにエクスポート
 };
