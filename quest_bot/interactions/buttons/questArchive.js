@@ -34,7 +34,7 @@ module.exports = {
       );
 
     await interaction.reply({
-      content: '本当にこのクエストを完了状態にしますか？\nこの操作は元に戻せません。完了したクエストは `/完了クエスト一覧` から確認できます。',
+      content: '本当にこのクエストを完了状態にしますか？\n完了したクエストは `/完了クエスト一覧` から確認・復元できます。',
       components: [confirmationRow],
       ephemeral: true,
     });

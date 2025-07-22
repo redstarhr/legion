@@ -29,7 +29,7 @@ module.exports = {
     await questDataManager.updateQuest(interaction.guildId, questId, {
       isArchived: true,
       isClosed: true,
-      timestamp: Date.now(), // Used for sorting in listCompletedQuests
+      completedAt: new Date().toISOString(), // Used for sorting in listCompletedQuests
     }, interaction.user);
 
     // 2. Fetch updated quest and update all messages
