@@ -6,7 +6,7 @@ module.exports = {
     customId: 'dash_open_failQuestSelect',
     async handle(interaction) {
         try {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const allQuests = await questDataManager.getAllQuests(interaction.guildId);
             const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
@@ -47,7 +47,7 @@ module.exports = {
             if (interaction.replied || interaction.deferred) {
                 await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
             } else {
-                await interaction.reply({ content: '❌ エラーが発生したため、UIを表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+                await interaction.reply({ content: '❌ エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
             }
         }
     },

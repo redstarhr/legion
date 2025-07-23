@@ -1,6 +1,6 @@
 // commands/questConfig.js
 
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const questDataManager = require('../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../utils/permissionUtils');
 
@@ -56,7 +56,7 @@ async function createConfigPanel(interaction) {
     new ButtonBuilder().setCustomId('config_open_unlinkSelect').setLabel('掲示板連携解除').setStyle(ButtonStyle.Danger)
   );
 
-  return { embeds: [embed], components: [row1, row2], ephemeral: true };
+  return { embeds: [embed], components: [row1, row2], flags: MessageFlags.Ephemeral };
 }
 
 module.exports = {
@@ -67,13 +67,22 @@ module.exports = {
     .setDefaultMemberPermissions(0),
 
   async execute(interaction) {
-    // 実行者の権限をチェック (管理者 or クエスト管理者ロール)
-    if (!(await hasQuestManagerPermission(interaction))) {
-      return interaction.reply({ content: 'このコマンドを実行する権限がありません。', ephemeral: true });
-    }
+    try {
+      // 実行者の権限をチェック (管理者 or クエスト管理者ロール)
+      if (!(await hasQuestManagerPermission(interaction))) {
+        return interaction.reply({ content: 'このコマンドを実行する権限がありません。', flags: MessageFlags.Ephemeral });
+      }
 
-    // 権限がある場合、設定パネルを生成して返信する
-    const view = await createConfigPanel(interaction);
-    await interaction.reply(view);
+      // 権限がある場合、設定パネルを生成して返信する
+      const view = await createConfigPanel(interaction);
+      await interaction.reply(view);
+    } catch (error) {
+      console.error('クエスト設定パネルの表示中にエラーが発生しました:', error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: 'エラーが発生したため、設定パネルを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      } else {
+        await interaction.reply({ content: 'エラーが発生したため、設定パネルを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      }
+    }
   },
 };

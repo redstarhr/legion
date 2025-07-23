@@ -1,5 +1,5 @@
 // quest_bot/interactions/buttons/configSetLogChannel.js
-const { ChannelSelectMenuBuilder, ChannelType, MessageFlags } = require('discord.js');
+const { ChannelSelectMenuBuilder, ChannelType } = require('discord.js');
 const { replyWithConfigSelect } = require('../../components/configSelectUI');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
     } catch (error) {
       console.error('ログチャンネル設定UIの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true }).catch(console.error);
       }
     }
   },

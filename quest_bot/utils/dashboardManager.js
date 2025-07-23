@@ -19,15 +19,11 @@ async function createDashboardEmbeds(guildId, quests) {
     const activeQuests = quests.filter(q => !q.isArchived);
 
     if (activeQuests.length > 0) {
-        const questFields = activeQuests.map(q => {
-            // この計算は変更しない。失敗者も枠を占有し続けるため。
-            const acceptedPlayers = q.accepted.reduce((sum, p) => sum + p.players, 0);
-            return {
-                name: q.name || '無題のクエスト',
-                value: `> 募集: ${q.players}人 / ${q.teams}組\n> 現在: ${acceptedPlayers}人`,
-                inline: true,
-            };
-        });
+        const questFields = activeQuests.map(q => ({
+            name: q.name || '無題のクエスト',
+            value: `> ${q.players}人`,
+            inline: true,
+        }));
         questListEmbed.addFields(questFields);
     } else {
         questListEmbed.setDescription('現在、アクティブなクエストはありません。');
@@ -63,34 +59,52 @@ async function createDashboardEmbeds(guildId, quests) {
  * @param {string} guildId
  */
 async function updateDashboard(client, guildId) {
-    const dashboard = await questDataManager.getDashboard(guildId);
-    if (!dashboard) {
-        console.warn(`[Dashboard] Guild ${guildId} にダッシュボードが設定されていません。`);
-        return;
+  const dashboard = await questDataManager.getDashboard(guildId);
+  if (!dashboard) {
+    console.warn(`[Dashboard] Guild ${guildId} にダッシュボードが設定されていません。`);
+    return;
+  }
+
+  try {
+    const channel = await client.channels.fetch(dashboard.channelId);
+    if (!channel || !channel.isTextBased()) {
+      console.error(`[Dashboard] Channel ${dashboard.channelId} not found or not a text channel.`);
+      return;
     }
 
+    // 1. 古いメッセージが存在すれば削除する
     try {
-        const channel = await client.channels.fetch(dashboard.channelId);
-        const message = await channel.messages.fetch(dashboard.messageId);
-
-        const allQuests = Object.values(await questDataManager.getAllQuests(guildId));
-        const embeds = await createDashboardEmbeds(guildId, allQuests);
-        const components = createDashboardActionRows();
-
-        await message.edit({
-            content: ' ', // contentを空にしないとEmbedが更新されないことがある
-            embeds: embeds,
-            components: components,
-        });
+      const oldMessage = await channel.messages.fetch(dashboard.messageId);
+      await oldMessage.delete();
     } catch (error) {
-        // メッセージが存在しないエラー(削除された場合など)を検知したら、DBからダッシュボード設定を削除する
-        if (error.code === RESTJSONErrorCodes.UnknownMessage) {
-            console.warn(`[Dashboard] ダッシュボードメッセージ (ID: ${dashboard.messageId}) が見つからなかったため、設定をリセットします。`);
-            await questDataManager.setDashboard(guildId, null, null);
-            return;
-        }
-        console.error(`[Dashboard] ダッシュボードの更新に失敗しました (Guild: ${guildId}):`, error);
+      if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
+        console.error(`[Dashboard] 古いダッシュボードメッセージの削除に失敗: ${dashboard.messageId}`, error);
+      }
     }
+
+    // 2. 新しいダッシュボードの内容を生成
+    const allQuests = Object.values(await questDataManager.getAllQuests(guildId));
+    const embeds = await createDashboardEmbeds(guildId, allQuests);
+    const components = createDashboardActionRows();
+
+    // 3. 新しいメッセージを送信
+    const newMessage = await channel.send({
+      embeds: embeds,
+      components: components,
+    });
+
+    // 4. 新しいメッセージIDをデータベースに保存
+    await questDataManager.setDashboard(guildId, newMessage.id, channel.id);
+
+  } catch (error) {
+    // メッセージが存在しないエラー(削除された場合など)を検知したら、DBからダッシュボード設定を削除する
+    if (error.code === RESTJSONErrorCodes.UnknownMessage || error.code === RESTJSONErrorCodes.UnknownChannel) {
+      console.warn(`[Dashboard] ダッシュボードメッセージまたはチャンネルが見つからなかったため、設定をリセットします。`);
+      await questDataManager.setDashboard(guildId, null, null);
+      return;
+    }
+    console.error(`[Dashboard] ダッシュボードの更新に失敗しました (Guild: ${guildId}):`, error);
+  }
 }
 
 module.exports = { updateDashboard };

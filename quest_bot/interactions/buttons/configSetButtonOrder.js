@@ -1,5 +1,5 @@
 // quest_bot/interactions/buttons/configSetButtonOrder.js
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
 const buttonOptions = [
     { label: '受注する', value: 'accept' },
@@ -26,12 +26,12 @@ module.exports = {
       await interaction.reply({
         content: 'クエスト掲示板に表示するボタンの順序を1つずつ選択してください。\n\n**1番目**に表示するボタンを選択してください:',
         components: [row],
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
     } catch (error) {
       console.error('ボタン順設定UIの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', ephemeral: true }).catch(console.error);
       }
     }
   },
