@@ -12,7 +12,7 @@ module.exports = {
     try {
       await interaction.deferUpdate();
 
-      const questId = interaction.customId.split('_')[2];
+      const questId = interaction.customId.split('_')[3];
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {

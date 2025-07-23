@@ -1,9 +1,8 @@
 // quest_bot/interactions/modals/questEditSubmit.js
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { createQuestEmbed } = require('../../utils/embeds');
-const { createQuestActionRows } = require('../../components/questActionButtons');
 const { logAction } = require('../../utils/logger');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 
 module.exports = {
   customId: 'quest_submit_editModal_', // Prefix match
@@ -50,19 +49,9 @@ module.exports = {
         return interaction.editReply({ content: '⚠️ クエストデータの更新に失敗しました。' });
       }
 
-      // 4. Update all messages
+      // 4. Update the quest message
       const updatedQuest = await questDataManager.getQuest(guildId, questId);
-      // 元のクエストメッセージのみ更新
-      try {
-        const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
-        const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
-        const newEmbed = await createQuestEmbed(updatedQuest);
-        const newButtons = await createQuestActionRows(updatedQuest);
-        await questMessage.edit({ embeds: [newEmbed], components: newButtons });
-      } catch (e) {
-        console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
-        // ログには残すが、ユーザーへの通知は続行
-      }
+      await updateQuestMessage(interaction.client, updatedQuest);
 
       // 5. Log action
       await logAction(interaction, {

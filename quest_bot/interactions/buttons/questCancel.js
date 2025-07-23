@@ -7,7 +7,7 @@ module.exports = {
   customId: 'quest_open_cancelConfirm_', // Prefix match
   async handle (interaction) {
     try {
-      const questId = interaction.customId.split('_')[2];
+      const questId = interaction.customId.split('_')[3];
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
