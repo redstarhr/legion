@@ -4,6 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
 
 module.exports = {
     customId: 'dash_select_cancelAcceptance_', // Prefix match
@@ -25,10 +26,8 @@ module.exports = {
             }
 
             // Check if the quest was full before cancellation
-            const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
-            const currentAcceptedTeams = activeAccepted.reduce((sum, a) => sum + (a.teams || 0), 0);
-            const currentAcceptedPlayers = activeAccepted.reduce((sum, a) => sum + (a.players || a.people || 0), 0);
-            const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= (quest.teams || 0) && currentAcceptedPlayers >= (quest.players || quest.people || 0));
+            const { currentAcceptedTeams, currentAcceptedPeople } = calculateRemainingSlots(quest);
+            const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= (quest.teams || 1) && currentAcceptedPlayers >= (quest.people || quest.players || 1));
 
             // 受注リストから対象のユーザーを削除
             const updatedAccepted = quest.accepted?.filter(a => a.userId !== userId) || [];

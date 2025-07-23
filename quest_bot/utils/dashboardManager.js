@@ -68,7 +68,13 @@ async function createDashboardEmbeds(guildId, quests) {
             }
             const userIdentifier = acceptance.userTag || acceptance.user || '不明なユーザー';
             const players = acceptance.players || acceptance.people || 0;
-            acc[acceptance.questName].push(`> ${userIdentifier} さんが ${players}人 受注`);
+            let acceptanceString = `> ${userIdentifier} さんが ${players}人 受注`;
+            // コメントがあれば短縮して追加
+            if (acceptance.comment) {
+                const shortComment = acceptance.comment.length > 40 ? `${acceptance.comment.substring(0, 37)}...` : acceptance.comment;
+                acceptanceString += ` (💬 ${shortComment})`;
+            }
+            acc[acceptance.questName].push(acceptanceString);
             return acc;
         }, {});
 
@@ -89,51 +95,50 @@ async function createDashboardEmbeds(guildId, quests) {
  * @param {string} guildId
  */
 async function updateDashboard(client, guildId) {
-  const dashboard = await questDataManager.getDashboard(guildId);
-  if (!dashboard) {
-    console.warn(`[Dashboard] Guild ${guildId} にダッシュボードが設定されていません。`);
-    return;
-  }
-
   try {
-    const channel = await client.channels.fetch(dashboard.channelId);
-    if (!channel || !channel.isTextBased()) {
-      console.error(`[Dashboard] Channel ${dashboard.channelId} not found or not a text channel.`);
+    const dashboard = await questDataManager.getDashboard(guildId);
+    if (!dashboard) {
+      // ダッシュボードが設定されていないのはエラーではないので、静かに終了
       return;
     }
 
-    // 1. 古いメッセージが存在すれば削除する
-    try {
-      const oldMessage = await channel.messages.fetch(dashboard.messageId);
-      await oldMessage.delete();
-    } catch (error) {
-      if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
-        console.error(`[Dashboard] 古いダッシュボードメッセージの削除に失敗: ${dashboard.messageId}`, error);
-      }
+    const channel = await client.channels.fetch(dashboard.channelId);
+    if (!channel || !channel.isTextBased()) {
+      console.error(`[Dashboard] Channel ${dashboard.channelId} not found or not a text channel for guild ${guildId}.`);
+      return;
     }
 
-    // 2. 新しいダッシュボードの内容を生成
     const allQuests = Object.values(await questDataManager.getAllQuests(guildId));
     const embeds = await createDashboardEmbeds(guildId, allQuests);
     const components = createDashboardActionRows();
+    const newContent = { embeds, components };
 
-    // 3. 新しいメッセージを送信
-    const newMessage = await channel.send({
-      embeds: embeds,
-      components: components,
-    });
-
-    // 4. 新しいメッセージIDをデータベースに保存
-    await questDataManager.setDashboard(guildId, newMessage.id, channel.id);
-
-  } catch (error) {
-    // メッセージが存在しないエラー(削除された場合など)を検知したら、DBからダッシュボード設定を削除する
-    if (error.code === RESTJSONErrorCodes.UnknownMessage || error.code === RESTJSONErrorCodes.UnknownChannel) {
-      console.warn(`[Dashboard] ダッシュボードメッセージまたはチャンネルが見つからなかったため、設定をリセットします。`);
-      await questDataManager.setDashboard(guildId, null, null);
-      return;
+    try {
+        const message = await channel.messages.fetch(dashboard.messageId);
+        await message.edit(newContent);
+    } catch (error) {
+        // メッセージが見つからない場合 (手動で削除されたなど) は、新しく送信して自己修復する
+        if (error.code === RESTJSONErrorCodes.UnknownMessage) {
+            console.warn(`[Dashboard] Dashboard message ${dashboard.messageId} not found in guild ${guildId}. Recreating...`);
+            try {
+                const newMessage = await channel.send(newContent);
+                await questDataManager.setDashboard(guildId, newMessage.id, channel.id);
+            } catch (sendError) {
+                console.error(`[Dashboard] Failed to recreate dashboard in guild ${guildId}:`, sendError);
+            }
+        } else {
+            // その他の予期せぬ編集エラーは上位のcatchに投げる
+            throw error;
+        }
     }
-    console.error(`[Dashboard] ダッシュボードの更新に失敗しました (Guild: ${guildId}):`, error);
+  } catch (error) {
+    // チャンネルが見つからない、権限がないなどのエラーをここで捕捉
+    if (error.code === RESTJSONErrorCodes.UnknownChannel) {
+        console.warn(`[Dashboard] Dashboard channel for guild ${guildId} not found. Resetting config.`);
+        await questDataManager.setDashboard(guildId, null, null);
+    } else {
+        console.error(`[Dashboard] Failed to update dashboard for guild ${guildId}:`, error);
+    }
   }
 }
 

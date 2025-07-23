@@ -4,6 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
 
 module.exports = {
   customId: 'quest_submit_acceptModal_', // Prefix match
@@ -15,16 +16,15 @@ module.exports = {
       const guildId = interaction.guildId;
 
       // 1. Get data from modal
-      const teamsStr = interaction.fields.getTextInputValue('accept_teams');
       const peopleStr = interaction.fields.getTextInputValue('accept_people');
       const comment = interaction.fields.getTextInputValue('accept_comment');
 
       // 2. Validate input
-      const teamsNum = parseInt(teamsStr, 10);
+      const teamsNum = 1; // 組数は1で固定
       const peopleNum = parseInt(peopleStr, 10);
 
-      if (isNaN(teamsNum) || isNaN(peopleNum) || teamsNum <= 0 || peopleNum <= 0) {
-        return interaction.editReply({ content: '⚠️ 組数と人数には1以上の半角数字を入力してください。' });
+      if (isNaN(peopleNum) || peopleNum <= 0) {
+        return interaction.editReply({ content: '⚠️ 人数には1以上の半角数字を入力してください。' });
       }
 
       // 3. Re-fetch quest data to prevent race conditions
@@ -33,29 +33,27 @@ module.exports = {
         return interaction.editReply({ content: '⚠️ このクエストは現在募集を締め切っているか、見つかりませんでした。' });
       }
 
-      // レースコンディション対策で、ここでも重複受注をチェック
-      const hasAlreadyAccepted = quest.accepted?.some(a => a.userId === interaction.user.id);
+      // レースコンディション対策で、ここでも重複受注をチェック (失敗以外)
+      const hasAlreadyAccepted = quest.accepted?.some(a => a.userId === interaction.user.id && a.status !== 'failed');
       if (hasAlreadyAccepted) {
           return interaction.editReply({ content: '⚠️ あなたは既にこのクエストを受注済みです。' });
       }
 
       // 4. Check for available slots
-      const currentAcceptedTeams = quest.accepted?.reduce((sum, a) => sum + a.teams, 0) || 0;
-      const currentAcceptedPeople = quest.accepted?.reduce((sum, a) => sum + a.people, 0) || 0;
-      const remainingTeams = quest.teams - currentAcceptedTeams;
-      const remainingPeople = quest.people - currentAcceptedPeople;
+      const { remainingTeams, remainingPeople, currentAcceptedTeams, currentAcceptedPeople } = calculateRemainingSlots(quest);
 
       if (teamsNum > remainingTeams || peopleNum > remainingPeople) {
-        return interaction.editReply({ content: `⚠️ 募集枠を超えています。残り: ${remainingTeams}組 / ${remainingPeople}人` });
+        return interaction.editReply({ content: `⚠️ 募集枠を超えています。(残り: ${remainingTeams}組 / ${remainingPeople}人)` });
       }
 
       // 5. Prepare update data
       const newAcceptance = {
         userId: interaction.user.id,
-        user: interaction.user.tag,
+        userTag: interaction.user.tag,
         channelName: interaction.channel.name,
         teams: teamsNum,
         people: peopleNum,
+        players: peopleNum, // 互換性のために両方追加
         comment: comment || null,
         timestamp: Date.now(),
       };
@@ -64,8 +62,8 @@ module.exports = {
 
       // Check if the quest is now full
       const newTotalTeams = currentAcceptedTeams + teamsNum;
-      const newTotalPeople = currentAcceptedPeople + peopleNum;
-      const isNowFull = newTotalTeams >= quest.teams && newTotalPeople >= quest.people;
+      const newTotalPeople = currentAcceptedPeople + peopleNum; // Use the same variable as above
+      const isNowFull = newTotalTeams >= (quest.teams || 1) && newTotalPeople >= (quest.people || quest.players || 1);
 
       const updates = {
         accepted: updatedAccepted,

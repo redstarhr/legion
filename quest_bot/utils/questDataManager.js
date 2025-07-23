@@ -437,6 +437,23 @@ async function processEndOfDay(guildId) {
   }
 }
 
+/**
+ * Deletes all data associated with a specific guild when the bot leaves.
+ * This includes quest data, config files, and logs.
+ * @param {string} guildId The ID of the guild to delete data for.
+ * @returns {Promise<void>}
+ */
+async function deleteGuildData(guildId) {
+  const prefix = `${DATA_DIR_BASE}/${guildId}/`;
+  try {
+    await bucket.deleteFiles({ prefix: prefix });
+    console.log(`[DataCleanup] Successfully deleted all data for guild ${guildId} with prefix gs://${GCS_BUCKET_NAME}/${prefix}`);
+  } catch (error)
+    console.error(`[DataCleanup] Failed to delete data for guild ${guildId}:`, error);
+    // We don't re-throw here, just log the error. The bot should not crash.
+  }
+}
+
 module.exports = {
   getAllQuests,
   getQuest,
@@ -458,4 +475,5 @@ module.exports = {
   setDashboard,
   getActiveAcceptances,
   processEndOfDay,
+  deleteGuildData,
 };

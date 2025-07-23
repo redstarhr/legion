@@ -4,6 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
 
 module.exports = {
   customId: 'quest_confirm_cancel_', // Prefix match
@@ -21,10 +22,8 @@ module.exports = {
       }
 
       // Check if the quest was full before cancellation
-      const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
-      const currentAcceptedTeams = activeAccepted.reduce((sum, a) => sum + (a.teams || 0), 0);
-      const currentAcceptedPeople = activeAccepted.reduce((sum, a) => sum + (a.people || a.players || 0), 0);
-      const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= (quest.teams || 0) && currentAcceptedPeople >= (quest.people || quest.players || 0));
+      const { currentAcceptedTeams, currentAcceptedPeople } = calculateRemainingSlots(quest);
+      const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= (quest.teams || 1) && currentAcceptedPeople >= (quest.people || quest.players || 1));
 
       // Filter out the user's acceptances
       const newAccepted = quest.accepted?.filter(a => a.userId !== userId) || [];

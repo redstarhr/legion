@@ -3,6 +3,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
 
 module.exports = {
     customId: 'dash_select_acceptPlayers_', // Prefix match
@@ -25,10 +26,7 @@ module.exports = {
             }
 
             // レースコンディション対策で、再度残り枠をチェック
-            const acceptedPlayers = quest.accepted.reduce((sum, p) => sum + p.players, 0);
-            const acceptedTeams = quest.accepted.reduce((sum, p) => sum + p.teams, 0);
-            const remainingPlayers = quest.players - acceptedPlayers;
-            const remainingTeams = quest.teams - acceptedTeams;
+            const { remainingTeams, remainingPlayers, currentAcceptedTeams, currentAcceptedPeople } = calculateRemainingSlots(quest);
 
             if (players > remainingPlayers || teams > remainingTeams) {
                  return interaction.editReply({ content: `⚠️ 募集枠を超えています。再度お試しください。残り: ${remainingPlayers}人 / ${remainingTeams}組`, components: [] });
@@ -39,14 +37,15 @@ module.exports = {
                 userTag: interaction.user.tag,
                 players,
                 teams,
+                people: players,
             };
 
-            const updatedAccepted = [...quest.accepted, newAcceptance];
+            const updatedAccepted = [...(quest.accepted || []), newAcceptance];
 
             // Check if the quest is now full
-            const newTotalTeams = acceptedTeams + teams;
-            const newTotalPlayers = acceptedPlayers + players;
-            const isNowFull = newTotalTeams >= quest.teams && newTotalPlayers >= quest.players;
+            const newTotalTeams = currentAcceptedTeams + teams;
+            const newTotalPlayers = currentAcceptedPeople + players;
+            const isNowFull = newTotalTeams >= (quest.teams || 1) && newTotalPlayers >= (quest.people || quest.players || 1);
 
             const updates = {
                 accepted: updatedAccepted,

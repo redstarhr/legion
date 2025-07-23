@@ -1,6 +1,7 @@
 // quest_bot/interactions/selectMenus/dashAcceptQuestSelect.js
 const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
 
 module.exports = {
     customId: 'dash_select_acceptQuest_', // Prefix match
@@ -19,13 +20,8 @@ module.exports = {
                 return interaction.update({ content: `⚠️ あなたは既にクエスト「${quest.name}」を受注済みです。変更する場合は、一度受注を取り消してください。`, components: [] });
             }
 
-            // Filter out failed participants before calculating totals
-            const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
-            const acceptedPlayers = activeAccepted.reduce((sum, p) => sum + (p.players || p.people || 0), 0);
-            const acceptedTeams = activeAccepted.reduce((sum, p) => sum + (p.teams || 0), 0);
-            
-            const remainingPlayers = (quest.players || quest.people || 1) - acceptedPlayers;
-            const remainingTeams = (quest.teams || 1) - acceptedTeams;
+            // Use the new utility function
+            const { remainingTeams, remainingPlayers } = calculateRemainingSlots(quest);
 
             // 1組受注する前提でチェック
             if (remainingTeams < 1) {

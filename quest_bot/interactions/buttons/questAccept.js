@@ -1,6 +1,7 @@
 // quest_bot/interactions/buttons/questAccept.js
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
 
 module.exports = {
   customId: 'quest_open_acceptModal_', // Prefix match
@@ -17,34 +18,22 @@ module.exports = {
       }
 
       // ユーザーが既に受注済みかチェック
-      const hasAlreadyAccepted = quest.accepted?.some(a => a.userId === interaction.user.id);
+      const hasAlreadyAccepted = quest.accepted?.some(a => a.userId === interaction.user.id && a.status !== 'failed');
       if (hasAlreadyAccepted) {
         return interaction.reply({ content: '⚠️ あなたは既にこのクエストを受注済みです。受注内容を変更する場合は、一度「受注取消」を行ってから再度受注してください。', flags: MessageFlags.Ephemeral });
       }
 
-      // Filter out failed participants before calculating totals
-      const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
+      // Use the new utility function to calculate remaining slots
+      const { remainingTeams, remainingPeople } = calculateRemainingSlots(quest);
 
-      // Calculate remaining slots based on active participants
-      const currentAcceptedTeams = activeAccepted.reduce((sum, a) => sum + a.teams, 0);
-      const currentAcceptedPeople = activeAccepted.reduce((sum, a) => sum + a.people, 0);
-      const remainingTeams = quest.teams - currentAcceptedTeams;
-      const remainingPeople = quest.people - currentAcceptedPeople;
-
-      if (remainingTeams <= 0 && remainingPeople <= 0) {
+      // 1組受注する前提でチェック
+      if (remainingTeams < 1 || remainingPeople <= 0) {
           return interaction.reply({ content: '⚠️ このクエストは既に定員に達しています。', flags: MessageFlags.Ephemeral });
       }
 
       const modal = new ModalBuilder()
         .setCustomId(`quest_submit_acceptModal_${questId}`)
         .setTitle('クエストの受注');
-
-      const teamsInput = new TextInputBuilder()
-        .setCustomId('accept_teams')
-        .setLabel(`受注する組数 (残り: ${remainingTeams}組)`)
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('例: 1')
-        .setRequired(true);
 
       const peopleInput = new TextInputBuilder()
         .setCustomId('accept_people')
@@ -61,7 +50,6 @@ module.exports = {
         .setRequired(false);
 
       modal.addComponents(
-        new ActionRowBuilder().addComponents(teamsInput),
         new ActionRowBuilder().addComponents(peopleInput),
         new ActionRowBuilder().addComponents(commentInput)
       );

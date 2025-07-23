@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
+const questDataManager = require('./quest_bot/utils/questDataManager');
 
 // Botクライアントを作成（必要なIntentを指定）
 const client = new Client({
@@ -121,6 +122,16 @@ client.on('interactionCreate', async interaction => {
     } else {
       await interaction.reply({ content: '⚠️ エラーが発生しました。', flags: MessageFlags.Ephemeral }).catch(e => console.error("Error handler's reply failed:", e));
     }
+  }
+});
+
+// ✅ Botがサーバーから退出した際のデータクリーンアップ
+client.on('guildDelete', async (guild) => {
+  console.log(`Bot was removed from guild: ${guild.name} (${guild.id}). Cleaning up data...`);
+  try {
+    await questDataManager.deleteGuildData(guild.id);
+  } catch (error) {
+    console.error(`Failed to execute cleanup for guild ${guild.id}:`, error);
   }
 });
 
