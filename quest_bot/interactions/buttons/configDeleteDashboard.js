@@ -1,6 +1,7 @@
 // quest_bot/interactions/buttons/configDeleteDashboard.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
+const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
   customId: 'config_open_deleteDashboardPrompt',
@@ -15,22 +16,11 @@ module.exports = {
         });
       }
 
-      const confirmationRow = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`config_confirm_deleteDashboard`)
-            .setLabel('はい、削除します')
-            .setStyle(ButtonStyle.Danger),
-          new ButtonBuilder()
-            .setCustomId(`config_cancel_deleteDashboard`)
-            .setLabel('いいえ')
-            .setStyle(ButtonStyle.Secondary)
-        );
-
-      await interaction.reply({
+      await replyWithConfirmation(interaction, {
         content: '**本当にクエストダッシュボードを削除しますか？**\nこの操作は元に戻せません。ダッシュボードメッセージがDiscordから削除され、設定がリセットされます。',
-        components: [confirmationRow],
-        flags: MessageFlags.Ephemeral,
+        confirmCustomId: 'config_confirm_deleteDashboard',
+        confirmLabel: 'はい、削除します',
+        cancelCustomId: 'config_cancel_deleteDashboard',
       });
 
     } catch (error) {

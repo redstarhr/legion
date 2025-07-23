@@ -1,7 +1,8 @@
 // quest_bot/interactions/buttons/questClose.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
   customId: 'quest_open_closeConfirm_', // Prefix match
@@ -22,22 +23,11 @@ module.exports = {
         return interaction.reply({ content: 'クエストの〆切は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
-      const confirmationRow = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`quest_confirm_close_${questId}`)
-            .setLabel('はい、締め切ります')
-            .setStyle(ButtonStyle.Danger),
-          new ButtonBuilder()
-            .setCustomId(`quest_cancel_close_${questId}`)
-            .setLabel('いいえ')
-            .setStyle(ButtonStyle.Secondary)
-        );
-
-      await interaction.reply({
+      await replyWithConfirmation(interaction, {
         content: '本当にこのクエストの募集を締め切りますか？\nこの操作は「募集再開」ボタンで元に戻せます。',
-        components: [confirmationRow],
-        flags: MessageFlags.Ephemeral,
+        confirmCustomId: `quest_confirm_close_${questId}`,
+        confirmLabel: 'はい、締め切ります',
+        cancelCustomId: `quest_cancel_close_${questId}`,
       });
     } catch (error) {
       console.error('募集〆切UIの表示中にエラーが発生しました:', error);

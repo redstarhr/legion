@@ -1,7 +1,8 @@
 // quest_bot/interactions/buttons/questArchive.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
   customId: 'quest_open_archiveConfirm_', // Prefix match
@@ -22,22 +23,11 @@ module.exports = {
         return interaction.reply({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
-      const confirmationRow = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`quest_confirm_archive_${questId}`)
-            .setLabel('はい、完了します')
-            .setStyle(ButtonStyle.Danger),
-          new ButtonBuilder()
-            .setCustomId(`quest_cancel_archive_${questId}`)
-            .setLabel('いいえ')
-            .setStyle(ButtonStyle.Secondary)
-        );
-
-      await interaction.reply({
+      await replyWithConfirmation(interaction, {
         content: '本当にこのクエストを完了状態にしますか？\n完了したクエストは `/完了クエスト一覧` から確認・復元できます。',
-        components: [confirmationRow],
-        flags: MessageFlags.Ephemeral,
+        confirmCustomId: `quest_confirm_archive_${questId}`,
+        confirmLabel: 'はい、完了します',
+        cancelCustomId: `quest_cancel_archive_${questId}`,
       });
     } catch (error) {
       console.error('クエスト完了UIの表示中にエラーが発生しました:', error);

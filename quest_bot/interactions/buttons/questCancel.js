@@ -1,6 +1,7 @@
 // quest_bot/interactions/buttons/questCancel.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
+const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
   customId: 'quest_open_cancelConfirm_', // Prefix match
@@ -22,22 +23,11 @@ module.exports = {
       const totalAcceptedTeams = userAcceptances.reduce((sum, a) => sum + a.teams, 0);
       const totalAcceptedPeople = userAcceptances.reduce((sum, a) => sum + a.people, 0);
 
-      const confirmationRow = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`quest_confirm_cancel_${questId}`)
-            .setLabel('はい、取り消します')
-            .setStyle(ButtonStyle.Danger),
-          new ButtonBuilder()
-            .setCustomId(`quest_cancel_cancel_${questId}`)
-            .setLabel('いいえ')
-            .setStyle(ButtonStyle.Secondary)
-        );
-
-      await interaction.reply({
+      await replyWithConfirmation(interaction, {
         content: `本当にクエスト「${quest.title || '無題'}」の受注（合計 ${totalAcceptedTeams}組 / ${totalAcceptedPeople}人）を取り消しますか？`,
-        components: [confirmationRow],
-        flags: MessageFlags.Ephemeral,
+        confirmCustomId: `quest_confirm_cancel_${questId}`,
+        confirmLabel: 'はい、取り消します',
+        cancelCustomId: `quest_cancel_cancel_${questId}`,
       });
     } catch (error) {
       console.error('受注取消UIの表示中にエラーが発生しました:', error);
