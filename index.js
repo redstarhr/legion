@@ -99,10 +99,17 @@ client.on('interactionCreate', async interaction => {
     }
   } catch (error) {
     console.error('❌ エラー:', error);
+    // 10062: Unknown interaction. これは通常、インタラクションが3秒以内に応答されずタイムアウトしたことを意味する。
+    // このエラーに対して再度応答しようとするとクラッシュするため、ログに記録するだけで処理を終了する。
+    if (error.code === 10062) {
+      console.error('An interaction timed out and could not be replied to.');
+      return;
+    }
+
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: '⚠️ エラーが発生しました。', flags: [MessageFlags.Ephemeral] });
+      await interaction.followUp({ content: '⚠️ エラーが発生しました。', flags: MessageFlags.Ephemeral }).catch(e => console.error("Error handler's followUp failed:", e));
     } else {
-      await interaction.reply({ content: '⚠️ エラーが発生しました。', flags: [MessageFlags.Ephemeral] });
+      await interaction.reply({ content: '⚠️ エラーが発生しました。', flags: MessageFlags.Ephemeral }).catch(e => console.error("Error handler's reply failed:", e));
     }
   }
 });
