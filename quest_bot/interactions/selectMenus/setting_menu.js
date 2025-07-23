@@ -35,6 +35,21 @@ module.exports = {
                     content: 'クエスト管理者として設定したいロールを選択してください。',
                     components: [row],
                 });
+            } else if (selectedValue === 'set_notification_channel') {
+                const row = new ActionRowBuilder()
+                    .addComponents(
+                        new ChannelSelectMenuBuilder()
+                            .setCustomId('setting_select_notification_channel')
+                            .setPlaceholder('通知を送信するチャンネルを選択')
+                            .addChannelTypes([ChannelType.GuildText])
+                            .setMinValues(1)
+                            .setMaxValues(1)
+                    );
+
+                await interaction.update({
+                    content: 'クエストの受注・取消などの通知を送信するチャンネルを選択してください。',
+                    components: [row],
+                });
             }
         } catch (error) {
             console.error('設定メニューの処理中にエラーが発生しました:', error);
