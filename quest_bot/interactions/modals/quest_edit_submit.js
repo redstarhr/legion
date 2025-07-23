@@ -3,7 +3,6 @@ const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
-const { checkAndCloseExpiredQuests } = require('../../utils/deadlineManager');
 
 module.exports = {
     customId: 'quest_edit_submit_', // 'quest_edit_submit_{questId}' に前方一致でマッチ

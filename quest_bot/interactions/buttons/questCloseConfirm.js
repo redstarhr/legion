@@ -1,8 +1,7 @@
 // quest_bot/interactions/buttons/questCloseConfirm.js
 const questDataManager = require('../../utils/questDataManager');
 const { MessageFlags } = require('discord.js');
-const { createQuestEmbed } = require('../../utils/embeds');
-const { createQuestActionRows } = require('../../components/questActionButtons');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -20,6 +19,10 @@ module.exports = {
         return interaction.editReply({ content: '対象のクエストが見つかりませんでした。', components: [] });
       }
 
+      if (quest.isClosed) {
+        return interaction.followUp({ content: '⚠️ このクエストは既に締め切られています。', flags: MessageFlags.Ephemeral });
+      }
+
       // 念のため再度権限チェック
       const isIssuer = quest.issuerId === interaction.user.id;
       const isManager = await hasQuestManagerPermission(interaction);
@@ -31,19 +34,9 @@ module.exports = {
       // 1. クエストデータを更新
       await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: true }, interaction.user);
 
-      // 2. 更新後のクエストを取得し、全てのメッセージを更新
+      // 2. Use the centralized function to update the quest message
       const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-      // 元のクエストメッセージのみ更新
-      try {
-        const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
-        const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
-        const newEmbed = await createQuestEmbed(updatedQuest);
-        const newButtons = await createQuestActionRows(updatedQuest);
-        await questMessage.edit({ embeds: [newEmbed], components: newButtons });
-      } catch (e) {
-        console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
-        // ログには残すが、ユーザーへの通知は続行
-      }
+      await updateQuestMessage(interaction.client, updatedQuest);
 
       // 3. アクションをログに記録
       await logAction(interaction, {
