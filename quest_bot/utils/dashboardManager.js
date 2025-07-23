@@ -50,15 +50,32 @@ async function createDashboardEmbeds(guildId, quests) {
         .setColor(embedColor)
         .setTitle('👥 受注状況一覧');
 
-    // 失敗していない受注情報を直接リストアップする
-    const acceptedList = activeQuests.flatMap(quest =>
-        quest.accepted
+    // 失敗していない受注情報をクエスト名と共に取得
+    const allActiveAcceptances = activeQuests.flatMap(quest =>
+        (quest.accepted || [])
             .filter(acceptance => acceptance.status !== 'failed')
-            .map(acceptance => `> **${quest.name || '無題のクエスト'}**: ${acceptance.userTag} さんが ${acceptance.teams}組 / ${acceptance.players}人 受注`)
+            .map(acceptance => ({
+                questName: quest.name || '無題のクエスト',
+                ...acceptance
+            }))
     );
 
-    if (acceptedList.length > 0) {
-        acceptedListEmbed.setDescription(acceptedList.join('\n'));
+    if (allActiveAcceptances.length > 0) {
+        // クエスト名で受注情報をグループ化
+        const groupedAcceptances = allActiveAcceptances.reduce((acc, acceptance) => {
+            if (!acc[acceptance.questName]) {
+                acc[acceptance.questName] = [];
+            }
+            const userIdentifier = acceptance.userTag || acceptance.user || '不明なユーザー';
+            const players = acceptance.players || acceptance.people || 0;
+            acc[acceptance.questName].push(`> ${userIdentifier} さんが ${players}人 受注`);
+            return acc;
+        }, {});
+
+        const description = Object.entries(groupedAcceptances)
+            .map(([questName, acceptances]) => `**${questName}**\n${acceptances.join('\n')}`)
+            .join('\n\n');
+        acceptedListEmbed.setDescription(description.substring(0, 4096));
     } else {
         acceptedListEmbed.setDescription('現在、クエストを受注している人はいません。');
     }

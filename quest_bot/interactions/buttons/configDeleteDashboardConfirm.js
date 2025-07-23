@@ -1,7 +1,8 @@
 // quest_bot/interactions/buttons/configDeleteDashboardConfirm.js
-const { RESTJSONErrorCodes } = require('discord.js');
+const { RESTJSONErrorCodes, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
+const { createConfigPanel } = require('../../components/configPanel');
 
 module.exports = {
   customId: 'config_confirm_deleteDashboard',
@@ -12,9 +13,10 @@ module.exports = {
       const dashboard = await questDataManager.getDashboard(interaction.guildId);
 
       if (!dashboard) {
+        const newView = await createConfigPanel(interaction);
         return interaction.editReply({
           content: '✅ ダッシュボードは既に削除されているか、見つかりませんでした。',
-          components: [],
+          ...newView,
         });
       }
 
@@ -40,10 +42,11 @@ module.exports = {
         description: 'クエストダッシュボードが削除されました。',
       });
 
-      // 4. 確認メッセージを更新
+      // 4. 設定パネルを更新して完了を通知
+      const newView = await createConfigPanel(interaction);
       await interaction.editReply({
         content: '✅ クエストダッシュボードを削除しました。',
-        components: [],
+        ...newView,
       });
 
     } catch (error) {

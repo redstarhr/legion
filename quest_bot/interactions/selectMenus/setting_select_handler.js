@@ -1,7 +1,22 @@
 const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { updateDashboard } = require('../../utils/dashboardManager');
-const { RESTJSONErrorCodes } = require('discord.js');
+const { RESTJSONErrorCodes, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { createConfigPanel } = require('../../components/configPanel');
+
+const colorOptions = [
+    { label: 'デフォルト (水色)', value: '#00bfff' }, { label: '青', value: '#3498db' },
+    { label: '緑', value: '#2ecc71' }, { label: '赤', value: '#e74c3c' },
+    { label: '紫', value: '#9b59b6' }, { label: '黄色', value: '#f1c40f' },
+    { label: 'オレンジ', value: '#e67e22' }, { label: 'ピンク', value: '#e91e63' },
+    { label: '白', value: '#ffffff' }, { label: '黒', value: '#2c2f33' },
+];
+
+const allButtonOptions = [
+    { label: '受注する', value: 'accept' }, { label: '受注取消', value: 'cancel' },
+    { label: '編集', value: 'edit' }, { label: '参加者に連絡', value: 'dm' },
+];
+const buttonNameMap = { accept: '受注', cancel: '受注取消', edit: '編集', dm: '参加者に連絡' };
 
 async function handleChannelSelect(interaction) {
     await interaction.deferUpdate();
@@ -158,21 +173,78 @@ async function handleDashboardChannelSelect(interaction) {
     await interaction.editReply({ content: replyMessage, components: [] });
 }
 
+async function handleEmbedColorSelect(interaction) {
+    await interaction.deferUpdate();
+    const selectedColor = interaction.values[0];
+    const selectedOption = colorOptions.find(opt => opt.value === selectedColor) || { label: 'カスタム', value: selectedColor };
+
+    await questDataManager.setEmbedColor(interaction.guildId, selectedColor);
+
+    const replyMessage = `✅ Embedの色を **${selectedOption.label} (${selectedColor})** に設定しました。`;
+    await logAction(interaction, { title: '⚙️ Embedカラー設定', description: replyMessage, color: '#95a5a6' });
+
+    const newView = await createConfigPanel(interaction);
+    await interaction.editReply(newView);
+}
+
+async function handleButtonOrderSelect(interaction) {
+    await interaction.deferUpdate();
+    const parts = interaction.customId.split('_');
+    const currentStep = parseInt(parts[4], 10);
+    const selectedOrder = parts.length > 5 ? parts.slice(5) : [];
+    const newSelection = interaction.values[0];
+    selectedOrder.push(newSelection);
+
+    const nextStep = currentStep + 1;
+
+    if (nextStep <= 4) {
+        const remainingOptions = allButtonOptions.filter(opt => !selectedOrder.includes(opt.value));
+        const newCustomId = `setting_select_button_order_${nextStep}_${selectedOrder.join('_')}`;
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(newCustomId)
+            .setPlaceholder(`${nextStep}番目に表示するボタンを選択してください`)
+            .addOptions(remainingOptions);
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+        const friendlyOrder = selectedOrder.map(key => `\`${buttonNameMap[key]}\``).join(' > ');
+        await interaction.editReply({
+            content: `現在の選択: ${friendlyOrder}\n\n**${nextStep}番目**に表示するボタンを選択してください:`,
+            components: [row],
+        });
+    } else {
+        await questDataManager.setButtonOrder(interaction.guildId, selectedOrder);
+        await logAction(interaction, {
+            title: '⚙️ ボタン順設定',
+            description: `✅ ボタンの表示順を **${selectedOrder.map(key => `\`${buttonNameMap[key]}\``).join(' > ')}** に設定しました。`,
+            color: '#95a5a6',
+        });
+        const newView = await createConfigPanel(interaction);
+        await interaction.editReply(newView);
+    }
+}
+
 module.exports = {
     customId: 'setting_select_', // prefix
     async handle(interaction) {
         try {
-            switch (interaction.customId) {
-                case 'setting_select_log_channel':
-                    return await handleChannelSelect(interaction);
-                case 'setting_select_manager_role':
-                    return await handleRoleSelect(interaction);
-                case 'setting_select_notification_channel':
-                    return await handleNotificationChannelSelect(interaction);
-                case 'setting_select_dashboard_channel':
-                    return await handleDashboardChannelSelect(interaction);
-                default:
-                    return; // Should not happen
+            const customId = interaction.customId;
+
+            if (customId === 'setting_select_log_channel') {
+                return await handleChannelSelect(interaction);
+            }
+            if (customId === 'setting_select_manager_role') {
+                return await handleRoleSelect(interaction);
+            }
+            if (customId === 'setting_select_notification_channel') {
+                return await handleNotificationChannelSelect(interaction);
+            }
+            if (customId === 'setting_select_dashboard_channel') {
+                return await handleDashboardChannelSelect(interaction);
+            }
+            if (customId === 'setting_select_embed_color') {
+                return await handleEmbedColorSelect(interaction);
+            }
+            if (customId.startsWith('setting_select_button_order_')) {
+                return await handleButtonOrderSelect(interaction);
             }
         } catch (error) {
             console.error('設定項目の選択処理中にエラーが発生しました:', error);
