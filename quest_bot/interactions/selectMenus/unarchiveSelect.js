@@ -3,6 +3,7 @@ const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
 
 module.exports = {
@@ -29,11 +30,12 @@ module.exports = {
         return interaction.followUp({ content: '⚠️ クエストの状態を戻すのに失敗しました。', flags: MessageFlags.Ephemeral });
       }
 
-      // 2. ダッシュボードを更新
+      // 2. クエストメッセージとダッシュボードを更新
+      const unarchivedQuest = await questDataManager.getQuest(guildId, questIdToUnarchive);
+      await updateQuestMessage(interaction.client, unarchivedQuest);
       await updateDashboard(interaction.client, guildId);
 
       // 3. Log the action
-      const unarchivedQuest = await questDataManager.getQuest(guildId, questIdToUnarchive);
       await logAction(interaction, {
         title: '↩️ クエスト完了状態の取消',
         color: '#3498db', // blue

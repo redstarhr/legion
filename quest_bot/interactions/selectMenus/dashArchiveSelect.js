@@ -2,6 +2,7 @@
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
@@ -38,7 +39,9 @@ module.exports = {
                 },
             });
 
-            // ダッシュボードを更新
+            // クエストメッセージとダッシュボードを更新
+            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
+            await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 
             await interaction.editReply({ content: `✅ クエスト「${quest.name}」を完了状態にしました。` });
