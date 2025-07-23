@@ -21,9 +21,10 @@ module.exports = {
       }
 
       // Check if the quest was full before cancellation
-      const currentAcceptedTeams = quest.accepted?.reduce((sum, a) => sum + a.teams, 0) || 0;
-      const currentAcceptedPeople = quest.accepted?.reduce((sum, a) => sum + a.people, 0) || 0;
-      const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= quest.teams && currentAcceptedPeople >= quest.people);
+      const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
+      const currentAcceptedTeams = activeAccepted.reduce((sum, a) => sum + (a.teams || 0), 0);
+      const currentAcceptedPeople = activeAccepted.reduce((sum, a) => sum + (a.people || a.players || 0), 0);
+      const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= (quest.teams || 0) && currentAcceptedPeople >= (quest.people || quest.players || 0));
 
       // Filter out the user's acceptances
       const newAccepted = quest.accepted?.filter(a => a.userId !== userId) || [];
