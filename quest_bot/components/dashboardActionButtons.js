@@ -8,7 +8,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 function createDashboardActionRows() {
     const row1 = new ActionRowBuilder()
         .addComponents(
-            new ButtonBuilder().setCustomId('dash_open_addQuestSelect').setLabel('クエスト追加').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('dash_open_addQuestModal').setLabel('クエスト追加').setStyle(ButtonStyle.Success),
             new ButtonBuilder().setCustomId('dash_open_editQuestSelect').setLabel('クエスト修正').setStyle(ButtonStyle.Primary),
             new ButtonBuilder().setCustomId('dash_open_archiveQuestSelect').setLabel('クエスト完了').setStyle(ButtonStyle.Secondary),
         );

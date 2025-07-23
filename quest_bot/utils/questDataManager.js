@@ -91,27 +91,29 @@ async function getQuest(guildId, questId) {
 /**
  * 新しいクエストを作成する
  * @param {string} guildId
- * @param {object} questDetails - The details of the new quest.
+ * @param {object} questDetails - The details of the new quest (name, players, teams).
  * @param {import('discord.js').User} user - The user who created the quest.
- * @param {string} [questId] - Optional. If provided, this ID is used. If not, a new one is generated.
  * @returns {Promise<object>} The newly created quest object.
  */
-async function createQuest(guildId, questDetails, user, questId = null) {
+async function createQuest(guildId, questDetails, user) {
   const quests = await getAllQuests(guildId);
-  const newQuestId = questId || `q_${nanoid(8)}`;
+  const newQuestId = `q_${nanoid(8)}`;
 
   if (quests[newQuestId]) {
-      console.error(`[createQuest] Quest with ID ${newQuestId} already exists in guild ${guildId}`);
-      return null; // Or throw an error
+      console.error(`[createQuest] Quest with ID ${newQuestId} already exists in guild ${guildId}. This is a rare collision.`);
+      return null;
   }
 
   const newQuest = {
-    ...questDetails,
+    name: questDetails.name,
+    players: questDetails.players,
+    teams: questDetails.teams,
     id: newQuestId,
     issuerId: user.id,
     createdAt: new Date().toISOString(),
-    accepted: questDetails.accepted || [],
-    linkedMessages: questDetails.linkedMessages || [],
+    accepted: [],
+    isClosed: false,
+    isArchived: false,
   };
   quests[newQuestId] = newQuest;
   await writeGuildFile(guildId, QUESTS_FILE, quests);
@@ -147,26 +149,6 @@ async function updateQuest(guildId, questId, updates, user) {
   quests[questId] = updatedQuest;
   await writeGuildFile(guildId, QUESTS_FILE, quests);
   return true;
-}
-
-/**
- * 連携メッセージIDから元のクエストを探す
- * @param {string} guildId
- * @param {string} linkedMessageId
- * @returns {Promise<{originalQuest: object, linkedMessageInfo: object}|null>}
- */
-async function findQuestByLinkedMessageId(guildId, linkedMessageId) {
-  const allQuests = await getAllQuests(guildId);
-  for (const questId in allQuests) {
-    const quest = allQuests[questId];
-    if (quest.linkedMessages && Array.isArray(quest.linkedMessages)) {
-      const linkedInfo = quest.linkedMessages.find(link => link.messageId === linkedMessageId);
-      if (linkedInfo) {
-        return { originalQuest: quest, linkedMessageInfo: linkedInfo };
-      }
-    }
-  }
-  return null;
 }
 
 // --- Config Data Functions ---
@@ -278,12 +260,39 @@ async function getAllGuildIds() {
   }
 }
 
+/**
+ * Gets all active, non-failed acceptances across all quests.
+ * Can be filtered by a specific user.
+ * @param {string} guildId
+ * @param {string} [userId] - Optional. If provided, only returns acceptances for this user.
+ * @returns {Promise<object[]>} An array of acceptance objects, each enhanced with questId and questName.
+ */
+async function getActiveAcceptances(guildId, userId = null) {
+  const allQuests = await getAllQuests(guildId);
+  const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
+
+  return activeQuests.flatMap(quest =>
+    quest.accepted
+      .filter(acceptance => {
+        // Filter out failed ones
+        if (acceptance.status === 'failed') return false;
+        // If a userId is provided, filter for that user
+        if (userId && acceptance.userId !== userId) return false;
+        return true;
+      })
+      .map(acceptance => ({
+        questId: quest.id,
+        questName: quest.name || '無題のクエスト',
+        ...acceptance,
+      }))
+  );
+}
+
 module.exports = {
   getAllQuests,
   getQuest,
   createQuest,
   updateQuest,
-  findQuestByLinkedMessageId,
   getGuildConfig,
   getQuestManagerRole,
   setQuestManagerRole,
@@ -298,4 +307,5 @@ module.exports = {
   getAllGuildIds, // deadlineManagerのためにエクスポート
   getDashboard,
   setDashboard,
+  getActiveAcceptances,
 };

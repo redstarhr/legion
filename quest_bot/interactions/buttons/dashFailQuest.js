@@ -8,19 +8,7 @@ module.exports = {
         try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const allQuests = await questDataManager.getAllQuests(interaction.guildId);
-            const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
-
-            const allAccepted = activeQuests.flatMap(quest =>
-                quest.accepted
-                    .filter(acceptance => acceptance.status !== 'failed') // 失敗報告済みのユーザーは除外
-                    .map(acceptance => ({
-                        questId: quest.id,
-                        questName: quest.name,
-                        ...acceptance,
-                    }))
-            );
-
+            const allAccepted = await questDataManager.getActiveAcceptances(interaction.guildId);
             if (allAccepted.length === 0) {
                 return interaction.editReply({ content: '現在、受注されているクエストはありません。' });
             }

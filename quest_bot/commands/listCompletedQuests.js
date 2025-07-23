@@ -11,7 +11,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       // Check if there are any completed quests first to avoid unnecessary view generation
       const allQuests = await questDataManager.getAllQuests(interaction.guildId);
@@ -28,7 +28,7 @@ module.exports = {
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply({ content: 'エラーが発生したため、一覧を表示できませんでした。' }).catch(console.error);
       } else {
-        await interaction.reply({ content: 'エラーが発生したため、一覧を表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+        await interaction.reply({ content: 'エラーが発生したため、一覧を表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
       }
     }
   },

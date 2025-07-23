@@ -10,13 +10,12 @@ const { createDashboardActionRows } = require('../components/dashboardActionButt
  * @returns {EmbedBuilder[]}
  */
 async function createDashboardEmbeds(guildId, quests) {
+    const activeQuests = quests.filter(q => !q.isArchived);
     const embedColor = await questDataManager.getEmbedColor(guildId);
     // --- クエスト一覧 Embed ---
     const questListEmbed = new EmbedBuilder()
         .setColor(embedColor)
         .setTitle('📜 クエスト一覧');
-
-    const activeQuests = quests.filter(q => !q.isArchived);
 
     if (activeQuests.length > 0) {
         const questFields = activeQuests.map(q => ({
@@ -34,18 +33,15 @@ async function createDashboardEmbeds(guildId, quests) {
         .setColor(embedColor)
         .setTitle('👥 受注状況一覧');
 
-    const allAccepted = activeQuests.flatMap(q =>
-        q.accepted.map(a => ({ ...a, questName: q.name || '無題のクエスト' }))
+    // 失敗していない受注情報を直接リストアップする
+    const acceptedList = activeQuests.flatMap(quest =>
+        quest.accepted
+            .filter(acceptance => acceptance.status !== 'failed')
+            .map(acceptance => `> **${quest.name || '無題のクエスト'}**: ${acceptance.userTag} さんが ${acceptance.teams}組 / ${acceptance.players}人 受注`)
     );
 
-    // 失敗ステータスのない受注のみをフィルタリング
-    const visibleAccepted = allAccepted.filter(a => a.status !== 'failed');
-
-    if (visibleAccepted.length > 0) {
-        const acceptedText = visibleAccepted.map(a =>
-            `> **${a.questName}**: ${a.userTag} さんが ${a.teams}組 / ${a.players}人 受注`
-        ).join('\n');
-        acceptedListEmbed.setDescription(acceptedText);
+    if (acceptedList.length > 0) {
+        acceptedListEmbed.setDescription(acceptedList.join('\n'));
     } else {
         acceptedListEmbed.setDescription('現在、クエストを受注している人はいません。');
     }

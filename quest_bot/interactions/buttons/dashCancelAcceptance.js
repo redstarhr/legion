@@ -6,20 +6,9 @@ module.exports = {
     customId: 'dash_open_cancelAcceptanceSelect',
     async handle(interaction) {
         try {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const allQuests = await questDataManager.getAllQuests(interaction.guildId);
-            const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
-
-            const myAcceptances = activeQuests.flatMap(quest =>
-                quest.accepted
-                    .filter(acceptance => acceptance.userId === interaction.user.id && acceptance.status !== 'failed')
-                    .map(acceptance => ({
-                        questId: quest.id,
-                        questName: quest.name,
-                        ...acceptance,
-                    }))
-            );
+            const myAcceptances = await questDataManager.getActiveAcceptances(interaction.guildId, interaction.user.id);
 
             if (myAcceptances.length === 0) {
                 return interaction.editReply({ content: '現在、あなたが受注しているクエストはありません。' });
