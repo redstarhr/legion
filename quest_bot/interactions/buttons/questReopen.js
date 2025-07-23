@@ -1,8 +1,7 @@
 // quest_bot/interactions/buttons/questReopen.js
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { createQuestEmbed } = require('../../utils/embeds');
-const { createQuestActionRows } = require('../../components/questActionButtons');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -19,6 +18,11 @@ module.exports = {
         return interaction.followUp({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
+      // Check if the quest is already open
+      if (!quest.isClosed) {
+        return interaction.followUp({ content: '⚠️ このクエストは既に募集中です。', flags: MessageFlags.Ephemeral });
+      }
+
       // Permission check: issuer or manager
       const isIssuer = quest.issuerId === interaction.user.id;
       const isManager = await hasQuestManagerPermission(interaction);
@@ -32,17 +36,7 @@ module.exports = {
 
       // 2. 更新後のクエストを取得し、全てのメッセージを更新
       const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-      // 元のクエストメッセージのみ更新
-      try {
-        const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
-        const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
-        const newEmbed = await createQuestEmbed(updatedQuest);
-        const newButtons = await createQuestActionRows(updatedQuest);
-        await questMessage.edit({ embeds: [newEmbed], components: newButtons });
-      } catch (e) {
-        console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
-        // ログには残すが、ユーザーへの通知は続行
-      }
+      await updateQuestMessage(interaction.client, updatedQuest);
 
       // 3. アクションをログに記録
       await logAction(interaction, {

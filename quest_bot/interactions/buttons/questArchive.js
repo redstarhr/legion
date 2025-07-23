@@ -15,6 +15,10 @@ module.exports = {
         return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
+      if (quest.isArchived) {
+        return interaction.reply({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。', flags: MessageFlags.Ephemeral });
+      }
+
       // Permission check: issuer or manager
       const isIssuer = quest.issuerId === interaction.user.id;
       const isManager = await hasQuestManagerPermission(interaction);

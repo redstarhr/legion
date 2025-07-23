@@ -1,8 +1,8 @@
 // quest_bot/interactions/buttons/questArchiveConfirm.js
 const questDataManager = require('../../utils/questDataManager');
 const { MessageFlags } = require('discord.js');
-const { createQuestEmbed } = require('../../utils/embeds');
-const { createQuestActionRows } = require('../../components/questActionButtons');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
+const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -16,7 +16,11 @@ module.exports = {
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.editReply({ content: '対象のクエストが見つかりませんでした。', components: [] });
+        return interaction.followUp({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
+      }
+
+      if (quest.isArchived) {
+        return interaction.followUp({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。', flags: MessageFlags.Ephemeral });
       }
 
       // Final permission check
@@ -24,7 +28,7 @@ module.exports = {
       const isManager = await hasQuestManagerPermission(interaction);
 
       if (!isIssuer && !isManager) {
-        return interaction.editReply({ content: 'クエストの完了は、発注者または管理者のみが行えます。', components: [] });
+        return interaction.followUp({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
       await questDataManager.updateQuest(interaction.guildId, questId, {
@@ -33,21 +37,14 @@ module.exports = {
         completedAt: new Date().toISOString(), // Used for sorting in listCompletedQuests
       }, interaction.user);
 
-      // 2. Fetch updated quest and update all messages
+      // 2. Fetch updated quest and update the original message
       const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-      // 元のクエストメッセージのみ更新
-      try {
-      const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
-      const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
-      const newEmbed = await createQuestEmbed(updatedQuest);
-      const newButtons = await createQuestActionRows(updatedQuest);
-      await questMessage.edit({ embeds: [newEmbed], components: newButtons });
-    } catch (e) {
-      console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
-      // ログには残すが、ユーザーへの通知は続行
-      }
+      await updateQuestMessage(interaction.client, updatedQuest);
 
-      // 3. Log the action
+      // 3. Update the dashboard
+      await updateDashboard(interaction.client, interaction.guildId);
+
+      // 4. Log the action
       await logAction(interaction, {
         title: '✅ クエスト完了',
         color: '#95a5a6', // grey
@@ -57,11 +54,11 @@ module.exports = {
         },
       });
 
-      // 4. Update the confirmation message
+      // 5. Update the confirmation message
       await interaction.editReply({ content: '✅ クエストを完了状態にしました。', components: [] });
     } catch (error) {
       console.error('クエスト完了の確認処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストを完了できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+      await interaction.followUp({ content: 'エラーが発生したため、クエストを完了できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
     }
   },
 };

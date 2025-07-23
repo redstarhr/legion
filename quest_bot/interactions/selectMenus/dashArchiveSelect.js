@@ -17,10 +17,15 @@ module.exports = {
                 return interaction.editReply({ content: '⚠️ 対象のクエストが見つかりませんでした。' });
             }
 
+            if (quest.isArchived) {
+                return interaction.editReply({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。' });
+            }
+
             // isArchivedフラグを立て、完了日時を記録
             const updates = {
                 isArchived: true,
                 completedAt: new Date().toISOString(),
+                isClosed: true, // Archiving should also close it
             };
             await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
