@@ -1,32 +1,30 @@
 // commands/questBoardSetup.js
 
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
-const questDataManager = require('../utils/questDataManager');
-const { updateDashboard } = require('../utils/dashboardManager');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('クエスト掲示板設置')
-    .setDescription('このチャンネルにクエストダッシュボードを設置します。(管理者のみ)')
+    .setDescription('クエスト掲示板を設置するチャンネルを選択します。(管理者のみ)')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction) {
     try {
-      // 修正1: flagsは配列ではなく直接値を渡す
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      const row = new ActionRowBuilder()
+        .addComponents(
+          new ChannelSelectMenuBuilder()
+            .setCustomId('setting_select_dashboard_channel') // 既存の設定ハンドラを再利用
+            .setPlaceholder('掲示板を設置/移動するチャンネルを選択')
+            .addChannelTypes([ChannelType.GuildText])
+            .setMinValues(1)
+            .setMaxValues(1)
+        );
 
-      const existingDashboard = await questDataManager.getDashboard(interaction.guildId);
-      if (existingDashboard) {
-          return interaction.editReply({ content: '⚠️ 既にこのサーバーにはクエストダッシュボードが設置されています。' });
-      }
-
-        const message = await interaction.channel.send({ content: '📡 ダッシュボードを生成中...' });
-        await questDataManager.setDashboard(interaction.guildId, message.id, interaction.channelId);
-
-        // 初回更新
-        await updateDashboard(interaction.client, interaction.guildId);
-
-        await interaction.editReply({ content: '✅ クエストダッシュボードをこのチャンネルに設置しました。' });
+      await interaction.reply({
+        content: 'クエスト掲示板を設置するチャンネルを選択してください。\n既に掲示板がある場合は、新しい場所に移動します。',
+        components: [row],
+        flags: MessageFlags.Ephemeral,
+      });
     } catch (error) {
         console.error('❌ ダッシュボードの設置に失敗しました:', error);
         const errorMessage = '❌ ダッシュボードの設置に失敗しました。Botに必要な権限（メッセージの送信・編集）があるか確認してください。';

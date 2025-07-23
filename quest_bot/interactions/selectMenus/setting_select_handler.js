@@ -1,5 +1,7 @@
 const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
+const { updateDashboard } = require('../../utils/dashboardManager');
+const { RESTJSONErrorCodes } = require('discord.js');
 
 async function handleChannelSelect(interaction) {
     await interaction.deferUpdate();
@@ -109,6 +111,53 @@ async function handleNotificationChannelSelect(interaction) {
     });
 }
 
+async function handleDashboardChannelSelect(interaction) {
+    await interaction.deferUpdate();
+    const guildId = interaction.guildId;
+    const newChannelId = interaction.values[0];
+
+    // 1. 既存のダッシュボード情報を取得
+    const oldDashboard = await questDataManager.getDashboard(guildId);
+
+    // 2. 既存のダッシュボードメッセージがあれば削除
+    if (oldDashboard && oldDashboard.channelId) {
+        try {
+            const oldChannel = await interaction.client.channels.fetch(oldDashboard.channelId);
+            await oldChannel.messages.delete(oldDashboard.messageId);
+        } catch (error) {
+            if (error.code !== RESTJSONErrorCodes.UnknownMessage && error.code !== RESTJSONErrorCodes.UnknownChannel) {
+                console.error(`[DashboardSetup] 古いダッシュボードメッセージの削除に失敗:`, error);
+                // 削除に失敗しても処理は続行する
+            }
+        }
+    }
+
+    // 3. 新しいチャンネルにダッシュボードを設置
+    const newChannel = await interaction.guild.channels.fetch(newChannelId);
+    if (!newChannel || !newChannel.isTextBased()) {
+        return interaction.editReply({ content: '⚠️ 選択されたチャンネルが見つからないか、テキストチャンネルではありません。', components: [] });
+    }
+
+    // プレースホルダーメッセージを送信
+    const placeholderMessage = await newChannel.send({ content: '📡 新しいクエスト掲示板を生成中...' });
+
+    // 4. 新しいダッシュボード情報を保存
+    await questDataManager.setDashboard(guildId, placeholderMessage.id, newChannelId);
+
+    // 5. ダッシュボードを内容で更新
+    await updateDashboard(interaction.client, guildId);
+
+    const replyMessage = `✅ クエスト掲示板を <#${newChannelId}> に設置しました。`;
+
+    await logAction(interaction, {
+        title: '⚙️ 掲示板チャンネル設定',
+        description: replyMessage,
+        color: '#95a5a6',
+    });
+
+    await interaction.editReply({ content: replyMessage, components: [] });
+}
+
 module.exports = {
     customId: 'setting_select_', // prefix
     async handle(interaction) {
@@ -120,6 +169,8 @@ module.exports = {
                     return await handleRoleSelect(interaction);
                 case 'setting_select_notification_channel':
                     return await handleNotificationChannelSelect(interaction);
+                case 'setting_select_dashboard_channel':
+                    return await handleDashboardChannelSelect(interaction);
                 default:
                     return; // Should not happen
             }

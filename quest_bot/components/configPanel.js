@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const questDataManager = require('../utils/questDataManager');
 
 const buttonNameMap = {
@@ -15,6 +15,7 @@ async function createConfigPanel(interaction) {
     const logChannelId = await questDataManager.getLogChannel(guildId);
     const managerRoleId = await questDataManager.getQuestManagerRole(guildId);
     const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
+    const dashboard = await questDataManager.getDashboard(guildId);
     const embedColor = await questDataManager.getEmbedColor(guildId);
     const buttonOrder = await questDataManager.getButtonOrder(guildId);
     const buttonOrderString = buttonOrder.map(key => `\`${buttonNameMap[key] || key}\``).join(' > ');
@@ -27,6 +28,7 @@ async function createConfigPanel(interaction) {
             { name: 'ログチャンネル', value: logChannelId ? `<#${logChannelId}>` : '未設定', inline: true },
             { name: '管理者ロール', value: managerRoleId ? `<@&${managerRoleId}>` : '未設定', inline: true },
             { name: '通知チャンネル', value: notificationChannelId ? `<#${notificationChannelId}>` : '未設定', inline: true },
+            { name: '掲示板チャンネル', value: dashboard ? `<#${dashboard.channelId}>` : '未設定', inline: true },
             { name: 'Embedカラー', value: `\`${embedColor}\``, inline: true },
             { name: 'ボタン表示順', value: buttonOrderString, inline: false }
         )
@@ -54,6 +56,11 @@ async function createConfigPanel(interaction) {
                         value: 'set_notification_channel',
                     },
                     {
+                        label: '掲示板チャンネル設定',
+                        description: 'クエスト掲示板を設置/移動するチャンネルを設定します。',
+                        value: 'set_dashboard_channel',
+                    },
+                    {
                         label: 'Embedカラー設定',
                         description: 'クエストメッセージの左側の色を設定します。',
                         value: 'set_embed_color',
@@ -66,7 +73,21 @@ async function createConfigPanel(interaction) {
                 ])
         );
 
-    return { embeds: [settingsEmbed], components: [row], flags: MessageFlags.Ephemeral };
+    const removeButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId('config_remove_log_channel').setLabel('ログ解除').setStyle(ButtonStyle.Danger).setDisabled(!logChannelId),
+            new ButtonBuilder().setCustomId('config_remove_manager_role').setLabel('ロール解除').setStyle(ButtonStyle.Danger).setDisabled(!managerRoleId),
+            new ButtonBuilder().setCustomId('config_remove_notification_channel').setLabel('通知解除').setStyle(ButtonStyle.Danger).setDisabled(!notificationChannelId),
+            new ButtonBuilder().setCustomId('config_remove_dashboard').setLabel('掲示板削除').setStyle(ButtonStyle.Danger).setDisabled(!dashboard)
+        );
+
+    const components = [row];
+    // いずれかの設定がされている場合のみ解除ボタンを表示
+    if (logChannelId || managerRoleId || notificationChannelId || dashboard) {
+        components.push(removeButtons);
+    }
+
+    return { embeds: [settingsEmbed], components: components, flags: MessageFlags.Ephemeral };
 }
 
 module.exports = { createConfigPanel };

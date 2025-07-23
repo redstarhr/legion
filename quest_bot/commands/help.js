@@ -15,14 +15,14 @@ module.exports = {
         .setDescription('このBotで利用できるコマンドの一覧です。');
 
       embed.addFields(
-        { name: '`/クエスト掲示板設置`', value: 'このチャンネルに新しいクエスト掲示板を設置します。' },
+        { name: '`/クエスト掲示板設置`', value: 'クエスト掲示板を設置/移動するチャンネルを選択します。' },
         { name: '`/完了クエスト一覧`', value: '完了（アーカイブ）済みのクエストを一覧表示します。' },
         { name: '`/legion-help`', value: 'このヘルプメッセージを表示します。' }
       );
 
       embed.addFields({
         name: '​', value: '--- **管理者向けコマンド** ---' }, // ​はゼロ幅スペース
-        { name: '`/setting`', value: 'Botの各種設定をボタン操作で行います。' }
+        { name: '`/クエスト設定`', value: 'Botの各種設定をボタン操作で行います。' }
       );
 
       await interaction.reply({
