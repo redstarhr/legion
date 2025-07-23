@@ -1,8 +1,8 @@
 // quest_bot/interactions/buttons/questCancelConfirm.js
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { createQuestEmbed } = require('../../utils/embeds');
-const { createQuestActionRows } = require('../../components/questActionButtons');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
+const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
@@ -41,26 +41,17 @@ module.exports = {
       }
 
       // Update all messages
-      const updatedQuest = await questDataManager.getQuest(guildId, questId);
-      // 元のクエストメッセージのみ更新
-      try {
-        const questChannel = await interaction.client.channels.fetch(updatedQuest.channelId);
-        const questMessage = await questChannel.messages.fetch(updatedQuest.messageId);
-        const newEmbed = await createQuestEmbed(updatedQuest);
-        const newButtons = await createQuestActionRows(updatedQuest);
-        await questMessage.edit({ embeds: [newEmbed], components: newButtons });
-      } catch (e) {
-        console.error(`[MessageUpdate] Failed to update original quest message ${updatedQuest.messageId}:`, e);
-        // ログには残すが、ユーザーへの通知は続行
-      }
+      const updatedQuest = await questDataManager.getQuest(guildId, questId); // Re-fetch for the most current state
+      await updateQuestMessage(interaction.client, updatedQuest);
+      await updateDashboard(interaction.client, guildId);
 
       // Log action
       await logAction(interaction, {
         title: '↩️ 受注取消',
         color: '#e67e22', // orange
         details: {
-          'クエストタイトル': updatedQuest.title || '無題',
-          'クエストID': updatedQuest.messageId,
+          'クエストタイトル': updatedQuest.title || '無題', // Use updatedQuest for consistency
+          'クエストID': questId,
         },
       });
 

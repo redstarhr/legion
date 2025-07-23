@@ -22,7 +22,7 @@ module.exports = {
 
       embed.addFields({
         name: '​', value: '--- **管理者向けコマンド** ---' }, // ​はゼロ幅スペース
-        { name: '`/クエスト設定`', value: 'Botの各種設定をボタン操作で行います。' }
+        { name: '`/setting`', value: 'Botの各種設定をボタン操作で行います。' }
       );
 
       await interaction.reply({

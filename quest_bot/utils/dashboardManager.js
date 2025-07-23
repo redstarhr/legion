@@ -18,12 +18,29 @@ async function createDashboardEmbeds(guildId, quests) {
         .setTitle('📜 クエスト一覧');
 
     if (activeQuests.length > 0) {
-        const questFields = activeQuests.map(q => ({
-            name: q.name || '無題のクエスト',
-            value: `> ${q.players}人`,
-            inline: true,
-        }));
-        questListEmbed.addFields(questFields);
+        // クエストを名前でグループ化
+        const groupedQuests = activeQuests.reduce((acc, quest) => {
+            const name = quest.name || '無題のクエスト';
+            if (!acc[name]) {
+                acc[name] = [];
+            }
+            acc[name].push(quest);
+            return acc;
+        }, {});
+
+        // グループごとにフィールドを作成
+        for (const [name, questsInGroup] of Object.entries(groupedQuests)) {
+            // グループ内のクエストを作成順にソート
+            questsInGroup.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+            const value = questsInGroup.map(q => {
+                const timestamp = Math.floor(new Date(q.createdAt).getTime() / 1000);
+                // 例: "> 2人 <t:1678886400:R>" (x分前 のように表示される)
+                return `> ${q.players}人 <t:${timestamp}:R>`;
+            }).join('\n');
+
+            questListEmbed.addFields({ name: name, value: value, inline: false });
+        }
     } else {
         questListEmbed.setDescription('現在、アクティブなクエストはありません。');
     }

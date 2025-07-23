@@ -9,7 +9,7 @@ module.exports = {
     customId: 'quest_edit_submit_', // 'quest_edit_submit_{questId}' に前方一致でマッチ
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             // 1. questIdをパースし、クエストデータを取得
             const questId = interaction.customId.replace('quest_edit_submit_', '');

@@ -1,5 +1,6 @@
 // quest_bot/interactions/selectMenus/dashAcceptPlayersSelect.js
 const questDataManager = require('../../utils/questDataManager');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 
@@ -64,6 +65,8 @@ module.exports = {
                 },
             });
 
+            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
+            await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 
             let replyMessage = `✅ クエスト「${quest.name}」を受注しました。`;

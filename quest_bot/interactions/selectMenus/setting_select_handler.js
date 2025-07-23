@@ -80,7 +80,19 @@ async function handleNotificationChannelSelect(interaction) {
 
     await questDataManager.setNotificationChannel(interaction.guildId, channelId);
 
+    let testMessageSuccess = false;
+    try {
+        await channel.send({ content: '✅ このチャンネルがクエストの受注・取消通知の送信先に設定されました。' });
+        testMessageSuccess = true;
+    } catch (error) {
+        console.error(`通知チャンネル (${channel.id}) へのテストメッセージ送信に失敗:`, error);
+    }
+
     const replyMessage = `✅ 通知チャンネルを <#${channel.id}> に設定しました。`;
+    let finalMessage = replyMessage;
+    if (!testMessageSuccess) {
+        finalMessage += '\n⚠️ **警告:** このチャンネルへのメッセージ送信に失敗しました。Botに「メッセージを送信」と「埋め込みリンク」の権限があるか確認してください。';
+    }
 
     await logAction(interaction, {
         title: '⚙️ 通知チャンネル設定',
@@ -92,7 +104,7 @@ async function handleNotificationChannelSelect(interaction) {
     });
 
     await interaction.editReply({
-        content: replyMessage,
+        content: finalMessage,
         components: [],
     });
 }

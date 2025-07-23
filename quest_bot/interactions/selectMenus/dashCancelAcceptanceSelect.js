@@ -2,6 +2,7 @@
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
@@ -47,7 +48,9 @@ module.exports = {
                 },
             });
 
-            // ダッシュボードを更新
+            // クエストメッセージとダッシュボードを更新
+            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
+            await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 
             let replyMessage = `✅ クエスト「${quest.name}」の受注を取り消しました。`;
