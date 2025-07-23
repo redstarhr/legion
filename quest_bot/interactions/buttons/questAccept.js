@@ -22,9 +22,12 @@ module.exports = {
         return interaction.reply({ content: '⚠️ あなたは既にこのクエストを受注済みです。受注内容を変更する場合は、一度「受注取消」を行ってから再度受注してください。', flags: MessageFlags.Ephemeral });
       }
 
-      // Calculate remaining slots
-      const currentAcceptedTeams = quest.accepted?.reduce((sum, a) => sum + a.teams, 0) || 0;
-      const currentAcceptedPeople = quest.accepted?.reduce((sum, a) => sum + a.people, 0) || 0;
+      // Filter out failed participants before calculating totals
+      const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
+
+      // Calculate remaining slots based on active participants
+      const currentAcceptedTeams = activeAccepted.reduce((sum, a) => sum + a.teams, 0);
+      const currentAcceptedPeople = activeAccepted.reduce((sum, a) => sum + a.people, 0);
       const remainingTeams = quest.teams - currentAcceptedTeams;
       const remainingPeople = quest.people - currentAcceptedPeople;
 
