@@ -15,6 +15,10 @@ module.exports = {
         return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
+      if (quest.isClosed) {
+        return interaction.reply({ content: '⚠️ このクエストは既に締め切られています。', flags: MessageFlags.Ephemeral });
+      }
+
       // Permission check: issuer or manager
       const isIssuer = quest.issuerId === interaction.user.id;
       const isManager = await hasQuestManagerPermission(interaction);
