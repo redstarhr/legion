@@ -1,5 +1,6 @@
 // quest_bot/interactions/selectMenus/dashEditQuestPlayersSelect.js
 const questDataManager = require('../../utils/questDataManager');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 
@@ -33,7 +34,9 @@ module.exports = {
                 },
             });
 
-            // ダッシュボードを更新
+            // クエストメッセージとダッシュボードを更新
+            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
+            await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 
             await interaction.editReply({ content: `✅ クエスト「${quest.name}」の募集人数を ${newPlayerCount}人 に修正しました。`, components: [] });

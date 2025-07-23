@@ -12,7 +12,7 @@ if (!GCS_BUCKET_NAME) {
 const storage = new Storage();
 const bucket = storage.bucket(GCS_BUCKET_NAME);
 
-const DATA_DIR_BASE = 'deta-quest';
+const DATA_DIR_BASE = 'data-legion/quest';
 const QUESTS_FILE_NAME = 'quests.json';
 const QUEST_LOG_DIR = 'quest';
 
@@ -449,7 +449,7 @@ async function deleteGuildData(guildId) {
   try {
     await bucket.deleteFiles({ prefix: prefix });
     console.log(`[DataCleanup] Successfully deleted all data for guild ${guildId} with prefix gs://${GCS_BUCKET_NAME}/${prefix}`);
-  } catch (error)
+  } catch (error) {
     console.error(`[DataCleanup] Failed to delete data for guild ${guildId}:`, error);
     // We don't re-throw here, just log the error. The bot should not crash.
   }
