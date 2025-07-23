@@ -30,6 +30,8 @@ module.exports = {
         DISCORD_TOKEN: process.env.DISCORD_TOKEN,
         CLIENT_ID: process.env.CLIENT_ID,
         GUILD_ID: process.env.GUILD_ID,
+        GCS_BUCKET_NAME: process.env.GCS_BUCKET_NAME,
+        GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS,
         watch: false,
       },
 

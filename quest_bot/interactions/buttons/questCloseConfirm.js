@@ -2,6 +2,7 @@
 const questDataManager = require('../../utils/questDataManager');
 const { MessageFlags } = require('discord.js');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
+const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -37,6 +38,7 @@ module.exports = {
       // 2. Use the centralized function to update the quest message
       const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
       await updateQuestMessage(interaction.client, updatedQuest);
+      await updateDashboard(interaction.client, interaction.guildId);
 
       // 3. アクションをログに記録
       await logAction(interaction, {

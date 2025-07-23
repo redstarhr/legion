@@ -2,6 +2,7 @@
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
+const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
@@ -37,6 +38,7 @@ module.exports = {
       // 2. 更新後のクエストを取得し、全てのメッセージを更新
       const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
       await updateQuestMessage(interaction.client, updatedQuest);
+      await updateDashboard(interaction.client, interaction.guildId);
 
       // 3. アクションをログに記録
       await logAction(interaction, {

@@ -2,6 +2,7 @@ const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 const { updateDashboard } = require('../../utils/dashboardManager');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
@@ -63,18 +64,20 @@ module.exports = {
             // 6. クエストデータを更新
             await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
-            // 7. クエスト掲示板を更新
+            // 7. クエストメッセージと掲示板を更新
+            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
+            await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 
             // 8. アクションをログに記録
             await logAction(interaction, {
                 title: '📝 クエスト編集',
                 color: '#f1c40f', // yellow
-                details: { 'クエスト名': newTitle, 'クエストID': questId },
+                details: { 'クエスト名': updatedQuest.title, 'クエストID': questId },
             });
 
             // 9. ユーザーに完了を通知
-            await interaction.editReply({ content: '✅ クエスト情報を更新し、掲示板を再生成しました。' });
+            await interaction.editReply({ content: '✅ クエスト情報を更新し、クエストメッセージと掲示板を更新しました。' });
 
         } catch (error) {
             console.error('クエスト編集の送信処理中にエラーが発生しました:', error);
