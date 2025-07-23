@@ -88,7 +88,7 @@ else
   # `set -e` が有効なため、if文でエラーを補足して専用メッセージを表示する
   if ! git stash pop; then
     echo -e "${RED}⚠️ 更新を取り込みましたが、ローカルの変更を戻す際に競合が発生しました (git stash pop)。${NC}"
-    echo "ファイル 'package.json' が競合しています。"
+    echo "競合の詳細は上記のエラーメッセージを確認してください。"
     echo -e "\n💡 以下のいずれかの方法で解決してください:"
     echo "   1. (推奨) ローカルの変更を破棄して強制同期する: ${GREEN}./update.sh -f${NC}"
     echo "   2. (上級者向け) 競合を手動で解決し、'git stash drop' を実行する。"
@@ -107,9 +107,9 @@ echo -e "\n${YELLOW}4. 依存関係のインストールとコマンドのデプ
 echo "📦 npm パッケージをインストール中..."
 npm install --no-audit --no-fund
 
-# ↓ スラッシュコマンド登録スクリプト（現在未使用のためコメントアウト）
+# スラッシュコマンド登録は通常不要なため、必要に応じて手動で実行
 # echo "📡 スラッシュコマンドをDiscordに登録中..."
-# node devcmd.js
+# node devcmdup.js
 
 # --- 5. PM2 Restart (if not skipped) ---
 if [ "$SKIP_PM2" = false ]; then

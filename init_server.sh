@@ -57,20 +57,27 @@ git clone git@github.com:star-discord/legion_kanri_bot.git "$PROJECT_DIR"
 cd "$PROJECT_DIR"
 
 echo "📝 .env ファイルを作成します"
-touch .env
-echo -e "${GREEN}✅ 空の '.env' を作成しました。${NC}"
+cat > .env << EOL
+# Discord Bot Settings
+DISCORD_TOKEN=
+CLIENT_ID=
+GUILD_ID=
 
-echo "📂 data ディレクトリを作成します"
-mkdir -p data
-echo -e "${GREEN}✅ 'data' ディレクトリを作成しました。${NC}"
+# Google Cloud Storage Settings
+GCS_BUCKET_NAME=
+GOOGLE_APPLICATION_CREDENTIALS=./gcs-key.json
+EOL
+echo -e "${GREEN}✅ '.env' のテンプレートを作成しました。${NC}"
+echo -e "${YELLOW}⚠️ 'gcs-key.json' という名前でサービスアカウントキーをこのディレクトリに配置することを推奨します。${NC}"
 
 echo "🔑 スクリプトに実行権限を付与します"
 find . -type f -name "*.sh" -exec chmod +x {} \;
 echo "✅ すべてのシェルスクリプトに実行権限を付与しました。"
 
-echo -e "\n${YELLOW}*** 重要: .env と data フォルダを設定してください ***${NC}"
+echo -e "\n${YELLOW}*** 重要: .env ファイルを設定してください ***${NC}"
 echo "1. Botのトークン等を '.env' ファイルに設定する必要があります。"
-echo "   エディタでファイルを開き、必要な情報を入力してください: ${GREEN}nano .env${NC}" read -p ".envファイルの設定が完了したら、Enterキーを押して続行してください..."
+echo "   エディタでファイルを開き、必須項目を入力してください: ${GREEN}nano .env${NC}"
+read -p ".envファイルの設定が完了したら、Enterキーを押して続行してください..."
 
 # --- 3. Dependencies & Deployment ---
 echo -e "\n${YELLOW}3. 依存関係のインストールとデプロイ...${NC}"

@@ -1,62 +1,67 @@
 // quest_bot/utils/questDataManager.js
 
+const { Storage } = require('@google-cloud/storage');
 const { nanoid } = require('nanoid');
-const fs = require('fs/promises');
-const path = require('path');
 
-// __dirname は .../quest_bot/utils なので、2階層上がってプロジェクトルートを指定
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-const QUESTS_FILE = 'quests.json';
-const CONFIG_FILE = 'config.json';
+// --- GCS Configuration ---
+const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
+if (!GCS_BUCKET_NAME) {
+  console.error("FATAL: GCS_BUCKET_NAME environment variable is not set. The bot cannot save data.");
+  throw new Error("GCS_BUCKET_NAME is not configured.");
+}
+const storage = new Storage();
+const bucket = storage.bucket(GCS_BUCKET_NAME);
+
+const DATA_DIR_BASE = 'deta-quest';
+const QUESTS_FILE_NAME = 'quests.json';
+const QUEST_LOG_DIR = 'quest';
 
 /**
- * 指定されたギルドのデータディレクトリが存在することを確認し、なければ作成する
+ * GCS上のファイルパスを生成する
  * @param {string} guildId
+ * @param {string} fileName
+ * @returns {string} GCS object path
  */
-async function ensureGuildDir(guildId) {
-  const guildDir = path.join(DATA_DIR, guildId);
-  try {
-    await fs.mkdir(guildDir, { recursive: true });
-  } catch (error) {
-    console.error(`Error creating directory for guild ${guildId}:`, error);
-    throw error;
-  }
+function getGcsFilePath(guildId, fileName) {
+  return `${DATA_DIR_BASE}/${guildId}/${fileName}`;
 }
 
 /**
- * ギルドのJSONファイルを読み込む汎用関数
+ * GCSからJSONファイルを読み込む汎用関数
  * @param {string} guildId
  * @param {string} fileName
  * @param {object} defaultValue ファイルが存在しない場合のデフォルト値
  * @returns {Promise<object>}
  */
-async function readGuildFile(guildId, fileName, defaultValue = {}) {
-  const filePath = path.join(DATA_DIR, guildId, fileName);
+async function readGcsFile(guildId, fileName, defaultValue = {}) {
+  const filePath = getGcsFilePath(guildId, fileName);
+  const file = bucket.file(filePath);
   try {
-    const data = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return defaultValue; // ファイルが存在しない場合はデフォルト値を返す
+    const [exists] = await file.exists();
+    if (!exists) {
+      return defaultValue;
     }
-    console.error(`Error reading file ${filePath}:`, error);
+    const [data] = await file.download();
+    return JSON.parse(data.toString('utf8'));
+  } catch (error) {
+    console.error(`Error reading GCS file gs://${GCS_BUCKET_NAME}/${filePath}:`, error);
     throw error;
   }
 }
 
 /**
- * ギルドのJSONファイルに書き込む汎用関数
+ * GCSへJSONファイルを書き込む汎用関数
  * @param {string} guildId
  * @param {string} fileName
  * @param {object} data
  */
-async function writeGuildFile(guildId, fileName, data) {
-  await ensureGuildDir(guildId);
-  const filePath = path.join(DATA_DIR, guildId, fileName);
+async function writeGcsFile(guildId, fileName, data) {
+  const filePath = getGcsFilePath(guildId, fileName);
+  const file = bucket.file(filePath);
   try {
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
+    await file.save(JSON.stringify(data, null, 2), { contentType: 'application/json' });
   } catch (error) {
-    console.error(`Error writing file ${filePath}:`, error);
+    console.error(`Error writing GCS file gs://${GCS_BUCKET_NAME}/${filePath}:`, error);
     throw error;
   }
 }
@@ -69,7 +74,7 @@ async function writeGuildFile(guildId, fileName, data) {
  * @returns {Promise<object>} クエストIDをキーとするクエストオブジェクトのマップ
  */
 async function getAllQuests(guildId) {
-  return await readGuildFile(guildId, QUESTS_FILE, {});
+  return await readGcsFile(guildId, QUESTS_FILE_NAME, {});
 }
 
 /**
@@ -116,7 +121,7 @@ async function createQuest(guildId, questDetails, user) {
     isArchived: false,
   };
   quests[newQuestId] = newQuest;
-  await writeGuildFile(guildId, QUESTS_FILE, quests);
+  await writeGcsFile(guildId, QUESTS_FILE_NAME, quests);
   return newQuest;
 }
 
@@ -147,20 +152,29 @@ async function updateQuest(guildId, questId, updates, user) {
   }
 
   quests[questId] = updatedQuest;
-  await writeGuildFile(guildId, QUESTS_FILE, quests);
+  await writeGcsFile(guildId, QUESTS_FILE_NAME, quests);
   return true;
 }
 
 // --- Config Data Functions ---
 
+/**
+ * ギルドの設定ファイル名を取得する (ギルドID.json)
+ * @param {string} guildId
+ * @returns {string}
+ */
+function getGuildConfigFileName(guildId) {
+  return `${guildId}.json`;
+}
+
 async function getGuildConfig(guildId) {
-  return await readGuildFile(guildId, CONFIG_FILE, {});
+  return await readGcsFile(guildId, getGuildConfigFileName(guildId), {});
 }
 
 async function updateGuildConfig(guildId, updates) {
   const config = await getGuildConfig(guildId);
   const newConfig = { ...config, ...updates };
-  await writeGuildFile(guildId, CONFIG_FILE, newConfig);
+  await writeGcsFile(guildId, getGuildConfigFileName(guildId), newConfig);
 }
 
 async function getQuestManagerRole(guildId) {
@@ -247,16 +261,22 @@ async function setDashboard(guildId, messageId, channelId) {
  * @returns {Promise<string[]>}
  */
 async function getAllGuildIds() {
+  // GCSで 'data/' プレフィックス以下の "ディレクトリ" (共通プレフィックス) を一覧する
   try {
-    // dataディレクトリ直下のディレクトリ名をギルドIDとして取得
-    const entries = await fs.readdir(DATA_DIR, { withFileTypes: true });
-    return entries.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return []; // dataディレクトリ自体が存在しない場合は空配列
+    const query = {
+      prefix: `${DATA_DIR_BASE}/`,
+      delimiter: '/',
+    };
+    const [_, __, apiResponse] = await bucket.getFiles(query);
+
+    if (apiResponse.prefixes) {
+      // apiResponse.prefixes は 'data/guildId1/', 'data/guildId2/' のような形式で返ってくる
+      return apiResponse.prefixes.map(p => p.replace(query.prefix, '').replace('/', ''));
     }
-    console.error('Error reading guild directories:', error);
-    throw error;
+    return [];
+  } catch (error) {
+    console.error('Error listing guild directories in GCS:', error);
+    return []; // エラー時は空配列を返し、ボットのクラッシュを防ぐ
   }
 }
 
@@ -288,6 +308,135 @@ async function getActiveAcceptances(guildId, userId = null) {
   );
 }
 
+/**
+ * 今日の日付を 'YYYY-MM-DD' 形式で取得する (JST)
+ * @returns {string}
+ */
+function getTodayDateString() {
+  // タイムゾーンをAsia/Tokyoに設定してフォーマット
+  // 'sv-SE' ロケールは 'YYYY-MM-DD' 形式を返すため、文字列操作より堅牢
+  return new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+}
+
+/**
+ * クエストデータを処理し、日次報告のペイロードとクリーンアップされたクエストリストを生成する。
+ * この関数は副作用（I/Oなど）を持たない。
+ * @param {object} allQuests - 元となる全てのクエストオブジェクトのマップ。
+ * @returns {{
+ *   summaryPayload: {completedQuests: object[], failedParticipants: object[]}|null,
+ *   cleanedQuests: object,
+ *   hasChanges: boolean
+ * }}
+ * @private
+ */
+function _prepareEndOfDayReport(allQuests) {
+  const cleanedQuests = {};
+  const completedQuests = [];
+  const failedParticipants = [];
+  let hasChanges = false;
+
+  for (const questId in allQuests) {
+    const quest = allQuests[questId];
+
+    // 1. 完了済み (アーカイブ済み) クエストの処理
+    if (quest.isArchived) {
+      completedQuests.push({ ...quest });
+      hasChanges = true;
+      continue; // クリーンアップされたリストには含めない
+    }
+
+    // 2. アクティブなクエストの処理と、失敗した参加者の集計
+    const activeParticipants = [];
+    let questHadFailures = false;
+
+    if (Array.isArray(quest.accepted)) {
+      for (const p of quest.accepted) {
+        if (p.status === 'failed') {
+          failedParticipants.push({
+            questId: quest.id,
+            questName: quest.name || '無題のクエスト',
+            userId: p.userId,
+            userTag: p.userTag, // ログ用にユーザー情報も追加
+            teams: p.teams,
+            people: p.people,
+            reason: p.reason || '理由なし',
+          });
+          questHadFailures = true;
+        } else {
+          activeParticipants.push(p);
+        }
+      }
+    }
+
+    // 失敗した参加者がいた場合、クエストデータが変更されたことになる
+    if (questHadFailures) {
+      hasChanges = true;
+      const updatedQuest = { ...quest, accepted: activeParticipants };
+      cleanedQuests[questId] = updatedQuest;
+    } else {
+      // 変更がないクエストはそのまま引き継ぐ
+      cleanedQuests[questId] = quest;
+    }
+  }
+
+  const hasReportableItems = completedQuests.length > 0 || failedParticipants.length > 0;
+
+  const summaryPayload = hasReportableItems
+    ? { completedQuests, failedParticipants }
+    : null;
+
+  return { summaryPayload, cleanedQuests, hasChanges };
+}
+
+/**
+ * 「1日の終わり」処理を実行する。
+ * 完了/失敗したクエストを集計し、日次ログとして保存後、元のクエストデータをクリーンアップする。
+ * @param {string} guildId
+ * @returns {Promise<{
+ *   success: boolean,
+ *   summary?: {
+ *     date: string,
+ *     completedQuests: object[],
+ *     failedParticipants: object[],
+ *   },
+ *   error?: string
+ * }>}
+ */
+async function processEndOfDay(guildId) {
+  const allQuests = await getAllQuests(guildId);
+
+  // 純粋なデータ処理関数を呼び出す
+  const { summaryPayload, cleanedQuests, hasChanges } = _prepareEndOfDayReport(allQuests);
+
+  // 報告対象がなければ早期に終了
+  if (!summaryPayload) {
+    return { success: false, error: '報告対象のクエスト完了または失敗がありません。' };
+  }
+
+  const todayStr = getTodayDateString();
+  const dailyLogFileName = `${QUEST_LOG_DIR}/${todayStr}.json`;
+
+  const finalSummary = {
+    date: new Date().toISOString(),
+    ...summaryPayload,
+  };
+
+  try {
+    // 1. 日次ログをGCSに保存する
+    await writeGcsFile(guildId, dailyLogFileName, finalSummary);
+
+    // 2. 元のデータに変更があった場合、クリーンアップされたクエストリストで上書き保存する
+    if (hasChanges) {
+      await writeGcsFile(guildId, QUESTS_FILE_NAME, cleanedQuests);
+    }
+
+    return { success: true, summary: finalSummary };
+  } catch (error) {
+    console.error(`[processEndOfDay] Error processing for guild ${guildId}:`, error);
+    return { success: false, error: '日次処理中にエラーが発生しました。' };
+  }
+}
+
 module.exports = {
   getAllQuests,
   getQuest,
@@ -308,4 +457,5 @@ module.exports = {
   getDashboard,
   setDashboard,
   getActiveAcceptances,
+  processEndOfDay,
 };

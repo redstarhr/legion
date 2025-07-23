@@ -5,6 +5,7 @@ const { Client, GatewayIntentBits, Collection, MessageFlags } = require('discord
 const fs = require('fs');
 const path = require('path');
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
+const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 
 // Botクライアントを作成（必要なIntentを指定）
 const client = new Client({
@@ -75,8 +76,8 @@ client.on('interactionCreate', async interaction => {
       if (handler) await handler.handle(interaction);
 
     // セレクトメニューが選択された場合
-    } else if (interaction.isStringSelectMenu()) {
-      let handler;
+    } else if (interaction.isAnySelectMenu()) { // isStringSelectMenu() から isAnySelectMenu() に変更し、全てのセレクトメニューに対応
+      let handler; 
       for (const [key, value] of client.selectMenus) {
         if (interaction.customId.startsWith(key)) {
           handler = value;
@@ -132,6 +133,9 @@ client.once('ready', () => {
   setInterval(() => {
     checkAndCloseExpiredQuests(client);
   }, 60 * 1000); // 60000ms = 1 minute
+
+  // 定時実行タスクを初期化
+  initializeScheduler(client);
 });
 
 // ✅ Discordにログイン
