@@ -17,7 +17,10 @@ module.exports = {
                 return interaction.editReply({ content: '⚠️ 対象のクエストが見つかりませんでした。', components: [] });
             }
 
-            const updates = { players: newPlayerCount };
+            const updates = {
+                players: newPlayerCount,
+                people: newPlayerCount, // 互換性のために追加
+            };
             await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
             await logAction(interaction, {

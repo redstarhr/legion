@@ -112,6 +112,7 @@ async function createQuest(guildId, questDetails, user) {
   const newQuest = {
     name: questDetails.name,
     players: questDetails.players,
+    people: questDetails.players, // 互換性のために追加
     teams: questDetails.teams,
     id: newQuestId,
     issuerId: user.id,
