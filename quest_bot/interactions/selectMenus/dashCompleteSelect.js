@@ -8,7 +8,7 @@ module.exports = {
     customId: 'dash_select_completeQuest_', // Prefix match
     async handle(interaction) {
         try {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const [questId, userId] = interaction.values[0].split('_');
 
@@ -48,7 +48,7 @@ module.exports = {
             if (interaction.replied || interaction.deferred) {
                 await interaction.editReply({ content: '❌ エラーが発生したため、討伐完了を報告できませんでした。' }).catch(console.error);
             } else {
-                await interaction.reply({ content: '❌ エラーが発生したため、討伐完了を報告できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+                await interaction.reply({ content: '❌ エラーが発生したため、討伐完了を報告できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
             }
         }
     },

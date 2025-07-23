@@ -12,12 +12,15 @@ const { hasQuestManagerPermission } = require('../utils/permissionUtils');
 async function createConfigPanel(interaction) {
   const guildId = interaction.guildId;
 
-  // Fetch all current settings
-  const logChannelId = await questDataManager.getLogChannel(guildId);
-  const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
-  const managerRoleId = await questDataManager.getQuestManagerRole(guildId);
-  const embedColor = await questDataManager.getEmbedColor(guildId);
-  const buttonOrder = await questDataManager.getButtonOrder(guildId);
+  // Fetch all current settings at once for efficiency
+  const config = await questDataManager.getGuildConfig(guildId);
+  const {
+    logChannelId = null,
+    notificationChannelId = null,
+    questManagerRoleId: managerRoleId = null,
+    embedColor = '#00bfff', // Default from questDataManager
+    buttonOrder = ['accept', 'cancel', 'edit', 'dm'], // Default from questDataManager
+  } = config;
 
   const buttonNameMap = {
     accept: '受注',

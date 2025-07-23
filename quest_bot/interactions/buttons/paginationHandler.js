@@ -14,7 +14,7 @@ module.exports = {
 
       // コマンドを実行した本人以外は操作できないようにする
       if (interaction.user.id !== userId) {
-        return interaction.reply({ content: 'あなたはこのボタンを操作できません。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: 'あなたはこのボタンを操作できません。', flags: MessageFlags.Ephemeral });
       }
 
       await interaction.deferUpdate();
@@ -35,7 +35,7 @@ module.exports = {
     } catch (error) {
       console.error('ページネーションの処理中にエラーが発生しました:', error);
       // deferUpdate後なので、followUpでエラー通知
-      await interaction.followUp({ content: 'エラーが発生したため、ページを更新できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+      await interaction.followUp({ content: 'エラーが発生したため、ページを更新できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
     }
   },
 };

@@ -1,5 +1,5 @@
 // quest_bot/interactions/selectMenus/dashEditQuestSelect.js
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
 module.exports = {
@@ -10,46 +10,29 @@ module.exports = {
             const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
             if (!quest) {
-                return interaction.reply({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', flags: [MessageFlags.Ephemeral] });
+                return interaction.update({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', components: [] });
             }
 
-            const modal = new ModalBuilder()
-                .setCustomId(`dash_submit_editQuestModal_${questId}_${interaction.id}`)
-                .setTitle(`クエスト修正: ${quest.name}`);
+            const numberOptions = Array.from({ length: 25 }, (_, i) => ({
+                label: `${i}人`,
+                value: `${i}`,
+            }));
 
-            const nameInput = new TextInputBuilder()
-                .setCustomId('quest_name')
-                .setLabel('クエスト名 (例: プラ, カマ)')
-                .setStyle(TextInputStyle.Short)
-                .setValue(quest.name)
-                .setRequired(true);
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId(`dash_select_editPlayers_${questId}_${interaction.id}`)
+                .setPlaceholder('新しい募集人数を選択してください')
+                .addOptions(numberOptions);
 
-            const playersInput = new TextInputBuilder()
-                .setCustomId('quest_players')
-                .setLabel('募集人数 (半角数字)')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.players))
-                .setRequired(true);
+            const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            const teamsInput = new TextInputBuilder()
-                .setCustomId('quest_teams')
-                .setLabel('募集組数 (半角数字)')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.teams))
-                .setRequired(true);
+            await interaction.update({
+                content: `**クエスト「${quest.name}」の募集人数を修正します。**\n新しい人数を選択してください。`,
+                components: [row],
+            });
 
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(nameInput),
-                new ActionRowBuilder().addComponents(playersInput),
-                new ActionRowBuilder().addComponents(teamsInput)
-            );
-
-            await interaction.showModal(modal);
         } catch (error) {
-            console.error('クエスト修正モーダルの表示中にエラーが発生しました:', error);
-            if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
-            }
+            console.error('クエスト修正UI(1/2)の表示中にエラーが発生しました:', error);
+            await interaction.update({ content: 'エラーが発生したため、UIを表示できませんでした。', components: [] }).catch(console.error);
         }
     },
 };

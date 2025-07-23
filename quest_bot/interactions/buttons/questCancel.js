@@ -10,13 +10,13 @@ module.exports = {
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
       // ユーザーがこのクエストを受注しているか確認
       const userAcceptances = quest.accepted?.filter(a => a.userId === interaction.user.id);
       if (!userAcceptances || userAcceptances.length === 0) {
-        return interaction.reply({ content: 'あなたはこのクエストを受注していません。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: 'あなたはこのクエストを受注していません。', flags: MessageFlags.Ephemeral });
       }
 
       const totalAcceptedTeams = userAcceptances.reduce((sum, a) => sum + a.teams, 0);

@@ -10,16 +10,16 @@ module.exports = {
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.reply({ content: '⚠️ 対象のクエストデータが見つかりません。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: '⚠️ 対象のクエストデータが見つかりません。', flags: MessageFlags.Ephemeral });
       }
       if (quest.isClosed || quest.isArchived) {
-        return interaction.reply({ content: '⚠️ このクエストは現在募集を締め切っています。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: '⚠️ このクエストは現在募集を締め切っています。', flags: MessageFlags.Ephemeral });
       }
 
       // ユーザーが既に受注済みかチェック
       const hasAlreadyAccepted = quest.accepted?.some(a => a.userId === interaction.user.id);
       if (hasAlreadyAccepted) {
-        return interaction.reply({ content: '⚠️ あなたは既にこのクエストを受注済みです。受注内容を変更する場合は、一度「受注取消」を行ってから再度受注してください。', flags: [MessageFlags.Ephemeral] });
+        return interaction.reply({ content: '⚠️ あなたは既にこのクエストを受注済みです。受注内容を変更する場合は、一度「受注取消」を行ってから再度受注してください。', flags: MessageFlags.Ephemeral });
       }
 
       // Calculate remaining slots
@@ -29,7 +29,7 @@ module.exports = {
       const remainingPeople = quest.people - currentAcceptedPeople;
 
       if (remainingTeams <= 0 && remainingPeople <= 0) {
-          return interaction.reply({ content: '⚠️ このクエストは既に定員に達しています。', flags: [MessageFlags.Ephemeral] });
+          return interaction.reply({ content: '⚠️ このクエストは既に定員に達しています。', flags: MessageFlags.Ephemeral });
       }
 
       const modal = new ModalBuilder()
@@ -66,7 +66,7 @@ module.exports = {
     } catch (error) {
       console.error('クエスト受注モーダルの表示中にエラーが発生しました:', error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、受注を開始できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+        await interaction.reply({ content: 'エラーが発生したため、受注を開始できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
       }
     }
   },

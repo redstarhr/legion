@@ -1,30 +1,22 @@
 // quest_bot/interactions/buttons/configSetNotificationChannel.js
-const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { ChannelSelectMenuBuilder, ChannelType, MessageFlags } = require('discord.js');
+const { replyWithConfigSelect } = require('../../components/configSelectUI');
 
 module.exports = {
   customId: 'config_open_notificationChannelSelect',
   async handle(interaction) {
     try {
-      // 他のユーザーの操作と競合しないように、インタラクションIDを含んだユニークなIDを生成
       const uniqueId = `config_select_notificationChannel_${interaction.id}`;
 
       const selectMenu = new ChannelSelectMenuBuilder()
         .setCustomId(uniqueId)
         .setPlaceholder('受注/取消通知を送るチャンネルを選択してください')
-        .addChannelTypes(ChannelType.GuildText); // テキストチャンネルのみに限定
+        .addChannelTypes(ChannelType.GuildText);
 
-      const removeButton = new ButtonBuilder()
-        .setCustomId(`config_action_removeNotificationChannel_${uniqueId}`)
-        .setLabel('設定を解除')
-        .setStyle(ButtonStyle.Danger);
-
-      const rowWithSelect = new ActionRowBuilder().addComponents(selectMenu);
-      const rowWithButton = new ActionRowBuilder().addComponents(removeButton);
-
-      await interaction.reply({
+      await replyWithConfigSelect(interaction, {
+        selectMenu,
+        removeButtonCustomId: `config_action_removeNotificationChannel_${uniqueId}`,
         content: 'クエストの受注や取消があった際に通知を送るテキストチャンネルを選択するか、設定を解除してください。',
-        components: [rowWithSelect, rowWithButton],
-        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error('通知チャンネル設定UIの表示中にエラーが発生しました:', error);

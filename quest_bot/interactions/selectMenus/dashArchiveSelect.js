@@ -8,7 +8,7 @@ module.exports = {
     customId: 'dash_select_archiveQuest_', // Prefix match
     async handle (interaction) {
         try {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const questId = interaction.values[0];
 
@@ -43,7 +43,7 @@ module.exports = {
             if (interaction.replied || interaction.deferred) {
                 await interaction.editReply({ content: '❌ エラーが発生したため、クエストを完了できませんでした。' }).catch(console.error);
             } else {
-                await interaction.reply({ content: '❌ エラーが発生したため、クエストを完了できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
+                await interaction.reply({ content: '❌ エラーが発生したため、クエストを完了できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
             }
         }
     },
