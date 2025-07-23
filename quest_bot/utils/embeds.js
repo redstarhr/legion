@@ -62,7 +62,7 @@ async function createQuestEmbed(quest) {
     embed.addFields({ name: `参加者リスト (${quest.accepted.length}名)`, value: participantsList.substring(0, 1024) });
   }
 
-  embed.setFooter({ text: `クエストID: ${quest.messageId || quest.id}` });
+  embed.setFooter({ text: `クエストID: ${quest.id}` });
   if (quest.createdAt) {
       embed.setTimestamp(new Date(quest.createdAt));
   }

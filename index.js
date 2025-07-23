@@ -98,7 +98,16 @@ client.on('interactionCreate', async interaction => {
       if (handler) await handler.handle(interaction);
     }
   } catch (error) {
-    console.error('❌ エラー:', error);
+    let interactionDetails = 'Unknown Interaction';
+    if (interaction.isCommand()) {
+        interactionDetails = `Command: /${interaction.commandName}`;
+    } else if (interaction.isButton() || interaction.isStringSelectMenu() || interaction.isModalSubmit()) {
+        interactionDetails = `Component: ${interaction.customId}`;
+    }
+
+    console.error(`❌ [ERROR] An error occurred in [${interactionDetails}] triggered by [${interaction.user.tag} (${interaction.user.id})] in guild [${interaction.guild.name} (${interaction.guild.id})]:`);
+    console.error(error);
+
     // 10062: Unknown interaction. これは通常、インタラクションが3秒以内に応答されずタイムアウトしたことを意味する。
     // このエラーに対して再度応答しようとするとクラッシュするため、ログに記録するだけで処理を終了する。
     if (error.code === 10062) {

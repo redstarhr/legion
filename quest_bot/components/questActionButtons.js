@@ -15,22 +15,22 @@ async function createQuestActionRows(quest) {
   // Define all possible main action buttons
   const allButtons = {
     accept: new ButtonBuilder()
-      .setCustomId(`quest_open_acceptModal_${quest.messageId}`)
+      .setCustomId(`quest_open_acceptModal_${quest.id}`)
       .setLabel('受注する')
       .setStyle(ButtonStyle.Success)
       .setDisabled(isClosed),
     cancel: new ButtonBuilder()
-      .setCustomId(`quest_open_cancelConfirm_${quest.messageId}`)
+      .setCustomId(`quest_open_cancelConfirm_${quest.id}`)
       .setLabel('受注取消')
       .setStyle(ButtonStyle.Danger)
       .setDisabled(isClosed),
     edit: new ButtonBuilder()
-      .setCustomId(`quest_open_editModal_${quest.messageId}`)
+      .setCustomId(`quest_open_editModal_${quest.id}`)
       .setLabel('編集')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(isClosed),
     dm: new ButtonBuilder()
-      .setCustomId(`quest_open_dmModal_${quest.messageId}`)
+      .setCustomId(`quest_open_dmModal_${quest.id}`)
       .setLabel('参加者に連絡')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(isClosed || !quest.accepted || quest.accepted.length === 0),
@@ -49,42 +49,41 @@ async function createQuestActionRows(quest) {
 
   // Build the second row for state management
   const stateManagementRow = new ActionRowBuilder();
+
   if (quest.isArchived) {
-    // アーカイブ済みの場合は、無効化されたボタンを表示
     stateManagementRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`quest_archived_${quest.messageId}`)
+        .setCustomId(`quest_archived_${quest.id}`)
         .setLabel('アーカイブ済')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(true)
     );
-  } else if (quest.isClosed) {
-    // 〆切済みの場合は、「募集再開」と「クエスト完了」ボタンを表示
-    stateManagementRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`quest_toggle_reopen_${quest.messageId}`)
-        .setLabel('募集再開')
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`quest_open_archiveConfirm_${quest.messageId}`)
-        .setLabel('クエスト完了')
-        .setStyle(ButtonStyle.Secondary)
-    );
   } else {
-    // 募集中の場合は、「募集〆切」ボタンを表示
-    stateManagementRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`quest_open_closeConfirm_${quest.messageId}`)
-        .setLabel('募集〆切')
-        .setStyle(ButtonStyle.Secondary)
-    );
-  }
+    // 募集再開/〆切ボタン
+    if (quest.isClosed) {
+      stateManagementRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`quest_toggle_reopen_${quest.id}`)
+          .setLabel('募集再開')
+          .setStyle(ButtonStyle.Primary)
+      );
+    } else {
+      stateManagementRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`quest_open_closeConfirm_${quest.id}`)
+          .setLabel('募集〆切')
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
 
-  // アーカイブされていないクエストには、ユーティリティボタンを追加
-  if (!quest.isArchived) {
+    // クエスト完了ボタン
+    stateManagementRow.addComponents(
+      new ButtonBuilder().setCustomId(`quest_open_archiveConfirm_${quest.id}`).setLabel('クエスト完了').setStyle(ButtonStyle.Secondary)
+    );
+    // 参加者リストDLボタン
     stateManagementRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`quest_action_downloadCsv_${quest.messageId}`)
+        .setCustomId(`quest_action_downloadCsv_${quest.id}`)
         .setLabel('参加者リストDL')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!quest.accepted || quest.accepted.length === 0)
