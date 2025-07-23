@@ -30,9 +30,10 @@ async function logAction(interaction, { title, color = '#2f3136', description, d
     }
 
     const fields = [];
-    // 常に実行者情報を追加
+    // 実行者情報を追加。Botによる自動実行の場合はラベルを変更する。
+    const executorLabel = interaction.user.bot ? 'システム' : '実行者';
     fields.push({
-      name: '実行者',
+      name: executorLabel,
       value: `${interaction.user.tag} (${interaction.user.id})`,
       inline: true,
     });

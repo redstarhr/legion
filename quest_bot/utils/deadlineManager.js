@@ -41,9 +41,15 @@ async function checkAndCloseExpiredQuests(client) {
               // 3. Send a notification to the notification channel.
               const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
               if (notificationChannelId) {
-                const notificationChannel = await client.channels.fetch(notificationChannelId);
-                const notificationEmbed = new EmbedBuilder().setColor(0xf4900c).setTitle('⏰ クエスト期限切れ通知').setDescription(`クエスト「${updatedQuest.title || '無題のクエスト'}」が設定された期限を過ぎたため、自動的に募集を締め切りました。`).setTimestamp();
-                if (notificationChannel?.isTextBased()) await notificationChannel.send({ embeds: [notificationEmbed] });
+                try {
+                  const notificationChannel = await client.channels.fetch(notificationChannelId);
+                  if (notificationChannel?.isTextBased()) {
+                    const notificationEmbed = new EmbedBuilder().setColor(0xf4900c).setTitle('⏰ クエスト期限切れ通知').setDescription(`クエスト「${updatedQuest.title || '無題のクエスト'}」が設定された期限を過ぎたため、自動的に募集を締め切りました。`).setTimestamp();
+                    await notificationChannel.send({ embeds: [notificationEmbed] });
+                  }
+                } catch (notificationError) {
+                  console.error(`[${guildId}] Failed to send deadline notification for quest ${questId}:`, notificationError);
+                }
               }
 
               // 4. Log the action.
