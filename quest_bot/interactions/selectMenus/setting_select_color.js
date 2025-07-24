@@ -2,6 +2,7 @@ const configDataManager = require('../../../configDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 const colorOptions = [
     { label: 'デフォルト (水色)', value: '#00bfff' },
     { label: '青', value: '#3498db' },
@@ -28,7 +29,7 @@ module.exports = {
 
       const replyMessage = `✅ Embedの色を **${selectedOption.label} (${selectedColor})** に設定しました。`;
 
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '⚙️ Embedカラー設定',
         description: replyMessage,
         color: '#95a5a6',
@@ -36,11 +37,10 @@ module.exports = {
 
       // Refresh the panel
       const newView = await createConfigPanel(interaction);
-      await interaction.editReply(newView);
+      await interaction.editReply({ content: replyMessage, ...newView });
 
     } catch (error) {
-      console.error('カラー設定の処理中にエラーが発生しました:', error);
-      await interaction.editReply({ content: 'エラーが発生したため、色を設定できませんでした。', components: [] });
+      await handleInteractionError({ interaction, error, context: 'Embedカラー設定' });
     }
   },
 };
