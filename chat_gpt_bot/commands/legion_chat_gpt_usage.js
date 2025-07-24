@@ -1,13 +1,9 @@
 // commands/legion_chat_gpt_usage.js
 
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { getOpenAIUsage } = require('../utils/star_chat_gpt_usage/openaiUsage');
-const { configManager } = require('../utils/configManager');
 const {
   createAdminEmbed,
-  createErrorEmbed,
-  createSuccessEmbed,
 } = require('../utils/embedHelper');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
@@ -29,39 +25,32 @@ module.exports = {
           '❌ 権限がありません',
           'この操作は管理者のみ実行可能です。'
         );
-        return await interaction.editReply({ embeds: [noPermissionEmbed] });
+        return await interaction.editReply({ embeds: [noPermissionEmbed], components: [] });
       }
 
-      const guildId = interaction.guildId;
-      const config = await configManager.getChatGPTConfig(guildId);
-
-      // APIキー未設定の場合のエラーメッセージ
-      if (!config.apiKey) {
-        const noApiKeyEmbed = createErrorEmbed(
-          'APIキー未設定',
-          'ChatGPTのAPIキーが未設定のため、使用量を取得できません。'
+      const row = new ActionRowBuilder()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId('chatgpt_select_usage_type')
+            .setPlaceholder('確認したい機能のタイプを選択してください')
+            .addOptions([
+              {
+                label: '「今日のChatGPT」機能',
+                description: '「今日の情報」ボタンや関連コマンドの使用量を確認します。',
+                value: 'usage_today_gpt',
+              },
+              {
+                label: '自動応答機能',
+                description: '設定チャンネルでの自動応答の使用量を確認します。',
+                value: 'usage_auto_response',
+              },
+            ])
         );
-        return await interaction.editReply({ embeds: [noApiKeyEmbed] });
-      }
 
-      // OpenAI 使用量取得
-      const usageResult = await getOpenAIUsage(config.apiKey);
-
-      if (usageResult.error) {
-        const errorEmbed = createErrorEmbed(
-          '使用量取得エラー',
-          usageResult.message || '不明なエラーが発生しました。'
-        );
-        return await interaction.editReply({ embeds: [errorEmbed] });
-      }
-
-      // 成功メッセージ
-      const usageEmbed = createSuccessEmbed(
-        '💸 OpenAI 今月の使用量',
-        `現在の使用量は **$${usageResult.usage} USD** です。\n\n※この値は OpenAI ダッシュボードから取得された最新データです。`
-      );
-
-      await interaction.editReply({ embeds: [usageEmbed] });
+      await interaction.editReply({
+        content: 'どの機能に関連する使用量を確認しますか？\n**（注意: 表示される値はAPIキーに紐づく合計使用量です）**',
+        components: [row],
+      });
     } catch (error) {
       await handleInteractionError({ interaction, error, context: 'ChatGPT使用量表示' });
     }

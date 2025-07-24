@@ -1,5 +1,5 @@
 // quest_bot/interactions/selectMenus/dashAcceptQuestSelect.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
@@ -27,25 +27,31 @@ module.exports = {
                  return interaction.update({ content: '⚠️ このクエストは既に定員に達しています。', components: [] });
             }
 
-            // 募集中の人数（最大25人）の選択肢を生成
-            const peopleOptionsCount = Math.min(remainingPeople, 25);
-            const peopleOptions = Array.from({ length: peopleOptionsCount }, (_, i) => ({
-                label: `${i + 1}人`,
-                value: `${i + 1}`,
-            }));
+            // モーダルを作成して表示する
+            const modal = new ModalBuilder()
+                .setCustomId(`quest_submit_acceptModal_${questId}`) // 既存のモーダル送信ハンドラを再利用
+                .setTitle(`クエスト受注: ${quest.name}`);
 
-            const selectMenu = new StringSelectMenuBuilder()
-                // 次のハンドラに team=1 を渡す
-                .setCustomId(`dash_select_acceptPlayers_${questId}_1_${interaction.id}`)
-                .setPlaceholder('受注する人数を選択してください')
-                .addOptions(peopleOptions);
+            const peopleInput = new TextInputBuilder()
+                .setCustomId('accept_people')
+                .setLabel(`受注する人数 (残り: ${remainingPeople}人)`)
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder(`例: 4 (最大 ${remainingPeople} 人まで)`)
+                .setRequired(true);
 
-            const row = new ActionRowBuilder().addComponents(selectMenu);
+            const commentInput = new TextInputBuilder()
+                .setCustomId('accept_comment')
+                .setLabel('備考（任意）')
+                .setStyle(TextInputStyle.Paragraph)
+                .setPlaceholder('なんでもどうぞ')
+                .setRequired(false);
 
-            await interaction.update({
-                content: `**クエスト「${quest.name}」を受注します。**\n受注する人数を選択してください。`,
-                components: [row],
-            });
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(peopleInput),
+                new ActionRowBuilder().addComponents(commentInput)
+            );
+
+            await interaction.showModal(modal);
         } catch (error) {
             await handleInteractionError({ interaction, error, context: 'クエスト受注UI表示' });
         }

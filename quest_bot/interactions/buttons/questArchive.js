@@ -1,84 +1,59 @@
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
+// quest_bot/interactions/buttons/questArchive.js
 const questDataManager = require('../../../manager/questDataManager');
+const { MessageFlags } = require('discord.js');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
+const { updateDashboard } = require('../../utils/dashboardManager');
+const { logAction } = require('../../utils/logger');
 const { canEditQuest } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
-    customId: 'quest_edit_', // 'quest_edit_{questId}' に前方一致でマッチ
-    async handle(interaction) {
-        try {
-            const questId = interaction.customId.replace('quest_edit_', '');
-            const quest = await questDataManager.getQuest(interaction.guildId, questId);
+  customId: 'quest_confirm_archive_', // Prefix match
+  async handle (interaction) {
+    try {
+      await interaction.deferUpdate();
 
-            if (!quest) {
-                return interaction.reply({ content: '⚠️ 編集しようとしたクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
-            }
+      const questId = interaction.customId.split('_')[3];
+      const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
-            // 権限チェック: クエスト発行者 or クエスト管理者/作成者
-            if (!(await canEditQuest(interaction, quest))) {
-                return interaction.reply({ content: '🚫 このクエストを編集する権限がありません。', flags: MessageFlags.Ephemeral });
-            }
+      if (!quest) {
+        return interaction.followUp({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
+      }
 
-            // 完了済みのクエストは編集させない
-            if (quest.isArchived) {
-                return interaction.reply({ content: '⚠️ 完了済みのクエストは編集できません。', flags: MessageFlags.Ephemeral });
-            }
+      if (quest.isArchived) {
+        return interaction.followUp({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。', flags: MessageFlags.Ephemeral });
+      }
 
-            // モーダルを作成
-            const modal = new ModalBuilder()
-                .setCustomId(`quest_edit_submit_${questId}`) // モーダル送信時のID
-                .setTitle('クエストの編集');
+      // Final permission check: issuer or quest manager/creator
+      if (!(await canEditQuest(interaction, quest))) {
+        return interaction.followUp({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
+      }
 
-            // データモデルの互換性を考慮して、両方のプロパティ名を確認
-            const titleInput = new TextInputBuilder()
-                .setCustomId('quest_title')
-                .setLabel('クエストタイトル')
-                .setStyle(TextInputStyle.Short)
-                .setValue(quest.title || quest.name || '') // title と name の両方に対応
-                .setRequired(true)
-                .setMaxLength(100);
+      const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, {
+        isArchived: true,
+        isClosed: true,
+        completedAt: new Date().toISOString(), // Used for sorting in listCompletedQuests
+      }, interaction.user);
 
-            const descriptionInput = new TextInputBuilder()
-                .setCustomId('quest_description')
-                .setLabel('クエスト詳細')
-                .setStyle(TextInputStyle.Paragraph)
-                .setValue(quest.description || '')
-                .setRequired(false)
-                .setMaxLength(1000);
+      await updateQuestMessage(interaction.client, updatedQuest);
 
-            const teamsInput = new TextInputBuilder()
-                .setCustomId('quest_teams')
-                .setLabel('募集 組数')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.teams || '1'))
-                .setRequired(true);
+      // 3. Update the dashboard
+      await updateDashboard(interaction.client, interaction.guildId);
 
-            const peopleInput = new TextInputBuilder()
-                .setCustomId('quest_people')
-                .setLabel('募集 人数（1組あたり）')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.people || quest.players || '1')) // people と players の両方に対応
-                .setRequired(true);
+      // 4. Log the action
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
+        title: '✅ クエスト完了',
+        color: '#95a5a6', // grey
+        details: {
+          'クエストタイトル': updatedQuest.title || '無題',
+          'クエストID': questId,
+        },
+      });
 
-            const deadlineInput = new TextInputBuilder()
-                .setCustomId('quest_deadline')
-                .setLabel('募集期限（YYYY-MM-DD HH:MM形式）')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('例：2024-12-31 23:59 (未入力で無期限)')
-                .setValue(quest.deadline || '')
-                .setRequired(false);
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(titleInput),
-                new ActionRowBuilder().addComponents(descriptionInput),
-                new ActionRowBuilder().addComponents(teamsInput),
-                new ActionRowBuilder().addComponents(peopleInput),
-                new ActionRowBuilder().addComponents(deadlineInput)
-            );
-
-            await interaction.showModal(modal);
-        } catch (error) {
-            await handleInteractionError({ interaction, error, context: 'クエスト編集モーダル表示' });
-        }
+      // 5. Update the confirmation message
+      await interaction.editReply({ content: '✅ クエストを完了状態にしました。', components: [] });
+    } catch (error) {
+      await handleInteractionError({ interaction, error, context: 'クエスト完了確認' });
     }
+  },
 };
