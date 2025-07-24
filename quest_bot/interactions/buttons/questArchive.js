@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/questArchive.js
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { isQuestAdmin } = require('../../../utils/permissionManager');
 const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
 
       // Permission check: issuer or manager
       const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await hasQuestManagerPermission(interaction);
+      const isManager = await isQuestAdmin(interaction);
 
       if (!isIssuer && !isManager) {
         return interaction.reply({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });

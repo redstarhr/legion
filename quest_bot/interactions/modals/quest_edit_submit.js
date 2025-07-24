@@ -1,6 +1,6 @@
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { isQuestAdmin } = require('../../../utils/permissionManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
@@ -21,7 +21,7 @@ module.exports = {
 
             // 2. 権限を再チェック
             const isIssuer = quest.issuerId === interaction.user.id;
-            const isManager = await hasQuestManagerPermission(interaction);
+            const isManager = await isQuestAdmin(interaction);
             if (!isIssuer && !isManager) {
                 return interaction.editReply({ content: '🚫 このクエストを編集する権限がありません。' });
             }

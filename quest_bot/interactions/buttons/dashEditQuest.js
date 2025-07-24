@@ -1,13 +1,13 @@
 // quest_bot/interactions/buttons/dashEditQuest.js
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { isQuestAdmin } = require('../../../utils/permissionManager');
 
 module.exports = {
     customId: 'dash_open_editQuestSelect',
     async handle(interaction) {
         try {
-            const isManager = await hasQuestManagerPermission(interaction);
+            const isManager = await isQuestAdmin(interaction);
             if (!isManager) {
                 return interaction.reply({ content: 'クエストの修正は、管理者またはクエスト管理者ロールを持つユーザーのみが行えます。', flags: MessageFlags.Ephemeral });
             }

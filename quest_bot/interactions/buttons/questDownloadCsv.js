@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/questDownloadCsv.js
 const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { isQuestAdmin } = require('../../../utils/permissionManager');
 const { logAction } = require('../../utils/logger');
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
 
       // 権限チェック: 発注者または管理者
       const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await hasQuestManagerPermission(interaction);
+      const isManager = await isQuestAdmin(interaction);
 
       if (!isIssuer && !isManager) {
         return interaction.editReply({ content: '参加者リストのダウンロードは、発注者または管理者のみが行えます。' });

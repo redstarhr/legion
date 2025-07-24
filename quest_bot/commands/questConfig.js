@@ -1,7 +1,7 @@
 // commands/questConfig.js
 
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
-const { hasQuestManagerPermission } = require('../utils/permissionUtils');
+const { isQuestAdmin } = require('../../utils/permissionManager');
 const { createConfigPanel } = require('../components/configPanel');
 
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
 
   async execute(interaction) {
     // 実行者の権限をチェック (管理者 or クエスト管理者ロール)
-    if (!(await hasQuestManagerPermission(interaction))) {
+    if (!(await isQuestAdmin(interaction))) {
       return interaction.reply({ content: 'このコマンドを実行する権限がありません。', flags: MessageFlags.Ephemeral });
     }
 

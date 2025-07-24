@@ -46,3 +46,16 @@ async function isQuestAdmin(interaction) {
  * @returns {Promise<boolean>}
  */
 async function is
+async function isChatGptAdmin(interaction) {
+    if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return true;
+    }
+    const config = await configManager.getLegionConfig(interaction.guildId);
+    return hasRole(interaction.member, config.legionAdminRoleId) || hasRole(interaction.member, config.chatGptAdminRoleId);
+}
+
+module.exports = {
+    isLegionAdmin,
+    isQuestAdmin,
+    isChatGptAdmin,
+};

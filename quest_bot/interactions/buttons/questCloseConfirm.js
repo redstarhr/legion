@@ -4,7 +4,7 @@ const { MessageFlags } = require('discord.js');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { isQuestAdmin } = require('../../../utils/permissionManager');
 
 module.exports = {
   customId: 'quest_confirm_close_', // Prefix match
@@ -26,7 +26,7 @@ module.exports = {
 
       // 念のため再度権限チェック
       const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await hasQuestManagerPermission(interaction);
+      const isManager = await isQuestAdmin(interaction);
 
       if (!isIssuer && !isManager) {
         return interaction.editReply({ content: 'クエストの〆切は、発注者または管理者のみが行えます。', components: [] });

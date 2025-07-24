@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/questDm.js
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { isQuestAdmin } = require('../../../utils/permissionManager');
 
 module.exports = {
   customId: 'quest_open_dmModal_', // Prefix match
@@ -16,7 +16,7 @@ module.exports = {
 
       // Permission check: issuer or manager
       const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await hasQuestManagerPermission(interaction);
+      const isManager = await isQuestAdmin(interaction);
 
       if (!isIssuer && !isManager) {
         return interaction.reply({ content: '参加者への連絡は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });

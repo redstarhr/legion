@@ -13,7 +13,6 @@ async function createConfigPanel(interaction) {
 
     // Fetch current settings from the data manager
     const logChannelId = await questDataManager.getLogChannel(guildId);
-    const managerRoleId = await questDataManager.getQuestManagerRole(guildId);
     const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
     const dashboard = await questDataManager.getDashboard(guildId);
     const embedColor = await questDataManager.getEmbedColor(guildId);
@@ -26,7 +25,6 @@ async function createConfigPanel(interaction) {
         .setDescription('現在のサーバー設定です。\n下のメニューから変更したい項目を選択してください。')
         .addFields(
             { name: 'ログチャンネル', value: logChannelId ? `<#${logChannelId}>` : '未設定', inline: true },
-            { name: '管理者ロール', value: managerRoleId ? `<@&${managerRoleId}>` : '未設定', inline: true },
             { name: '通知チャンネル', value: notificationChannelId ? `<#${notificationChannelId}>` : '未設定', inline: true },
             { name: '掲示板チャンネル', value: dashboard ? `<#${dashboard.channelId}>` : '未設定', inline: true },
             { name: 'Embedカラー', value: `\`${embedColor}\``, inline: true },
@@ -44,11 +42,6 @@ async function createConfigPanel(interaction) {
                         label: 'ログチャンネル設定',
                         description: '各種操作ログを送信するチャンネルを設定します。',
                         value: 'set_log_channel',
-                    },
-                    {
-                        label: '管理者ロール設定',
-                        description: 'Botの管理権限を持つロールを設定します。',
-                        value: 'set_manager_role',
                     },
                     {
                         label: '通知チャンネル設定',
@@ -76,7 +69,6 @@ async function createConfigPanel(interaction) {
     const removeButtons = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder().setCustomId('config_remove_log_channel').setLabel('ログ解除').setStyle(ButtonStyle.Danger).setDisabled(!logChannelId),
-            new ButtonBuilder().setCustomId('config_remove_manager_role').setLabel('ロール解除').setStyle(ButtonStyle.Danger).setDisabled(!managerRoleId),
             new ButtonBuilder().setCustomId('config_remove_notification_channel').setLabel('通知解除').setStyle(ButtonStyle.Danger).setDisabled(!notificationChannelId),
             new ButtonBuilder().setCustomId('config_remove_dashboard').setLabel('掲示板削除').setStyle(ButtonStyle.Danger).setDisabled(!dashboard)
         );
