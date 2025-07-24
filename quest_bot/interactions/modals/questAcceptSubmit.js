@@ -6,6 +6,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { sendAcceptanceNotification } = require('../../utils/notificationManager');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_submit_acceptModal_', // Prefix match
@@ -100,12 +101,7 @@ module.exports = {
       if (isNowFull) { replyMessage += '\nℹ️ この受注により、募集が定員に達したため自動的に締め切られました。'; }
       await interaction.editReply({ content: replyMessage });
     } catch (error) {
-      console.error('クエスト受注の処理中にエラーが発生しました:', error);
-      if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: 'エラーが発生したため、クエストを受注できませんでした。' }).catch(console.error);
-      } else {
-        await interaction.reply({ content: 'エラーが発生したため、クエストを受注できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
-      }
+      await handleInteractionError({ interaction, error, context: 'クエスト受注処理' });
     }
   },
 };

@@ -3,6 +3,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_select_editPlayers_', // Prefix match
@@ -41,8 +42,7 @@ module.exports = {
             await interaction.editReply({ content: `✅ クエスト「${quest.name}」の募集人数を ${newPlayerCount}人 に修正しました。`, components: [] });
 
         } catch (error) {
-            console.error('クエスト人数修正処理中にエラーが発生しました:', error);
-            await interaction.editReply({ content: '❌ エラーが発生したため、クエストを修正できませんでした。', components: [] }).catch(console.error);
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからの人数修正' });
         }
     },
 };

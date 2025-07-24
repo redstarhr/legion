@@ -2,6 +2,7 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_submit_dmModal_', // Prefix match
@@ -68,12 +69,7 @@ module.exports = {
       }
       await interaction.editReply({ content: replyMessage });
     } catch (error) {
-      console.error('参加者へのDM送信処理中にエラーが発生しました:', error);
-      if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: 'エラーが発生したため、DMを送信できませんでした。' }).catch(console.error);
-      } else {
-        await interaction.reply({ content: 'エラーが発生したため、DMを送信できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
-      }
+      await handleInteractionError({ interaction, error, context: '参加者DM送信' });
     }
   },
 };

@@ -1,9 +1,10 @@
 const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const { canEditQuest } = require('../../../permissionManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'quest_edit_submit_', // 'quest_edit_submit_{questId}' に前方一致でマッチ
@@ -20,9 +21,8 @@ module.exports = {
             }
 
             // 2. 権限を再チェック
-            const isIssuer = quest.issuerId === interaction.user.id;
-            const isManager = await isQuestAdmin(interaction);
-            if (!isIssuer && !isManager) {
+            // Final permission check: issuer or quest manager/creator
+            if (!(await canEditQuest(interaction, quest))) {
                 return interaction.editReply({ content: '🚫 このクエストを編集する権限がありません。' });
             }
 
@@ -69,7 +69,7 @@ module.exports = {
             await updateDashboard(interaction.client, interaction.guildId);
 
             // 8. アクションをログに記録
-            await logAction(interaction, {
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                 title: '📝 クエスト編集',
                 color: '#f1c40f', // yellow
                 details: { 'クエスト名': updatedQuest.title, 'クエストID': questId },
@@ -79,8 +79,7 @@ module.exports = {
             await interaction.editReply({ content: '✅ クエスト情報を更新し、クエストメッセージと掲示板を更新しました。' });
 
         } catch (error) {
-            console.error('クエスト編集の送信処理中にエラーが発生しました:', error);
-            await interaction.editReply({ content: '❌ エラーが発生したため、クエストを更新できませんでした。' }).catch(console.error);
+            await handleInteractionError({ interaction, error, context: 'クエスト編集送信' });
         }
     }
 };

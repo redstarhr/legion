@@ -2,6 +2,7 @@ const configDataManager = require('../../../configDataManager');
 const { createConfigPanel } = require('../../components/configPanel');
 const { handleInteractionError } = require('../../../interactionErrorLogger');
 
+const { logAction } = require('../../utils/logger');
 module.exports = {
     customId: 'setting_select_creator_roles',
     async handle(interaction) {
@@ -19,6 +20,12 @@ module.exports = {
             } else {
                 successMessage = '✅ クエスト作成者ロールの設定を解除しました。';
             }
+
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
+                title: '⚙️ クエスト作成者ロール設定',
+                description: successMessage,
+                color: '#95a5a6',
+            });
 
             const newView = await createConfigPanel(interaction);
             await interaction.editReply({

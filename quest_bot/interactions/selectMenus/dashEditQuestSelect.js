@@ -1,6 +1,7 @@
 // quest_bot/interactions/selectMenus/dashEditQuestSelect.js
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
+const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_select_editQuest_', // Prefix match
@@ -13,26 +14,65 @@ module.exports = {
                 return interaction.update({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', components: [] });
             }
 
-            const numberOptions = Array.from({ length: 25 }, (_, i) => ({
-                label: `${i}人`,
-                value: `${i}`,
-            }));
+            if (quest.isArchived) {
+                return interaction.update({ content: '⚠️ 完了済みのクエストは編集できません。', components: [] });
+            }
 
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`dash_select_editPlayers_${questId}_${interaction.id}`)
-                .setPlaceholder('新しい募集人数を選択してください')
-                .addOptions(numberOptions);
+            // Build the same modal as the quest_edit button
+            const modal = new ModalBuilder()
+                .setCustomId(`quest_edit_submit_${questId}`)
+                .setTitle('クエストの編集');
 
-            const row = new ActionRowBuilder().addComponents(selectMenu);
+            const titleInput = new TextInputBuilder()
+                .setCustomId('quest_title')
+                .setLabel('クエストタイトル')
+                .setStyle(TextInputStyle.Short)
+                .setValue(quest.title || quest.name || '')
+                .setRequired(true)
+                .setMaxLength(100);
 
-            await interaction.update({
-                content: `**クエスト「${quest.name}」の募集人数を修正します。**\n新しい人数を選択してください。`,
-                components: [row],
-            });
+            const descriptionInput = new TextInputBuilder()
+                .setCustomId('quest_description')
+                .setLabel('クエスト詳細')
+                .setStyle(TextInputStyle.Paragraph)
+                .setValue(quest.description || '')
+                .setRequired(false)
+                .setMaxLength(1000);
+
+            const teamsInput = new TextInputBuilder()
+                .setCustomId('quest_teams')
+                .setLabel('募集 組数')
+                .setStyle(TextInputStyle.Short)
+                .setValue(String(quest.teams || '1'))
+                .setRequired(true);
+
+            const peopleInput = new TextInputBuilder()
+                .setCustomId('quest_people')
+                .setLabel('募集 人数（1組あたり）')
+                .setStyle(TextInputStyle.Short)
+                .setValue(String(quest.people || quest.players || '1'))
+                .setRequired(true);
+
+            const deadlineInput = new TextInputBuilder()
+                .setCustomId('quest_deadline')
+                .setLabel('募集期限（YYYY-MM-DD HH:MM形式）')
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder('例：2024-12-31 23:59 (未入力で無期限)')
+                .setValue(quest.deadline || '')
+                .setRequired(false);
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(titleInput),
+                new ActionRowBuilder().addComponents(descriptionInput),
+                new ActionRowBuilder().addComponents(teamsInput),
+                new ActionRowBuilder().addComponents(peopleInput),
+                new ActionRowBuilder().addComponents(deadlineInput)
+            );
+
+            await interaction.showModal(modal);
 
         } catch (error) {
-            console.error('クエスト修正UI(1/2)の表示中にエラーが発生しました:', error);
-            await interaction.update({ content: 'エラーが発生したため、UIを表示できませんでした。', components: [] }).catch(console.error);
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからのクエスト編集モーダル表示' });
         }
     },
 };
