@@ -3,6 +3,7 @@ const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { canEditQuest } = require('../../../permissionManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_action_downloadCsv_', // Prefix match
@@ -10,18 +11,15 @@ module.exports = {
     try {
       await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
-      const questId = interaction.customId.split('_')[3]; // quest_download_csv_QUESTID
+      const questId = interaction.customId.replace('quest_action_downloadCsv_', '');
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
         return interaction.editReply({ content: '対象のクエストが見つかりませんでした。' });
       }
 
-      // 権限チェック: 発注者または管理者
-      const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await isQuestAdmin(interaction);
-
-      if (!isIssuer && !isManager) {
+      // Permission check: issuer or quest manager/creator
+      if (!(await canEditQuest(interaction, quest))) {
         return interaction.editReply({ content: '参加者リストのダウンロードは、発注者または管理者のみが行えます。' });
       }
 
@@ -48,7 +46,7 @@ module.exports = {
         const comment = p.comment ? `"${p.comment.replace(/"/g, '""')}"` : '';
         const row = [
           p.userId,
-          p.user,
+          p.userTag,
           p.teams,
           p.people,
           comment,
@@ -81,10 +79,7 @@ module.exports = {
         files: [attachment],
       });
     } catch (error) {
-      console.error('参加者リストのダウンロード処理中にエラーが発生しました:', error);
-      if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: 'エラーが発生したため、ファイルを生成できませんでした。' }).catch(console.error);
-      }
+      await handleInteractionError({ interaction, error, context: '参加者リストダウンロード' });
     }
   },
 };
