@@ -415,7 +415,7 @@ async function processEndOfDay(guildId) {
   }
 
   const todayStr = getTodayDateString();
-  const dailyLogFileName = `${QUEST_LOG_DIR}/${todayStr}.json`;
+  const dailyLogFileName = `${QUEST_LOG_DIR}/${todayStr}_quest.json`;
 
   const finalSummary = {
     date: new Date().toISOString(),

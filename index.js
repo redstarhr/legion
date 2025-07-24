@@ -4,56 +4,88 @@ require('dotenv').config(); // .envファイルを読み込む
 const { Client, GatewayIntentBits, Collection, MessageFlags } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+
+// --- Bot Modules ---
+// 各機能のメインファイルをインポート
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./quest_bot/utils/questDataManager');
+// TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
+// const chatGptDataManager = require('./chat_gpt_bot/utils/dataManager');
 
 // Botクライアントを作成（必要なIntentを指定）
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent, // ChatGPTがメッセージに応答する場合に必要
   ]
 });
 
 // コマンド、ボタン、モーダル用のコレクションを用意
 client.commands = new Collection();
 client.buttons = new Collection();
-client.selectMenus = new Collection(); // セレクトメニュー用のコレクションを追加
+client.selectMenus = new Collection();
 client.modals = new Collection();
 
+// --- ハンドラ読み込み ---
+const botModules = ['quest_bot', 'chat_gpt_bot', 'legion_config_bot'];
 
-// ✅ スラッシュコマンドの読み込み
-const commandFiles = fs.readdirSync('./quest_bot/commands').filter(file => file.endsWith('.js'));
-for (const file of commandFiles) {
-  const filePath = path.join(__dirname, 'quest_bot', 'commands', file);
-  const command = require(filePath);
-  client.commands.set(command.data.name, command);
-}
+console.log('🔄 ハンドラを読み込んでいます...');
 
-// ✅ ボタンの読み込み
-const buttonPath = path.join(__dirname, 'quest_bot', 'interactions', 'buttons');
-const buttonFiles = fs.readdirSync(buttonPath).filter(file => file.endsWith('.js'));
-for (const file of buttonFiles) {
-  const button = require(path.join(buttonPath, file));
-  client.buttons.set(button.customId, button);
-}
+for (const moduleName of botModules) {
+    console.log(`  📁 モジュール [${moduleName}] を読み込み中...`);
 
-// ✅ セレクトメニューの読み込み
-const selectMenuPath = path.join(__dirname, 'quest_bot', 'interactions', 'selectMenus');
-const selectMenuFiles = fs.readdirSync(selectMenuPath).filter(file => file.endsWith('.js'));
-for (const file of selectMenuFiles) {
-  const selectMenu = require(path.join(selectMenuPath, file));
-  client.selectMenus.set(selectMenu.customId, selectMenu);
-}
+    // コマンド
+    const commandsPath = path.join(__dirname, moduleName, 'commands');
+    if (fs.existsSync(commandsPath)) {
+        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+        for (const file of commandFiles) {
+            try {
+                const filePath = path.join(commandsPath, file);
+                const command = require(filePath);
+                if ('data' in command && 'execute' in command) {
+                    client.commands.set(command.data.name, command);
+                } else {
+                    console.warn(`[⚠️警告] ${filePath} は不正なコマンド形式です。`);
+                }
+            } catch (error) {
+                console.error(`[❌エラー] ${file} の読み込みに失敗しました:`, error);
+            }
+        }
+    }
 
-// ✅ モーダルの読み込み
-const modalPath = path.join(__dirname, 'quest_bot', 'interactions', 'modals');
-const modalFiles = fs.readdirSync(modalPath).filter(file => file.endsWith('.js'));
-for (const file of modalFiles) {
-  const modal = require(path.join(modalPath, file));
-  client.modals.set(modal.customId, modal);
+    // インタラクション (buttons, selectMenus, modals)
+    const interactionsPath = path.join(__dirname, moduleName, 'interactions');
+    if (fs.existsSync(interactionsPath)) {
+        const interactionTypes = {
+            buttons: client.buttons,
+            selectMenus: client.selectMenus,
+            modals: client.modals,
+        };
+
+        for (const [type, collection] of Object.entries(interactionTypes)) {
+            const typePath = path.join(interactionsPath, type);
+            if (fs.existsSync(typePath)) {
+                const interactionFiles = fs.readdirSync(typePath).filter(file => file.endsWith('.js'));
+                for (const file of interactionFiles) {
+                    try {
+                        const filePath = path.join(typePath, file);
+                        const interactionHandler = require(filePath);
+                        if ('customId' in interactionHandler && 'handle' in interactionHandler) {
+                            collection.set(interactionHandler.customId, interactionHandler);
+                        } else {
+                            console.warn(`[⚠️警告] ${filePath} は不正なインタラクションハンドラ形式です。`);
+                        }
+                    } catch (error) {
+                        console.error(`[❌エラー] ${file} の読み込みに失敗しました:`, error);
+                    }
+                }
+            }
+        }
+    }
 }
+console.log('✅ ハンドラの読み込みが完了しました。');
 
 
 // ✅ interactionCreate イベントのハンドリング
@@ -77,7 +109,7 @@ client.on('interactionCreate', async interaction => {
       if (handler) await handler.handle(interaction);
 
     // セレクトメニューが選択された場合
-    } else if (interaction.isAnySelectMenu()) { // isStringSelectMenu() から isAnySelectMenu() に変更し、全てのセレクトメニューに対応
+    } else if (interaction.isAnySelectMenu()) {
       let handler; 
       for (const [key, value] of client.selectMenus) {
         if (interaction.customId.startsWith(key)) {
@@ -129,7 +161,10 @@ client.on('interactionCreate', async interaction => {
 client.on('guildDelete', async (guild) => {
   console.log(`Bot was removed from guild: ${guild.name} (${guild.id}). Cleaning up data...`);
   try {
+    // quest_bot のデータを削除
     await questDataManager.deleteGuildData(guild.id);
+    // TODO: chat_gpt_bot のデータも削除する処理を後で追加
+    // await chatGptDataManager.deleteGuildData(guild.id);
   } catch (error) {
     console.error(`Failed to execute cleanup for guild ${guild.id}:`, error);
   }
