@@ -30,12 +30,20 @@ client.selectMenus = new Collection();
 client.modals = new Collection();
 
 // --- ハンドラ読み込み ---
-const botModules = ['quest_bot', 'chat_gpt_bot', 'legion_config_bot'];
 
-console.log('🔄 ハンドラを読み込んでいます...');
+// Botモジュールを動的に検出
+const botModules = fs.readdirSync(__dirname, { withFileTypes: true })
+  .filter(dirent => dirent.isDirectory())
+  .map(dirent => dirent.name)
+  // モジュールと判断する条件: 'commands' または 'interactions' ディレクトリを持つ
+  .filter(name =>
+    fs.existsSync(path.join(__dirname, name, 'commands')) ||
+    fs.existsSync(path.join(__dirname, name, 'interactions'))
+  );
+
+console.log(`🔄 ${botModules.length}個のモジュールからハンドラを読み込みます: [${botModules.join(', ')}]`);
 
 for (const moduleName of botModules) {
-    console.log(`  📁 モジュール [${moduleName}] を読み込み中...`);
 
     // コマンド
     const commandsPath = path.join(__dirname, moduleName, 'commands');
