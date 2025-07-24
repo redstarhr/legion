@@ -5,6 +5,7 @@ const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
+const { sendCancellationNotification } = require('../../utils/notificationManager');
 
 module.exports = {
   customId: 'quest_confirm_cancel_', // Prefix match
@@ -55,17 +56,7 @@ module.exports = {
       });
 
       // Send notification
-      const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
-      if (notificationChannelId) {
-        try {
-          const notificationChannel = await interaction.client.channels.fetch(notificationChannelId);
-          if (notificationChannel?.isTextBased()) {
-            const notificationEmbed = new EmbedBuilder().setColor(0xf4900c).setTitle('⚠️ 受注取消通知').setDescription(`クエスト「${updatedQuest.title || '無題のクエスト'}」の受注が取り消されました。`).addFields({ name: '取消者', value: interaction.user.tag, inline: true }).setTimestamp();
-            if (wasFullAndClosed) { notificationEmbed.setFooter({ text: 'ℹ️ この取消により、募集が自動的に再開されました。' }); }
-            await notificationChannel.send({ embeds: [notificationEmbed] });
-          }
-        } catch (error) { console.error(`[${guildId}] Notification failed for quest cancellation ${questId}:`, error); }
-      }
+      await sendCancellationNotification({ interaction, quest: updatedQuest, wasFull: wasFullAndClosed });
 
       // Final reply to user
       let replyMessage = '✅ クエストの受注を取り消しました。';

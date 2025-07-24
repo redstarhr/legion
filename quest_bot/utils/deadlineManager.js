@@ -2,9 +2,9 @@
 
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('./questDataManager');
-const configDataManager = require('../../configDataManager');
 const { logAction } = require('./logger');
 const { updateQuestMessage } = require('./questMessageManager');
+const { sendDeadlineNotification } = require('./notificationManager');
 
 let isChecking = false; // Lock to prevent overlapping executions
 
@@ -50,18 +50,7 @@ async function checkAndCloseExpiredQuests(client) {
               await updateQuestMessage(client, updatedQuest);
 
               // 3. Send a notification to the notification channel.
-              const notificationChannelId = await configDataManager.getNotificationChannel(guildId);
-              if (notificationChannelId) {
-                try {
-                  const notificationChannel = await client.channels.fetch(notificationChannelId);
-                  if (notificationChannel?.isTextBased()) {
-                    const notificationEmbed = new EmbedBuilder().setColor(0xf4900c).setTitle('⏰ クエスト期限切れ通知').setDescription(`クエスト「${updatedQuest.title || '無題のクエスト'}」が設定された期限を過ぎたため、自動的に募集を締め切りました。`).setTimestamp();
-                    await notificationChannel.send({ embeds: [notificationEmbed] });
-                  }
-                } catch (notificationError) {
-                  console.error(`[${guildId}] Failed to send deadline notification for quest ${questId}:`, notificationError);
-                }
-              }
+              await sendDeadlineNotification({ client, quest: updatedQuest });
 
               // 4. Log the action.
               await logAction({ client, guildId, user: client.user }, {

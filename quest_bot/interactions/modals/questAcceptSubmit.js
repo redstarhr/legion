@@ -5,6 +5,7 @@ const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
+const { sendAcceptanceNotification } = require('../../utils/notificationManager');
 
 module.exports = {
   customId: 'quest_submit_acceptModal_', // Prefix match
@@ -92,18 +93,7 @@ module.exports = {
       });
 
       // 9. Send notification
-      const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
-      if (notificationChannelId) {
-        try {
-          const notificationChannel = await interaction.client.channels.fetch(notificationChannelId);
-          if (notificationChannel?.isTextBased()) {
-            const notificationEmbed = new EmbedBuilder().setColor(0x57f287).setTitle('✅ クエスト受注通知').setDescription(`クエスト「${updatedQuest.title || '無題のクエスト'}」に新しい受注がありました。`).addFields({ name: '受注者', value: interaction.user.tag, inline: true },{ name: '受注内容', value: `${teamsNum}組 / ${peopleNum}人`, inline: true },{ name: '受注チャンネル', value: `\`${interaction.channel.name}\``, inline: true }).setTimestamp();
-            if (comment) { notificationEmbed.addFields({ name: 'コメント', value: comment }); }
-            if (isNowFull) { notificationEmbed.setFooter({ text: 'ℹ️ この受注により、募集が自動的に締め切られました。' }); }
-            await notificationChannel.send({ embeds: [notificationEmbed] });
-          }
-        } catch (error) { console.error(`[${guildId}] Notification failed for quest ${questId}:`, error); }
-      }
+      await sendAcceptanceNotification({ interaction, quest: updatedQuest, acceptance: newAcceptance, wasFull: isNowFull });
 
       // 10. Final reply to user
       let replyMessage = '✅ クエストを受注しました！';

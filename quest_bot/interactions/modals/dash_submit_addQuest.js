@@ -37,16 +37,28 @@ module.exports = {
         try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const praCount = parseInt(interaction.fields.getTextInputValue('pra_count'), 10) || 0;
-            const kamaCount = parseInt(interaction.fields.getTextInputValue('kama_count'), 10) || 0;
+            const praCountStr = interaction.fields.getTextInputValue('pra_count');
+            const kamaCountStr = interaction.fields.getTextInputValue('kama_count');
 
-            const createdQuests = [];
+            const praCount = parseInt(praCountStr, 10);
+            const kamaCount = parseInt(kamaCountStr, 10);
 
-            const newPraQuest = await createAndLogQuest(interaction, 'プラ', praCount);
-            if (newPraQuest) createdQuests.push(newPraQuest);
+            // Input validation
+            if (isNaN(praCount) || isNaN(kamaCount) || praCount < 0 || kamaCount < 0 || praCount > 24 || kamaCount > 24) {
+                return interaction.editReply({ content: '⚠️ 募集人数には0から24までの半角数字を入力してください。' });
+            }
 
-            const newKamaQuest = await createAndLogQuest(interaction, 'カマ', kamaCount);
-            if (newKamaQuest) createdQuests.push(newKamaQuest);
+            const questsToCreate = [
+                { name: 'プラ', count: praCount },
+                { name: 'カマ', count: kamaCount }
+            ];
+
+            const creationPromises = questsToCreate
+                .filter(q => q.count > 0) // Only create quests if count > 0
+                .map(q => createAndLogQuest(interaction, q.name, q.count));
+
+            // Run all creation tasks in parallel and filter out null results
+            const createdQuests = (await Promise.all(creationPromises)).filter(Boolean);
 
             if (createdQuests.length > 0) {
                 await updateDashboard(interaction.client, interaction.guildId);
