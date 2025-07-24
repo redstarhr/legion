@@ -9,7 +9,7 @@ const {
 } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
 const { idManager } = require('../utils/idManager');
-const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+const { handleInteractionError } = require('../../interactionErrorLogger');
 const { createAdminEmbed } = require('../utils/star_chat_gpt_usage/embedHelper');
 
 module.exports = {

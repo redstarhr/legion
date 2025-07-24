@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/dash_open_addQuestSelect.js
 const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
-const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_open_addQuestSelect',

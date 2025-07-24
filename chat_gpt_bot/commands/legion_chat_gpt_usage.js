@@ -8,7 +8,7 @@ const {
   createErrorEmbed,
   createSuccessEmbed,
 } = require('../utils/star_chat_gpt_usage/embedHelper');
-const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+const { handleInteractionError } = require('../../interactionErrorLogger');
 const { getOpenAIUsage } = require('../utils/star_chat_gpt_usage/openaiUsage');
 
 module.exports = {

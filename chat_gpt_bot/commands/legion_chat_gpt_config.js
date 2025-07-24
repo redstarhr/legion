@@ -2,7 +2,7 @@
 
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlagsBitField } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+const { handleInteractionError } = require('../../interactionErrorLogger');
 const { idManager } = require('../utils/idManager');
 const { getChatGPTConfig } = require('../utils/configManager');
 
