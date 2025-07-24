@@ -34,7 +34,7 @@ module.exports = {
 
             const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
 
-            await logAction(interaction, {
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                 title: '❌ 討伐失敗',
                 color: '#e74c3c', // red
                 details: {

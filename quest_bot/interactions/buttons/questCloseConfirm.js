@@ -3,6 +3,7 @@ const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { canEditQuest } = require('../../../permissionManager');
 const { replyWithConfirmation } = require('../../components/confirmationUI');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_open_closeConfirm_', // Prefix match

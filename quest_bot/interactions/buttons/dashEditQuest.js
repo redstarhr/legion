@@ -2,7 +2,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_open_editQuestSelect',

@@ -3,7 +3,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../utils/questDataManager');
 const { generateCompletedQuestsView } = require('../utils/paginationUtils');
-const { handleInteractionError } = require('../../interactionErrorLogger');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
 module.exports = {
   data: new SlashCommandBuilder()

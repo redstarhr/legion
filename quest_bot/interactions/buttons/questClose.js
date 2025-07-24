@@ -5,6 +5,7 @@ const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { canEditQuest } = require('../../../permissionManager');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_confirm_archive_', // Prefix match

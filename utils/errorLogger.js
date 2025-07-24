@@ -44,3 +44,12 @@ async function logError({ error, client, guildId, interaction, customContext }) 
 
         // Add error stack, respecting Discord's character limits
         const errorMessage = error.stack || error.message;
+        errorEmbed.setDescription(`\`\`\`\n${errorMessage.substring(0, 4000)}\n\`\`\``);
+
+        await logChannel.send({ embeds: [errorEmbed] });
+    } catch (discordError) {
+        console.error(`[ErrorLogger] CRITICAL: Failed to send error log to Discord channel ${logChannelId}.`, discordError);
+    }
+}
+
+module.exports = { logError };

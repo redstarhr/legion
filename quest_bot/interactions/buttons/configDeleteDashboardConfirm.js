@@ -4,7 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 module.exports = {
   customId: 'config_confirm_deleteDashboard',
   async handle(interaction) {
@@ -37,7 +37,7 @@ module.exports = {
       await questDataManager.setDashboard(interaction.guildId, null, null);
 
       // 3. アクションをログに記録
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '🗑️ ダッシュボード削除',
         color: '#e74c3c',
         description: 'クエストダッシュボードが削除されました。',

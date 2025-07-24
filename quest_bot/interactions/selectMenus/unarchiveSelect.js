@@ -36,7 +36,7 @@ module.exports = {
       await updateDashboard(interaction.client, guildId);
 
       // 3. Log the action
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '↩️ クエスト完了状態の取消',
         color: '#3498db', // blue
         details: {

@@ -22,9 +22,15 @@ if (!DISCORD_TOKEN || !CLIENT_ID) {
  */
 async function main() {
   const commands = [];
-  const botModules = ['quest_bot', 'chat_gpt_bot', 'legion_config_bot'];
 
-  console.log(`${YELLOW}🔍 全モジュールのコマンドファイルを読み込んでいます...${NC}`);
+  // Botモジュールを動的に検出 (index.jsと同一ロジック)
+  const botModules = fs.readdirSync(__dirname, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name)
+    // モジュールと判断する条件: 'commands' ディレクトリを持つ
+    .filter(name => fs.existsSync(path.join(__dirname, name, 'commands')));
+
+  console.log(`${YELLOW}🔍 ${botModules.length}個のモジュールからコマンドを読み込みます: [${botModules.join(', ')}]${NC}`);
 
   // --- コマンドの読み込みとデータ整形 ---
   for (const moduleName of botModules) {

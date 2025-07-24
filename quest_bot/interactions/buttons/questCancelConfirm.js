@@ -6,7 +6,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { sendCancellationNotification } = require('../../utils/notificationManager');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_confirm_cancel_', // Prefix match

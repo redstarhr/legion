@@ -1,6 +1,7 @@
 // quest_bot/interactions/buttons/dashCancelAcceptance.js
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_open_cancelAcceptanceSelect',

@@ -4,7 +4,8 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const { canEditQuest } = require('../../../permissionManager');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_toggle_reopen_', // Prefix match
@@ -25,10 +26,7 @@ module.exports = {
       }
 
       // Permission check: issuer or manager
-      const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await isQuestAdmin(interaction);
-
-      if (!isIssuer && !isManager) {
+      if (!(await canEditQuest(interaction, quest))) {
         return interaction.followUp({ content: 'クエストの募集再開は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 

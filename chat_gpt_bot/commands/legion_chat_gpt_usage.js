@@ -1,6 +1,15 @@
 // commands/legion_chat_gpt_usage.js
 
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { isChatGptAdmin } = require('../../permissionManager');
+const { getOpenAIUsage } = require('../utils/star_chat_gpt_usage/openaiUsage');
+const { configManager } = require('../utils/configManager');
+const {
+  createAdminEmbed,
+  createErrorEmbed,
+  createSuccessEmbed,
+} = require('../utils/star_chat_gpt_usage/embedHelper');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
 
 module.exports = {

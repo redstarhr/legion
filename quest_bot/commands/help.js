@@ -1,7 +1,7 @@
 // commands/help.js
 
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
-const { handleInteractionError } = require('../../interactionErrorLogger');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
 module.exports = {
   data: new SlashCommandBuilder()

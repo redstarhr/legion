@@ -2,6 +2,7 @@
 
 const { MessageFlags } = require('discord.js');
 const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'list_completed_', // 完了クエスト一覧のページネーションを処理
@@ -33,9 +34,7 @@ module.exports = {
         ...newView,
       });
     } catch (error) {
-      console.error('ページネーションの処理中にエラーが発生しました:', error);
-      // deferUpdate後なので、followUpでエラー通知
-      await interaction.followUp({ content: 'エラーが発生したため、ページを更新できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: '完了クエスト一覧ページネーション' });
     }
   },
 };

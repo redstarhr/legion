@@ -3,7 +3,7 @@ const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { canEditQuest } = require('../../../permissionManager');
 const { logAction } = require('../../utils/logger');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_action_downloadCsv_', // Prefix match
@@ -63,7 +63,7 @@ module.exports = {
       });
 
       // 4. アクションをログに記録
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '📥 参加者リストDL',
         color: '#71368a', // purple
         details: {
