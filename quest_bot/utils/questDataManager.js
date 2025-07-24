@@ -235,6 +235,7 @@ function getTodayDateString() {
 function _prepareEndOfDayReport(allQuests) {
   const cleanedQuests = {};
   const completedQuests = [];
+  const completedParticipants = [];
   const failedParticipants = [];
   let hasChanges = false;
 
@@ -248,13 +249,20 @@ function _prepareEndOfDayReport(allQuests) {
       continue; // クリーンアップされたリストには含めない
     }
 
-    // 2. アクティブなクエストの処理と、失敗した参加者の集計
+    // 2. アクティブなクエストの処理と、完了/失敗した参加者の集計
     const activeParticipants = [];
-    let questHadFailures = false;
+    let questDataChanged = false;
 
     if (Array.isArray(quest.accepted)) {
       for (const p of quest.accepted) {
-        if (p.status === 'failed') {
+        if (p.status === 'completed') {
+          completedParticipants.push({
+            questId: quest.id,
+            questName: quest.name || '無題のクエスト',
+            ...p,
+          });
+          questDataChanged = true;
+        } else if (p.status === 'failed') {
           failedParticipants.push({
             questId: quest.id,
             questName: quest.name || '無題のクエスト',
@@ -264,7 +272,7 @@ function _prepareEndOfDayReport(allQuests) {
             people: p.people,
             reason: p.reason || '理由なし',
           });
-          questHadFailures = true;
+          questDataChanged = true;
         } else {
           activeParticipants.push(p);
         }
@@ -272,7 +280,7 @@ function _prepareEndOfDayReport(allQuests) {
     }
 
     // 失敗した参加者がいた場合、クエストデータが変更されたことになる
-    if (questHadFailures) {
+    if (questDataChanged) {
       hasChanges = true;
       const updatedQuest = { ...quest, accepted: activeParticipants };
       cleanedQuests[questId] = updatedQuest;
@@ -282,10 +290,10 @@ function _prepareEndOfDayReport(allQuests) {
     }
   }
 
-  const hasReportableItems = completedQuests.length > 0 || failedParticipants.length > 0;
+  const hasReportableItems = completedQuests.length > 0 || completedParticipants.length > 0 || failedParticipants.length > 0;
 
   const summaryPayload = hasReportableItems
-    ? { completedQuests, failedParticipants }
+    ? { completedQuests, completedParticipants, failedParticipants }
     : null;
 
   return { summaryPayload, cleanedQuests, hasChanges };
@@ -298,7 +306,7 @@ function _prepareEndOfDayReport(allQuests) {
  * @returns {Promise<{
  *   success: boolean,
  *   summary?: {
- *     date: string,
+ *     date: string, completedParticipants: object[],
  *     completedQuests: object[],
  *     failedParticipants: object[],
  *   },

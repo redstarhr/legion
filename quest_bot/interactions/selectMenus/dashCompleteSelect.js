@@ -24,8 +24,13 @@ module.exports = {
                 return interaction.editReply({ content: '⚠️ 対象の受注情報が見つかりませんでした。既に報告済みの可能性があります。' });
             }
 
-            // 受注リストから対象のユーザーを削除
-            const updatedAccepted = quest.accepted.filter(a => a.userId !== userId);
+            // 受注リストから対象のユーザーを削除する代わりに、ステータスを更新
+            const acceptanceIndex = quest.accepted.findIndex(a => a.userId === userId);
+            if (acceptanceIndex === -1) {
+                return interaction.editReply({ content: '⚠️ 対象の受注情報が見つかりませんでした。' });
+            }
+            const updatedAccepted = [...quest.accepted];
+            updatedAccepted[acceptanceIndex].status = 'completed';
             const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
 
             await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {

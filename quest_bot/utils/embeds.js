@@ -20,8 +20,8 @@ async function createQuestEmbed(quest) {
     embed.setDescription(quest.description);
   }
 
-  // Filter out failed participants before calculating totals
-  const activeAccepted = quest.accepted?.filter(a => a.status !== 'failed') || [];
+  // Filter out completed or failed participants before calculating totals for the "current" count
+  const activeAccepted = quest.accepted?.filter(a => !a.status) || [];
 
   // Calculate accepted counts from active participants
   const acceptedTeams = activeAccepted.reduce((sum, a) => sum + a.teams, 0);
@@ -52,19 +52,26 @@ async function createQuestEmbed(quest) {
     }
   }
 
-  // Show only active participants in the list
-  if (activeAccepted.length > 0) {
-    const participantsList = activeAccepted.map(p => {
-      let participantString = `> <@${p.userId}>: ${p.teams}組 / ${p.people}人`;
+  // Show all participants and their status
+  if (quest.accepted && quest.accepted.length > 0) {
+    const participantsList = quest.accepted.map(p => {
+      let statusEmoji = '';
+      if (p.status === 'completed') {
+        statusEmoji = '✅ ';
+      } else if (p.status === 'failed') {
+        statusEmoji = '❌ ';
+      }
+
+      let participantString = `> ${statusEmoji}<@${p.userId}>: ${p.teams}組 / ${p.people}人`;
       if (p.comment) {
         const shortComment = p.comment.length > 50 ? `${p.comment.substring(0, 47)}...` : p.comment;
         participantString += ` (💬 ${shortComment})`;
       }
       return participantString;
     }).join('\n');
-    if (participantsList) {
-        embed.addFields({ name: `参加者リスト (${activeAccepted.length}名)`, value: participantsList.substring(0, 1024) });
-    }
+
+    // The total number of entries in the list
+    embed.addFields({ name: `参加者リスト (${quest.accepted.length}名)`, value: participantsList.substring(0, 1024) });
   }
 
   embed.setFooter({ text: `クエストID: ${quest.id}` });
