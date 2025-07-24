@@ -3,6 +3,7 @@ node_modules/
 
 # Generated data and secret files
 data/
+.vscode
 
 # Configuration file with sensitive data
 config.json
