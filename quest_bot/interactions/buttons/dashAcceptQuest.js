@@ -2,6 +2,7 @@
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 module.exports = {
     customId: 'dash_open_acceptQuestSelect',
     async handle(interaction) {
@@ -33,10 +34,7 @@ module.exports = {
                 components: [row],
             });
         } catch (error) {
-            console.error('クエスト受注UIの表示中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからのクエスト受注UI表示' });
         }
     },
 };

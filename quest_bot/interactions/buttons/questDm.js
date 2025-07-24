@@ -49,8 +49,7 @@ module.exports = {
       // 4. 確認メッセージを更新して処理完了を通知
       await interaction.editReply({ content: '✅ クエストの募集を締め切りました。', components: [] });
     } catch (error) {
-      console.error('募集〆切の確認処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、募集を締め切れませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: '募集〆切確認' });
     }
   },
 };

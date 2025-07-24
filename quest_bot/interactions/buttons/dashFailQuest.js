@@ -31,12 +31,7 @@ module.exports = {
                 components: [row],
             });
         } catch (error) {
-            console.error('失敗報告UIの表示中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
-            } else {
-                await interaction.reply({ content: '❌ エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: '失敗報告UI表示' });
         }
     },
 };

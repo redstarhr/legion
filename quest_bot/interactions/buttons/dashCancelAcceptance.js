@@ -32,10 +32,7 @@ module.exports = {
                 components: [row],
             });
         } catch (error) {
-            console.error('受注取消UIの表示中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: '受注取消UI表示' });
         }
     },
 };

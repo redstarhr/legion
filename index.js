@@ -11,6 +11,7 @@ const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManage
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./quest_bot/utils/questDataManager');
 const { logError } = require('./utils/errorLogger');
+const { handleInteractionError } = require('./utils/interactionErrorLogger');
 // TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
 // const chatGptDataManager = require('./chat_gpt_bot/utils/dataManager');
 
@@ -145,29 +146,16 @@ client.on('interactionCreate', async interaction => {
     let interactionDetails = 'Unknown Interaction';
     if (interaction.isCommand()) {
         interactionDetails = `Command: /${interaction.commandName}`;
-    } else if (interaction.isButton() || interaction.isStringSelectMenu() || interaction.isModalSubmit()) {
+    } else if (interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {
         interactionDetails = `Component: ${interaction.customId}`;
     }
 
-    // Use the centralized error logger
-    await logError({
-      error,
-      interaction,
-      customContext: `Unhandled error in interactionCreate event for ${interactionDetails}`,
+    // The handleInteractionError function will log the error AND reply to the user.
+    await handleInteractionError({
+        interaction,
+        error,
+        context: `Unhandled error in interactionCreate event for ${interactionDetails}`
     });
-
-    // 10062: Unknown interaction. これは通常、インタラクションが3秒以内に応答されずタイムアウトしたことを意味する。
-    // このエラーに対して再度応答しようとするとクラッシュするため、ログに記録するだけで処理を終了する。
-    if (error.code === 10062) {
-      console.error('An interaction timed out and could not be replied to.');
-      return;
-    }
-
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: '⚠️ エラーが発生しました。', flags: MessageFlags.Ephemeral }).catch(e => console.error("Error handler's followUp failed:", e));
-    } else {
-      await interaction.reply({ content: '⚠️ エラーが発生しました。', flags: MessageFlags.Ephemeral }).catch(e => console.error("Error handler's reply failed:", e));
-    }
   }
 });
 

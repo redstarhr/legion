@@ -52,8 +52,7 @@ module.exports = {
       // 5. Update the confirmation message
       await interaction.editReply({ content: '✅ クエストを完了状態にしました。', components: [] });
     } catch (error) {
-      console.error('クエスト完了の確認処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストを完了できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: 'クエスト完了確認' });
     }
   },
 };

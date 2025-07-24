@@ -52,9 +52,7 @@ module.exports = {
       // 4. 実行者に完了を通知
       await interaction.followUp({ content: '✅ クエストの募集を再開しました。', flags: MessageFlags.Ephemeral });
     } catch (error) {
-      console.error('募集再開の処理中にエラーが発生しました:', error);
-      // deferUpdate後なので、followUpでエラー通知
-      await interaction.followUp({ content: 'エラーが発生したため、募集を再開できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: '募集再開処理' });
     }
   },
 };

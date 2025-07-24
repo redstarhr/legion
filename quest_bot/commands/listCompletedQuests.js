@@ -3,6 +3,7 @@
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../utils/questDataManager');
 const { generateCompletedQuestsView } = require('../utils/paginationUtils');
+const { handleInteractionError } = require('../../interactionErrorLogger');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -24,12 +25,7 @@ module.exports = {
 
       await interaction.editReply(view);
     } catch (error) {
-      console.error('完了クエスト一覧の表示中にエラーが発生しました:', error);
-      if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: 'エラーが発生したため、一覧を表示できませんでした。' }).catch(console.error);
-      } else {
-        await interaction.reply({ content: 'エラーが発生したため、一覧を表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
-      }
+      await handleInteractionError({ interaction, error, context: '完了クエスト一覧表示' });
     }
   },
 };

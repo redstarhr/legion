@@ -1,4 +1,5 @@
 const { MessageFlags } = require('discord.js');
+const { logError } = require('./errorLogger');
 
 /**
  * A standardized error handler for Discord.js interactions.
@@ -9,7 +10,19 @@ const { MessageFlags } = require('discord.js');
  * @param {string} options.context - A brief message describing where the error occurred (for logging).
  */
 async function handleInteractionError({ interaction, error, context }) {
-    console.error(`❌ Error during [${context}] for interaction [${interaction.customId || interaction.commandName}] by [${interaction.user.tag}]:`, error);
+    // Use the centralized logger
+    await logError({
+        error,
+        interaction,
+        customContext: `Interaction failed: ${context}`,
+    });
+
+    // 10062: Unknown interaction. This usually means the interaction timed out.
+    // We cannot reply to it, so we just log the error and exit.
+    if (error.code === 10062) {
+        console.warn(`[handleInteractionError] Could not reply to interaction (ID: ${interaction.id}) as it is unknown or has expired.`);
+        return;
+    }
 
     const errorMessage = {
         content: '❌ 処理中にエラーが発生しました。しばらくしてからもう一度お試しください。',
@@ -24,7 +37,7 @@ async function handleInteractionError({ interaction, error, context }) {
             await interaction.reply(errorMessage);
         }
     } catch (replyError) {
-        console.error(`[ErrorLogger] Failed to send error reply for interaction [${interaction.id}]:`, replyError);
+        console.error(`[ErrorLogger] CRITICAL: Failed to send error reply for interaction [${interaction.id}]:`, replyError);
     }
 }
 

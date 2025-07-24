@@ -1,6 +1,7 @@
 // commands/help.js
 
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const { handleInteractionError } = require('../../interactionErrorLogger');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -30,8 +31,7 @@ module.exports = {
         flags: MessageFlags.Ephemeral, // コマンド実行者のみに見えるようにする
       });
     } catch (error) {
-      console.error('ヘルプコマンドの実行中にエラーが発生しました:', error);
-      // エラーハンドリングはメインのindex.jsに任せるが、念のためログ出力
+      await handleInteractionError({ interaction, error, context: 'ヘルプコマンド実行' });
     }
   },
 };

@@ -4,6 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_select_failQuest_', // Prefix match
@@ -52,12 +53,7 @@ module.exports = {
             await interaction.editReply({ content: `✅ クエスト「${quest.name}」における ${acceptance.userTag} さんの失敗を報告しました。` });
 
         } catch (error) {
-            console.error('討伐失敗処理中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、討伐失敗を報告できませんでした。' }).catch(console.error);
-            } else {
-                await interaction.reply({ content: '❌ エラーが発生したため、討伐失敗を報告できませんでした。', flags: [MessageFlags.Ephemeral] }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからの失敗報告' });
         }
     },
 };

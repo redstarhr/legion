@@ -5,6 +5,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
   customId: 'list_select_unarchive_', // Prefix match
@@ -63,8 +64,7 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
-      console.error('クエストの完了状態取消処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストの状態を戻せませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: 'クエスト完了状態取消' });
     }
   },
 };

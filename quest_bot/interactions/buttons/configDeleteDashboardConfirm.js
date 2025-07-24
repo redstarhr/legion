@@ -4,6 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 module.exports = {
   customId: 'config_confirm_deleteDashboard',
   async handle(interaction) {
@@ -50,11 +51,7 @@ module.exports = {
       });
 
     } catch (error) {
-      console.error('ダッシュボードの削除処理中にエラーが発生しました:', error);
-      await interaction.editReply({
-        content: '❌ エラーが発生したため、ダッシュボードを削除できませんでした。Botの権限などを確認してください。',
-        components: [],
-      }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: 'ダッシュボード削除確認' });
     }
   },
 };

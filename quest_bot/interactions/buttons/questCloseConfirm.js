@@ -31,10 +31,7 @@ module.exports = {
         cancelCustomId: `quest_cancel_close_${questId}`,
       });
     } catch (error) {
-      console.error('募集〆切UIの表示中にエラーが発生しました:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
-      }
+      await handleInteractionError({ interaction, error, context: '募集〆切UI表示' });
     }
   },
 };
