@@ -2,9 +2,9 @@
 
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlagsBitField } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { logAndReplyError } = require('../utils/errorHelper');
-const { getChatGPTConfig } = require('../utils/star_chat_gpt_config/configManager');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 const { idManager } = require('../utils/idManager');
+const { getChatGPTConfig } = require('../utils/configManager');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -48,7 +48,7 @@ module.exports = {
       await interaction.reply({ embeds: [embed], components: [buttonRow], flags: MessageFlagsBitField.Flags.Ephemeral });
 
     } catch (error) {
-      await logAndReplyError(interaction, error, '設定の表示中にエラーが発生しました。');
+      await handleInteractionError({ interaction, error, context: 'ChatGPT設定表示' });
     }
   },
 };

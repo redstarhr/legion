@@ -8,9 +8,9 @@ const {
   MessageFlagsBitField,
 } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { createAdminEmbed } = require('../utils/embedHelper');
 const { idManager } = require('../utils/idManager');
-const { logAndReplyError } = require('../utils/errorHelper');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+const { createAdminEmbed } = require('../utils/star_chat_gpt_usage/embedHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -44,7 +44,7 @@ module.exports = {
 
       await interaction.editReply({ content, components: [row] });
     } catch (error) {
-      await logAndReplyError(interaction, error, 'ChatGPT案内メッセージの設置中にエラーが発生しました。');
+      await handleInteractionError({ interaction, error, context: 'ChatGPT案内メッセージ設置' });
     }
   },
 };

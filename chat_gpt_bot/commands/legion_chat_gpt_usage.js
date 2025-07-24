@@ -2,14 +2,14 @@
 
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { getOpenAIUsage } = require('../utils/openaiUsage');
 const { configManager } = require('../utils/configManager');
 const {
   createAdminEmbed,
   createErrorEmbed,
   createSuccessEmbed,
 } = require('../utils/star_chat_gpt_usage/embedHelper');
-const { logAndReplyError } = require('../utils/errorHelper');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+const { getOpenAIUsage } = require('../utils/star_chat_gpt_usage/openaiUsage');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -62,7 +62,7 @@ module.exports = {
 
       await interaction.editReply({ embeds: [usageEmbed] });
     } catch (error) {
-      await logAndReplyError(interaction, error, '処理中にエラーが発生しました。');
+      await handleInteractionError({ interaction, error, context: 'ChatGPT使用量表示' });
     }
   },
 };
