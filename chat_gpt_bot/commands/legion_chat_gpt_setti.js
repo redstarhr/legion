@@ -6,16 +6,16 @@ const {
   ButtonBuilder,
   ButtonStyle,
   MessageFlagsBitField,
+  EmbedBuilder,
 } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { idManager } = require('../utils/idManager');
 const { handleInteractionError } = require('../../interactionErrorLogger');
 const { createAdminEmbed } = require('../utils/star_chat_gpt_usage/embedHelper');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('star_chat_gpt_setti')
-    .setDescription('指定チャンネルにChatGPT案内メッセージとボタンを設置します'),
+    .setName('legion_chatgpt_パネル')
+    .setDescription('現在のチャンネルにChatGPT機能のパネルを設置します。'),
 
   async execute(interaction) {
     try {
@@ -29,22 +29,29 @@ module.exports = {
         });
       }
 
+      const embed = new EmbedBuilder()
+        .setTitle('🤖 ChatGPT 機能パネル')
+        .setDescription('以下のボタンから、今日の天気やニュース、豆知識などの情報を取得できます。')
+        .setColor(0x2ecc71);
+
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(idManager.createButtonId('star_chat_gpt_setti', 'today_gpt'))
-          .setLabel('🤖 今日のChatGPT')
+          .setCustomId('chatgpt_panel_today_gpt')
+          .setLabel('今日の情報')
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-          .setCustomId(idManager.createButtonId('star_chat_gpt_setti', 'open_config'))
+          .setCustomId('chatgpt_panel_open_config')
           .setLabel('⚙️ 設定')
           .setStyle(ButtonStyle.Secondary)
       );
 
-      const content = `🤖 **ChatGPT案内**\n以下のボタンを押すと、「天気」「ニュース」「豆知識」などの情報が届きます。`;
+      // Send the panel to the channel publicly
+      await interaction.channel.send({ embeds: [embed], components: [row] });
 
-      await interaction.editReply({ content, components: [row] });
+      // Confirm to the user that the panel was placed
+      await interaction.editReply({ content: '✅ ChatGPTパネルを設置しました。' });
     } catch (error) {
-      await handleInteractionError({ interaction, error, context: 'ChatGPT案内メッセージ設置' });
+      await handleInteractionError({ interaction, error, context: 'ChatGPTパネル設置' });
     }
   },
 };

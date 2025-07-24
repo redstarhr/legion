@@ -13,7 +13,7 @@ const { getOpenAIUsage } = require('../utils/star_chat_gpt_usage/openaiUsage');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('star_chat_gpt_usage')
+    .setName('legion_chatgpt_使用率')
     .setDescription('今月のOpenAI API使用量を表示します')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 

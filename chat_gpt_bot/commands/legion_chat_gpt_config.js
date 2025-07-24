@@ -3,12 +3,11 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlagsBitField } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
 const { handleInteractionError } = require('../../interactionErrorLogger');
-const { idManager } = require('../utils/idManager');
 const { getChatGPTConfig } = require('../utils/configManager');
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('star_chat_gpt_config')
+    .setName('legion_chatgpt_設定')
     .setDescription('ChatGPTの応答設定を表示・編集します'),
 
   async execute(interaction) {
@@ -36,11 +35,11 @@ module.exports = {
 
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(idManager.createButtonId('star_chat_gpt_config', 'edit_basic_settings'))
+          .setCustomId('chatgpt_config_edit_basic')
           .setLabel('基本設定を修正')
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-          .setCustomId(idManager.createButtonId('star_chat_gpt_config', 'edit_channels'))
+          .setCustomId('chatgpt_config_edit_channels')
           .setLabel('対応チャンネルを修正')
           .setStyle(ButtonStyle.Secondary),
       );

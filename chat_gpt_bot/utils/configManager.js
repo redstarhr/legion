@@ -9,7 +9,7 @@ const storage = new Storage();
 const bucket = storage.bucket(GCS_BUCKET_NAME);
 
 const DATA_DIR_BASE = 'data-legion/chat_gpt';
-const CONFIG_FILE_NAME = 'kyou_chat_gpt.json';
+const CONFIG_FILE_NAME = 'config.json';
 
 /**
  * GCS上のファイルパスを生成する
