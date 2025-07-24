@@ -1,9 +1,6 @@
 // commands/legion_chat_gpt_config.js
 
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlagsBitField } = require('discord.js');
-const { isChatGptAdmin } = require('../../permissionManager');
-const { handleInteractionError } = require('../../interactionErrorLogger');
-const { getChatGPTConfig } = require('../utils/configManager');
 
 module.exports = {
   data: new SlashCommandBuilder()
