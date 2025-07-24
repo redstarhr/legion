@@ -1,7 +1,7 @@
 // quest_bot/components/questActionButtons.js
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const questDataManager = require('../utils/questDataManager');
+const configDataManager = require('../../configDataManager');
 
 /**
  * クエストの現在の状態に基づいてアクションボタンの行を生成します。
@@ -37,7 +37,7 @@ async function createQuestActionRows(quest) {
   };
 
   // Get custom order from the database
-  const buttonOrder = await questDataManager.getButtonOrder(guildId);
+  const buttonOrder = await configDataManager.getButtonOrder(guildId);
 
   // Build the first row based on the custom order
   const mainActionRow = new ActionRowBuilder();

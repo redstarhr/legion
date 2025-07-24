@@ -1,4 +1,4 @@
-const questDataManager = require('../../utils/questDataManager');
+const configDataManager = require('../../../configDataManager');
 const { logAction } = require('../../utils/logger');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { RESTJSONErrorCodes, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
@@ -27,7 +27,7 @@ async function handleChannelSelect(interaction) {
         return interaction.editReply({ content: '⚠️ 選択されたチャンネルが見つかりませんでした。', components: [] });
     }
 
-    await questDataManager.setLogChannel(interaction.guildId, channelId);
+    await configDataManager.setLogChannel(interaction.guildId, channelId);
 
     let testMessageSuccess = false;
     try {
@@ -67,7 +67,7 @@ async function handleRoleSelect(interaction) {
         return interaction.editReply({ content: '⚠️ 選択されたロールが見つかりませんでした。', components: [] });
     }
 
-    await questDataManager.setQuestManagerRole(interaction.guildId, roleId);
+    await configDataManager.setQuestAdminRole(interaction.guildId, roleId);
 
     const replyMessage = `✅ クエスト管理者ロールを **${role.name}** に設定しました。`;
 
@@ -95,7 +95,7 @@ async function handleNotificationChannelSelect(interaction) {
         return interaction.editReply({ content: '⚠️ 選択されたチャンネルが見つかりませんでした。', components: [] });
     }
 
-    await questDataManager.setNotificationChannel(interaction.guildId, channelId);
+    await configDataManager.setNotificationChannel(interaction.guildId, channelId);
 
     let testMessageSuccess = false;
     try {
@@ -132,7 +132,7 @@ async function handleDashboardChannelSelect(interaction) {
     const newChannelId = interaction.values[0];
 
     // 1. 既存のダッシュボード情報を取得
-    const oldDashboard = await questDataManager.getDashboard(guildId);
+    const oldDashboard = await configDataManager.getDashboard(guildId);
 
     // 2. 既存のダッシュボードメッセージがあれば削除
     if (oldDashboard && oldDashboard.channelId) {
@@ -157,7 +157,7 @@ async function handleDashboardChannelSelect(interaction) {
     const placeholderMessage = await newChannel.send({ content: '📡 新しいクエスト掲示板を生成中...' });
 
     // 4. 新しいダッシュボード情報を保存
-    await questDataManager.setDashboard(guildId, placeholderMessage.id, newChannelId);
+    await configDataManager.setDashboard(guildId, placeholderMessage.id, newChannelId);
 
     // 5. ダッシュボードを内容で更新
     await updateDashboard(interaction.client, guildId);
@@ -178,7 +178,7 @@ async function handleEmbedColorSelect(interaction) {
     const selectedColor = interaction.values[0];
     const selectedOption = colorOptions.find(opt => opt.value === selectedColor) || { label: 'カスタム', value: selectedColor };
 
-    await questDataManager.setEmbedColor(interaction.guildId, selectedColor);
+    await configDataManager.setEmbedColor(interaction.guildId, selectedColor);
 
     const replyMessage = `✅ Embedの色を **${selectedOption.label} (${selectedColor})** に設定しました。`;
     await logAction(interaction, { title: '⚙️ Embedカラー設定', description: replyMessage, color: '#95a5a6' });
@@ -211,7 +211,7 @@ async function handleButtonOrderSelect(interaction) {
             components: [row],
         });
     } else {
-        await questDataManager.setButtonOrder(interaction.guildId, selectedOrder);
+        await configDataManager.setButtonOrder(interaction.guildId, selectedOrder);
         await logAction(interaction, {
             title: '⚙️ ボタン順設定',
             description: `✅ ボタンの表示順を **${selectedOrder.map(key => `\`${buttonNameMap[key]}\``).join(' > ')}** に設定しました。`,

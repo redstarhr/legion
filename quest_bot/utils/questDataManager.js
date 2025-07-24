@@ -157,95 +157,6 @@ async function updateQuest(guildId, questId, updates, user) {
   return updatedQuest;
 }
 
-// --- Config Data Functions ---
-
-/**
- * ギルドの設定ファイル名を取得する (ギルドID.json)
- * @param {string} guildId
- * @returns {string}
- */
-function getGuildConfigFileName(guildId) {
-  return `${guildId}.json`;
-}
-
-async function getGuildConfig(guildId) {
-  return await readGcsFile(guildId, getGuildConfigFileName(guildId), {});
-}
-
-async function updateGuildConfig(guildId, updates) {
-  const config = await getGuildConfig(guildId);
-  const newConfig = { ...config, ...updates };
-  await writeGcsFile(guildId, getGuildConfigFileName(guildId), newConfig);
-}
-
-async function getLogChannel(guildId) {
-  const config = await getGuildConfig(guildId);
-  return config.logChannelId || null;
-}
-
-async function setLogChannel(guildId, channelId) {
-  await updateGuildConfig(guildId, { logChannelId: channelId });
-}
-
-async function getNotificationChannel(guildId) {
-  const config = await getGuildConfig(guildId);
-  return config.notificationChannelId || null;
-}
-
-async function setNotificationChannel(guildId, channelId) {
-  await updateGuildConfig(guildId, { notificationChannelId: channelId });
-}
-
-async function getEmbedColor(guildId) {
-  const config = await getGuildConfig(guildId);
-  return config.embedColor || '#00bfff'; // デフォルト色
-}
-
-async function setEmbedColor(guildId, color) {
-  await updateGuildConfig(guildId, { embedColor: color });
-}
-
-// --- Button Order Config ---
-
-const DEFAULT_BUTTON_ORDER = ['accept', 'cancel', 'edit', 'dm'];
-
-/**
- * ギルドのボタン表示順設定を取得する
- * @param {string} guildId
- * @returns {Promise<string[]>}
- */
-async function getButtonOrder(guildId) {
-  const config = await getGuildConfig(guildId);
-  // 設定がなければデフォルト順を返す
-  return config.buttonOrder || DEFAULT_BUTTON_ORDER;
-}
-
-/**
- * ギルドのボタン表示順を設定する
- * @param {string} guildId
- * @param {string[]} order
- */
-async function setButtonOrder(guildId, order) {
-  await updateGuildConfig(guildId, { buttonOrder: order });
-}
-
-// --- Dashboard Config ---
-
-/**
- * ダッシュボードの情報を取得する
- * @param {string} guildId
- * @returns {Promise<{messageId: string, channelId: string}|null>}
- */
-async function getDashboard(guildId) {
-    const config = await getGuildConfig(guildId);
-    return config.dashboard || null;
-}
-
-async function setDashboard(guildId, messageId, channelId) {
-    const dashboardData = (messageId && channelId) ? { messageId, channelId } : null;
-    await updateGuildConfig(guildId, { dashboard: dashboardData });
-}
-
 // --- Utility for Deadline Manager ---
 
 /**
@@ -451,18 +362,7 @@ module.exports = {
   getQuest,
   createQuest,
   updateQuest,
-  getGuildConfig,
-  getLogChannel,
-  setLogChannel,
-  getNotificationChannel,
-  setNotificationChannel,
-  getEmbedColor,
-  setEmbedColor,
-  getButtonOrder,
-  setButtonOrder,
   getAllGuildIds, // deadlineManagerのためにエクスポート
-  getDashboard,
-  setDashboard,
   getActiveAcceptances,
   processEndOfDay,
   deleteGuildData,

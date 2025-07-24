@@ -2,6 +2,7 @@
 
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('./questDataManager');
+const configDataManager = require('../../configDataManager');
 const { logAction } = require('./logger');
 const { updateQuestMessage } = require('./questMessageManager');
 
@@ -41,7 +42,7 @@ async function checkAndCloseExpiredQuests(client) {
               await updateQuestMessage(client, updatedQuest);
 
               // 3. Send a notification to the notification channel.
-              const notificationChannelId = await questDataManager.getNotificationChannel(guildId);
+              const notificationChannelId = await configDataManager.getNotificationChannel(guildId);
               if (notificationChannelId) {
                 try {
                   const notificationChannel = await client.channels.fetch(notificationChannelId);

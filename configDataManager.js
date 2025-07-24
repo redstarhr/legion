@@ -49,6 +49,51 @@ async function setChatGptAdminRole(guildId, roleId) {
   await saveLegionConfig(guildId, { chatGptAdminRoleId: roleId });
 }
 
+// --- Quest Bot Config Functions ---
+
+async function setLogChannel(guildId, channelId) {
+  await saveLegionConfig(guildId, { logChannelId: channelId });
+}
+async function getLogChannel(guildId) {
+  const config = await getLegionConfig(guildId);
+  return config.logChannelId || null;
+}
+
+async function setNotificationChannel(guildId, channelId) {
+  await saveLegionConfig(guildId, { notificationChannelId: channelId });
+}
+async function getNotificationChannel(guildId) {
+  const config = await getLegionConfig(guildId);
+  return config.notificationChannelId || null;
+}
+
+async function setEmbedColor(guildId, color) {
+  await saveLegionConfig(guildId, { embedColor: color });
+}
+async function getEmbedColor(guildId) {
+  const config = await getLegionConfig(guildId);
+  return config.embedColor || '#00bfff'; // Default color
+}
+
+const DEFAULT_BUTTON_ORDER = ['accept', 'cancel', 'edit', 'dm'];
+async function setButtonOrder(guildId, order) {
+  await saveLegionConfig(guildId, { buttonOrder: order });
+}
+async function getButtonOrder(guildId) {
+  const config = await getLegionConfig(guildId);
+  return config.buttonOrder || DEFAULT_BUTTON_ORDER;
+}
+
+async function setDashboard(guildId, messageId, channelId) {
+  const dashboardData = (messageId && channelId) ? { messageId, channelId } : null;
+  await saveLegionConfig(guildId, { dashboard: dashboardData });
+}
+async function getDashboard(guildId) {
+  const config = await getLegionConfig(guildId);
+  return config.dashboard || null;
+}
+
+
 module.exports = {
   getLegionConfig,
   saveLegionConfig,
@@ -56,4 +101,16 @@ module.exports = {
   setQuestAdminRole,
   setQuestCreatorRoleIds,
   setChatGptAdminRole,
+
+  // Quest Bot Configs
+  setLogChannel,
+  getLogChannel,
+  setNotificationChannel,
+  getNotificationChannel,
+  setEmbedColor,
+  getEmbedColor,
+  setButtonOrder,
+  getButtonOrder,
+  setDashboard,
+  getDashboard,
 };

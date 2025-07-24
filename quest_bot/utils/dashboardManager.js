@@ -1,6 +1,7 @@
 // quest_bot/utils/dashboardManager.js
 const { EmbedBuilder, RESTJSONErrorCodes } = require('discord.js');
 const questDataManager = require('./questDataManager');
+const configDataManager = require('../../configDataManager');
 const { createDashboardActionRows } = require('../components/dashboardActionButtons');
 
 /**
@@ -11,7 +12,7 @@ const { createDashboardActionRows } = require('../components/dashboardActionButt
  */
 async function createDashboardEmbeds(guildId, quests) {
     const activeQuests = quests.filter(q => !q.isArchived);
-    const embedColor = await questDataManager.getEmbedColor(guildId);
+    const embedColor = await configDataManager.getEmbedColor(guildId);
     // --- クエスト一覧 Embed ---
     const questListEmbed = new EmbedBuilder()
         .setColor(embedColor)
@@ -96,7 +97,7 @@ async function createDashboardEmbeds(guildId, quests) {
  */
 async function updateDashboard(client, guildId) {
   try {
-    const dashboard = await questDataManager.getDashboard(guildId);
+    const dashboard = await configDataManager.getDashboard(guildId);
     if (!dashboard) {
       // ダッシュボードが設定されていないのはエラーではないので、静かに終了
       return;
@@ -122,7 +123,7 @@ async function updateDashboard(client, guildId) {
             console.warn(`[Dashboard] Dashboard message ${dashboard.messageId} not found in guild ${guildId}. Recreating...`);
             try {
                 const newMessage = await channel.send(newContent);
-                await questDataManager.setDashboard(guildId, newMessage.id, channel.id);
+                await configDataManager.setDashboard(guildId, newMessage.id, channel.id);
             } catch (sendError) {
                 console.error(`[Dashboard] Failed to recreate dashboard in guild ${guildId}:`, sendError);
             }
@@ -135,7 +136,7 @@ async function updateDashboard(client, guildId) {
     // チャンネルが見つからない、権限がないなどのエラーをここで捕捉
     if (error.code === RESTJSONErrorCodes.UnknownChannel) {
         console.warn(`[Dashboard] Dashboard channel for guild ${guildId} not found. Resetting config.`);
-        await questDataManager.setDashboard(guildId, null, null);
+        await configDataManager.setDashboard(guildId, null, null);
     } else {
         console.error(`[Dashboard] Failed to update dashboard for guild ${guildId}:`, error);
     }

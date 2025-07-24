@@ -2,6 +2,7 @@
 const cron = require('node-cron');
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('./questDataManager');
+const configDataManager = require('../../configDataManager');
 
 /**
  * processEndOfDayから返されたサマリーをDiscord Embedに整形する
@@ -53,11 +54,11 @@ async function runStartOfDayTasks(client) {
         continue;
       }
 
-      const logChannelId = await questDataManager.getLogChannel(guildId);
+      const logChannelId = await configDataManager.getLogChannel(guildId);
       if (logChannelId) {
         const logChannel = await guild.channels.fetch(logChannelId).catch(() => null);
         if (logChannel && logChannel.isTextBased()) {
-          const embedColor = await questDataManager.getEmbedColor(guildId);
+          const embedColor = await configDataManager.getEmbedColor(guildId);
           const startEmbed = new EmbedBuilder()
             .setColor(embedColor)
             .setTitle('☀️ 1日の始まり')
@@ -94,11 +95,11 @@ async function runDailyTasks(client) {
       const result = await questDataManager.processEndOfDay(guildId);
 
       if (result.success) {
-        const logChannelId = await questDataManager.getLogChannel(guildId);
+        const logChannelId = await configDataManager.getLogChannel(guildId);
         if (logChannelId) {
           const logChannel = await guild.channels.fetch(logChannelId).catch(() => null);
           if (logChannel && logChannel.isTextBased()) {
-            const embedColor = await questDataManager.getEmbedColor(guildId);
+            const embedColor = await configDataManager.getEmbedColor(guildId);
             const summaryEmbed = createSummaryEmbed(result.summary, embedColor);
             await logChannel.send({ embeds: [summaryEmbed] });
             console.log(`[Scheduler] Sent daily summary to log channel in ${guild.name}.`);

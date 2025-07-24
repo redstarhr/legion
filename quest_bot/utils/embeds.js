@@ -1,7 +1,7 @@
 // quest_bot/utils/embeds.js
 
 const { EmbedBuilder } = require('discord.js');
-const questDataManager = require('./questDataManager');
+const configDataManager = require('../../configDataManager');
 
 /**
  * Creates a standardized embed for a quest object.
@@ -11,7 +11,7 @@ const questDataManager = require('./questDataManager');
 async function createQuestEmbed(quest) {
   // guildId is expected to be on the quest object.
   // This is ensured by the modification in questDataManager.js
-  const embedColor = await questDataManager.getEmbedColor(quest.guildId);
+  const embedColor = await configDataManager.getEmbedColor(quest.guildId);
   const embed = new EmbedBuilder().setColor(embedColor);
 
   embed.setTitle(quest.title || '無題のクエスト');
