@@ -5,19 +5,26 @@ const { getLogChannel } = require('../../configDataManager');
 
 /**
  * アクションログを特定のチャンネルに送信する
- * @param {import('discord.js').Interaction} interaction - ログのトリガーとなったインタラクション
+ * @param {object} context - ログのコンテキスト
+ * @param {import('discord.js').Client} context.client - Discord Client
+ * @param {string} context.guildId - ギルドID
+ * @param {import('discord.js').User} context.user - 実行者 (システムの場合はBotのUser)
  * @param {object} logData - ログデータ
  * @param {string} logData.title - ログのタイトル
  * @param {import('discord.js').ColorResolvable} [logData.color='#2f3136'] - Embedの色
  * @param {string} [logData.description] - ログの詳細説明
  * @param {Object<string, string>} [logData.details] - Embedのフィールドに追加するキーと値のペア
  */
-async function logAction(interaction, { title, color = '#2f3136', description, details = {} }) {
-  const logChannelId = await getLogChannel(interaction.guildId);
+async function logAction({ client, guildId, user }, { title, color = '#2f3136', description, details = {} }) {
+  if (!client || !guildId || !user) {
+    console.error('[Logger] Invalid context provided to logAction. Missing client, guildId, or user.');
+    return;
+  }
+  const logChannelId = await getLogChannel(guildId);
   if (!logChannelId) return;
 
   try {
-    const logChannel = await interaction.client.channels.fetch(logChannelId);
+    const logChannel = await client.channels.fetch(logChannelId);
     if (!logChannel || !logChannel.isTextBased()) return;
 
     const logEmbed = new EmbedBuilder()
@@ -31,10 +38,10 @@ async function logAction(interaction, { title, color = '#2f3136', description, d
 
     const fields = [];
     // 実行者情報を追加。Botによる自動実行の場合はラベルを変更する。
-    const executorLabel = interaction.user.bot ? 'システム' : '実行者';
+    const executorLabel = user.bot ? 'システム' : '実行者';
     fields.push({
       name: executorLabel,
-      value: `${interaction.user.tag} (${interaction.user.id})`,
+      value: `${user.tag} (${user.id})`,
       inline: true,
     });
 
@@ -49,7 +56,7 @@ async function logAction(interaction, { title, color = '#2f3136', description, d
 
     await logChannel.send({ embeds: [logEmbed] });
   } catch (error) {
-    console.error(`[${interaction.guildId}] ログの送信に失敗しました:`, error);
+    console.error(`[${guildId}] ログの送信に失敗しました:`, error);
   }
 }
 

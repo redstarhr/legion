@@ -1,6 +1,7 @@
 // quest_bot/interactions/buttons/dash_open_addQuestSelect.js
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_open_addQuestSelect',
@@ -14,30 +15,32 @@ module.exports = {
         }
 
         try {
-            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+            // 2. UIの作成 (モーダル)
+            const modal = new ModalBuilder()
+                .setCustomId(`dash_submit_addQuest_${interaction.id}`)
+                .setTitle('クエスト一括追加');
 
-            // 2. UIの作成 (プラの人数選択)
-            const numberOptions = Array.from({ length: 25 }, (_, i) => ({
-                label: `${i}人`,
-                value: `${i}`,
-            }));
+            const praInput = new TextInputBuilder()
+                .setCustomId('pra_count')
+                .setLabel('プラの募集人数')
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder('0〜24の数字を入力')
+                .setValue('0')
+                .setRequired(true);
 
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`dash_select_addQuest_pra_${interaction.id}`)
-                .setPlaceholder('プラの人数を選択してください')
-                .addOptions(numberOptions);
+            const kamaInput = new TextInputBuilder()
+                .setCustomId('kama_count')
+                .setLabel('カマの募集人数')
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder('0〜24の数字を入力')
+                .setValue('0')
+                .setRequired(true);
 
-            const row = new ActionRowBuilder().addComponents(selectMenu);
+            modal.addComponents(new ActionRowBuilder().addComponents(praInput), new ActionRowBuilder().addComponents(kamaInput));
 
-            await interaction.editReply({
-                content: '1. **プラ**の募集人数を選択してください。\n（両方0人を選択するとキャンセルされます）',
-                components: [row],
-            });
+            await interaction.showModal(modal);
         } catch (error) {
-            console.error('クエスト追加UIの表示中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: 'クエスト追加モーダル表示' });
         }
     },
 };

@@ -1,47 +1,53 @@
-// quest_bot/interactions/buttons/dashArchiveQuest.js
-const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
+// quest_bot/interactions/selectMenus/dashAcceptQuestSelect.js
+const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { calculateRemainingSlots } = require('../../utils/questUtils');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
-    customId: 'dash_open_archiveQuestSelect',
-    async handle(interaction) {
+    customId: 'dash_select_acceptQuest_', // Prefix match
+    async handle (interaction) {
         try {
-            if (!(await hasQuestManagerPermission(interaction))) {
-                return interaction.reply({ content: 'クエストの完了は、管理者またはクエスト管理者ロールを持つユーザーのみが行えます。', flags: MessageFlags.Ephemeral });
+            const questId = interaction.values[0];
+            const quest = await questDataManager.getQuest(interaction.guildId, questId);
+
+            if (!quest) {
+                return interaction.update({ content: '⚠️ 選択されたクエストが見つかりませんでした。ダッシュボードが更新されるまでお待ちください。', components: [] });
             }
 
-            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-            const allQuests = await questDataManager.getAllQuests(interaction.guildId);
-            const activeQuests = Object.values(allQuests).filter(q => !q.isArchived);
-
-            if (activeQuests.length === 0) {
-                return interaction.editReply({ content: '現在、完了できるクエストはありません。' });
+            // ユーザーが既にこのクエストを受注しているか確認
+            const { remainingTeams, remainingPeople, activeAccepted } = calculateRemainingSlots(quest);
+            const hasAccepted = activeAccepted.some(a => a.userId === interaction.user.id);
+            if (hasAccepted) {
+                return interaction.update({ content: `⚠️ あなたは既にクエスト「${quest.name}」を受注済みです。変更する場合は、一度討伐/失敗報告をしてから再度受注してください。`, components: [] });
             }
 
-            const questOptions = activeQuests.map(quest => ({
-                label: quest.name,
-                description: `ID: ${quest.id}`,
-                value: quest.id,
+            // 1組も受注できない場合は定員とみなす
+            if (remainingTeams < 1 || remainingPeople <= 0) {
+                 return interaction.update({ content: '⚠️ このクエストは既に定員に達しています。', components: [] });
+            }
+
+            // 募集中の人数（最大25人）の選択肢を生成
+            const peopleOptionsCount = Math.min(remainingPeople, 25);
+            const peopleOptions = Array.from({ length: peopleOptionsCount }, (_, i) => ({
+                label: `${i + 1}人`,
+                value: `${i + 1}`,
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`dash_select_archiveQuest_${interaction.id}`)
-                .setPlaceholder('完了（アーカイブ）するクエストを選択してください')
-                .addOptions(questOptions.slice(0, 25));
+                // 次のハンドラに team=1 を渡す
+                .setCustomId(`dash_select_acceptPlayers_${questId}_1_${interaction.id}`)
+                .setPlaceholder('受注する人数を選択してください')
+                .addOptions(peopleOptions);
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            await interaction.editReply({
-                content: 'どのクエストを完了状態にしますか？完了したクエストは、`/完了クエスト一覧` から確認できます。',
+            await interaction.update({
+                content: `**クエスト「${quest.name}」を受注します。**\n受注する人数を選択してください。`,
                 components: [row],
             });
         } catch (error) {
-            console.error('クエスト完了UIの表示中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、UIを表示できませんでした。' }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: 'クエスト受注UI表示' });
         }
     },
 };

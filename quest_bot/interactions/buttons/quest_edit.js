@@ -1,92 +1,100 @@
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { PermissionFlagsBits } = require('discord.js');
+const configManager = require('./configDataManager');
+
+/**
+ * Checks if a member has a specific role.
+ * @param {import('discord.js').GuildMember} member The member to check.
+ * @param {string|null} roleId The ID of the role to check for.
+ * @returns {boolean}
+ */
+function hasRole(member, roleId) {
+    return roleId && member.roles.cache.has(roleId);
+}
+
+/**
+ * Checks if the user is a Legion-level administrator.
+ * This includes Discord Administrators and users with the Legion Admin Role.
+ * @param {import('discord.js').Interaction} interaction
+ * @returns {Promise<boolean>}
+ */
+async function isLegionAdmin(interaction) {
+    if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return true;
+    }
+    const config = await configManager.getLegionConfig(interaction.guildId);
+    return hasRole(interaction.member, config.legionAdminRoleId);
+}
+
+/**
+ * Checks if the user has permission to manage the Quest Bot.
+ * This includes Discord Admins, Legion Admins, and Quest Admins.
+ * @param {import('discord.js').Interaction} interaction
+ * @returns {Promise<boolean>}
+ */
+async function isQuestAdmin(interaction) {
+    if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return true;
+    }
+    const config = await configManager.getLegionConfig(interaction.guildId);
+    return hasRole(interaction.member, config.legionAdminRoleId) || hasRole(interaction.member, config.questAdminRoleId);
+}
+
+/**
+ * Checks if the user has permission to create/manage quests.
+ * This includes Quest Admins and users with a Quest Creator Role.
+ * @param {import('discord.js').Interaction} interaction
+ * @returns {Promise<boolean>}
+ */
+async function canManageQuests(interaction) {
+    // First, check for administrator-level permissions
+    if (await isQuestAdmin(interaction)) {
+        return true;
+    }
+
+    // Then, check for the quest creator roles
+    const config = await configManager.getLegionConfig(interaction.guildId);
+    const creatorRoleIds = config.questCreatorRoleIds || [];
+
+    return creatorRoleIds.length > 0 && interaction.member.roles.cache.some(role => creatorRoleIds.includes(role.id));
+}
+
+/**
+ * Checks if the user has permission to edit or manage a specific quest.
+ * This includes the quest issuer and anyone who can manage quests in general.
+ * @param {import('discord.js').Interaction} interaction
+ * @param {object} quest The quest object to check against.
+ * @returns {Promise<boolean>}
+ */
+async function canEditQuest(interaction, quest) {
+    if (!quest) return false;
+
+    // 1. Check if the user is the issuer of the quest.
+    if (quest.issuerId === interaction.user.id) {
+        return true;
+    }
+
+    // 2. Check if the user has general quest management permissions.
+    return await canManageQuests(interaction);
+}
+
+/**
+ * Checks if the user has permission to manage the ChatGPT Bot.
+ * This includes Discord Admins, Legion Admins, and ChatGPT Admins.
+ * @param {import('discord.js').Interaction} interaction
+ * @returns {Promise<boolean>}
+ */
+async function isChatGptAdmin(interaction) {
+    if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return true;
+    }
+    const config = await configManager.getLegionConfig(interaction.guildId);
+    return hasRole(interaction.member, config.legionAdminRoleId) || hasRole(interaction.member, config.chatGptAdminRoleId);
+}
 
 module.exports = {
-    customId: 'quest_edit_', // 'quest_edit_{questId}' に前方一致でマッチ
-    async handle(interaction) {
-        try {
-            const questId = interaction.customId.replace('quest_edit_', '');
-            const quest = await questDataManager.getQuest(interaction.guildId, questId);
-
-            if (!quest) {
-                return interaction.reply({ content: '⚠️ 編集しようとしたクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
-            }
-
-            // 権限チェック: クエスト発行者 or 管理者
-            const isIssuer = quest.issuerId === interaction.user.id;
-            const isManager = await hasQuestManagerPermission(interaction);
-
-            if (!isIssuer && !isManager) {
-                return interaction.reply({ content: '🚫 このクエストを編集する権限がありません。', flags: MessageFlags.Ephemeral });
-            }
-
-            // 完了済みのクエストは編集させない
-            if (quest.isArchived) {
-                return interaction.reply({ content: '⚠️ 完了済みのクエストは編集できません。', flags: MessageFlags.Ephemeral });
-            }
-
-            // モーダルを作成
-            const modal = new ModalBuilder()
-                .setCustomId(`quest_edit_submit_${questId}`) // モーダル送信時のID
-                .setTitle('クエストの編集');
-
-            // データモデルの互換性を考慮して、両方のプロパティ名を確認
-            const titleInput = new TextInputBuilder()
-                .setCustomId('quest_title')
-                .setLabel('クエストタイトル')
-                .setStyle(TextInputStyle.Short)
-                .setValue(quest.title || quest.name || '') // title と name の両方に対応
-                .setRequired(true)
-                .setMaxLength(100);
-
-            const descriptionInput = new TextInputBuilder()
-                .setCustomId('quest_description')
-                .setLabel('クエスト詳細')
-                .setStyle(TextInputStyle.Paragraph)
-                .setValue(quest.description || '')
-                .setRequired(false)
-                .setMaxLength(1000);
-
-            const teamsInput = new TextInputBuilder()
-                .setCustomId('quest_teams')
-                .setLabel('募集 組数')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.teams || '1'))
-                .setRequired(true);
-
-            const peopleInput = new TextInputBuilder()
-                .setCustomId('quest_people')
-                .setLabel('募集 人数（1組あたり）')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.people || quest.players || '1')) // people と players の両方に対応
-                .setRequired(true);
-
-            const deadlineInput = new TextInputBuilder()
-                .setCustomId('quest_deadline')
-                .setLabel('募集期限（YYYY-MM-DD HH:MM形式）')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('例：2024-12-31 23:59 (未入力で無期限)')
-                .setValue(quest.deadline || '')
-                .setRequired(false);
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(titleInput),
-                new ActionRowBuilder().addComponents(descriptionInput),
-                new ActionRowBuilder().addComponents(teamsInput),
-                new ActionRowBuilder().addComponents(peopleInput),
-                new ActionRowBuilder().addComponents(deadlineInput)
-            );
-
-            await interaction.showModal(modal);
-        } catch (error) {
-            console.error('クエスト編集モーダルの表示中にエラーが発生しました:', error);
-            const replyOptions = { content: 'エラーが発生したため、編集を開始できませんでした。', flags: MessageFlags.Ephemeral };
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp(replyOptions).catch(console.error);
-            } else {
-                await interaction.reply(replyOptions).catch(console.error);
-            }
-        }
-    }
+    isLegionAdmin,
+    isQuestAdmin,
+    canManageQuests,
+    canEditQuest,
+    isChatGptAdmin,
 };

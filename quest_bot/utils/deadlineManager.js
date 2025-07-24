@@ -6,11 +6,19 @@ const configDataManager = require('../../configDataManager');
 const { logAction } = require('./logger');
 const { updateQuestMessage } = require('./questMessageManager');
 
+let isChecking = false; // Lock to prevent overlapping executions
+
 /**
  * Checks for and closes any quests that have passed their deadline.
  * @param {import('discord.js').Client} client The Discord client instance.
  */
 async function checkAndCloseExpiredQuests(client) {
+  if (isChecking) {
+    console.log('[DeadlineManager] A check is already in progress. Skipping.');
+    return;
+  }
+  isChecking = true;
+
   try {
     const guildIds = await questDataManager.getAllGuildIds();
     if (guildIds.length === 0) {
@@ -56,8 +64,7 @@ async function checkAndCloseExpiredQuests(client) {
               }
 
               // 4. Log the action.
-              const pseudoInteraction = { client, guildId, user: client.user };
-              await logAction(pseudoInteraction, {
+              await logAction({ client, guildId, user: client.user }, {
                 title: '⏰ クエスト期限切れ',
                 color: '#e67e22',
                 details: {
@@ -74,6 +81,8 @@ async function checkAndCloseExpiredQuests(client) {
     }
   } catch (error) {
     console.error('Error fetching guilds for deadline check:', error);
+  } finally {
+    isChecking = false;
   }
 }
 

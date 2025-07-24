@@ -43,7 +43,7 @@ async function handleChannelSelect(interaction) {
         finalMessage += '\n⚠️ **警告:** このチャンネルへのメッセージ送信に失敗しました。Botに「メッセージを送信」と「埋め込みリンク」の権限があるか確認してください。';
     }
 
-    await logAction(interaction, {
+    await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '⚙️ ログチャンネル設定',
         description: replyMessage,
         color: '#95a5a6',
@@ -71,7 +71,7 @@ async function handleRoleSelect(interaction) {
 
     const replyMessage = `✅ クエスト管理者ロールを **${role.name}** に設定しました。`;
 
-    await logAction(interaction, {
+    await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '⚙️ 管理者ロール設定',
         description: replyMessage,
         color: '#95a5a6',
@@ -111,7 +111,7 @@ async function handleNotificationChannelSelect(interaction) {
         finalMessage += '\n⚠️ **警告:** このチャンネルへのメッセージ送信に失敗しました。Botに「メッセージを送信」と「埋め込みリンク」の権限があるか確認してください。';
     }
 
-    await logAction(interaction, {
+    await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '⚙️ 通知チャンネル設定',
         description: replyMessage,
         color: '#95a5a6',
@@ -164,7 +164,7 @@ async function handleDashboardChannelSelect(interaction) {
 
     const replyMessage = `✅ クエスト掲示板を <#${newChannelId}> に設置しました。`;
 
-    await logAction(interaction, {
+    await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '⚙️ 掲示板チャンネル設定',
         description: replyMessage,
         color: '#95a5a6',
@@ -181,7 +181,7 @@ async function handleEmbedColorSelect(interaction) {
     await configDataManager.setEmbedColor(interaction.guildId, selectedColor);
 
     const replyMessage = `✅ Embedの色を **${selectedOption.label} (${selectedColor})** に設定しました。`;
-    await logAction(interaction, { title: '⚙️ Embedカラー設定', description: replyMessage, color: '#95a5a6' });
+    await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, { title: '⚙️ Embedカラー設定', description: replyMessage, color: '#95a5a6' });
 
     const newView = await createConfigPanel(interaction);
     await interaction.editReply(newView);
@@ -212,7 +212,7 @@ async function handleButtonOrderSelect(interaction) {
         });
     } else {
         await configDataManager.setButtonOrder(interaction.guildId, selectedOrder);
-        await logAction(interaction, {
+        await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
             title: '⚙️ ボタン順設定',
             description: `✅ ボタンの表示順を **${selectedOrder.map(key => `\`${buttonNameMap[key]}\``).join(' > ')}** に設定しました。`,
             color: '#95a5a6',

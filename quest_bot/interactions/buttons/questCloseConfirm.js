@@ -1,60 +1,40 @@
-// quest_bot/interactions/buttons/questCloseConfirm.js
-const questDataManager = require('../../utils/questDataManager');
+// quest_bot/interactions/buttons/questClose.js
 const { MessageFlags } = require('discord.js');
-const { updateQuestMessage } = require('../../utils/questMessageManager');
-const { updateDashboard } = require('../../utils/dashboardManager');
-const { logAction } = require('../../utils/logger');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const questDataManager = require('../../utils/questDataManager');
+const { canEditQuest } = require('../../../permissionManager');
+const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
-  customId: 'quest_confirm_close_', // Prefix match
+  customId: 'quest_open_closeConfirm_', // Prefix match
   async handle (interaction) {
     try {
-      // 確認メッセージを更新する準備
-      await interaction.deferUpdate();
-
       const questId = interaction.customId.split('_')[3];
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.editReply({ content: '対象のクエストが見つかりませんでした。', components: [] });
+        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
       if (quest.isClosed) {
-        return interaction.followUp({ content: '⚠️ このクエストは既に締め切られています。', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: '⚠️ このクエストは既に締め切られています。', flags: MessageFlags.Ephemeral });
       }
 
-      // 念のため再度権限チェック
-      const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await isQuestAdmin(interaction);
-
-      if (!isIssuer && !isManager) {
-        return interaction.editReply({ content: 'クエストの〆切は、発注者または管理者のみが行えます。', components: [] });
+      // Permission check: issuer or quest manager/creator
+      if (!(await canEditQuest(interaction, quest))) {
+        return interaction.reply({ content: 'クエストの〆切は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
-      // 1. クエストデータを更新
-      await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: true }, interaction.user);
-
-      // 2. Use the centralized function to update the quest message
-      const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-      await updateQuestMessage(interaction.client, updatedQuest);
-      await updateDashboard(interaction.client, interaction.guildId);
-
-      // 3. アクションをログに記録
-      await logAction(interaction, {
-        title: '🚫 募集〆切',
-        color: '#e74c3c', // red
-        details: {
-          'クエストタイトル': updatedQuest.title || '無題',
-          'クエストID': questId,
-        },
+      await replyWithConfirmation(interaction, {
+        content: '本当にこのクエストの募集を締め切りますか？\nこの操作は「募集再開」ボタンで元に戻せます。',
+        confirmCustomId: `quest_confirm_close_${questId}`,
+        confirmLabel: 'はい、締め切ります',
+        cancelCustomId: `quest_cancel_close_${questId}`,
       });
-
-      // 4. 確認メッセージを更新して処理完了を通知
-      await interaction.editReply({ content: '✅ クエストの募集を締め切りました。', components: [] });
     } catch (error) {
-      console.error('募集〆切の確認処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、募集を締め切れませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      console.error('募集〆切UIの表示中にエラーが発生しました:', error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      }
     }
   },
 };

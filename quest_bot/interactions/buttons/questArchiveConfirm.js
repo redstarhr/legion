@@ -1,64 +1,40 @@
-// quest_bot/interactions/buttons/questArchiveConfirm.js
-const questDataManager = require('../../utils/questDataManager');
+// quest_bot/interactions/buttons/questArchive.js
 const { MessageFlags } = require('discord.js');
-const { updateQuestMessage } = require('../../utils/questMessageManager');
-const { updateDashboard } = require('../../utils/dashboardManager');
-const { logAction } = require('../../utils/logger');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const questDataManager = require('../../utils/questDataManager');
+const { canEditQuest } = require('../../../permissionManager');
+const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {
-  customId: 'quest_confirm_archive_', // Prefix match
+  customId: 'quest_open_archiveConfirm_', // Prefix match
   async handle (interaction) {
     try {
-      await interaction.deferUpdate();
-
       const questId = interaction.customId.split('_')[3];
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.followUp({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
       }
 
       if (quest.isArchived) {
-        return interaction.followUp({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。', flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。', flags: MessageFlags.Ephemeral });
       }
 
-      // Final permission check
-      const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await isQuestAdmin(interaction);
-
-      if (!isIssuer && !isManager) {
-        return interaction.followUp({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
+      // Permission check: issuer or quest manager/creator
+      if (!(await canEditQuest(interaction, quest))) {
+        return interaction.reply({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
-      await questDataManager.updateQuest(interaction.guildId, questId, {
-        isArchived: true,
-        isClosed: true,
-        completedAt: new Date().toISOString(), // Used for sorting in listCompletedQuests
-      }, interaction.user);
-
-      // 2. Fetch updated quest and update the original message
-      const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
-      await updateQuestMessage(interaction.client, updatedQuest);
-
-      // 3. Update the dashboard
-      await updateDashboard(interaction.client, interaction.guildId);
-
-      // 4. Log the action
-      await logAction(interaction, {
-        title: '✅ クエスト完了',
-        color: '#95a5a6', // grey
-        details: {
-          'クエストタイトル': updatedQuest.title || '無題',
-          'クエストID': questId,
-        },
+      await replyWithConfirmation(interaction, {
+        content: '本当にこのクエストを完了状態にしますか？\n完了したクエストは `/完了クエスト一覧` から確認・復元できます。',
+        confirmCustomId: `quest_confirm_archive_${questId}`,
+        confirmLabel: 'はい、完了します',
+        cancelCustomId: `quest_cancel_archive_${questId}`,
       });
-
-      // 5. Update the confirmation message
-      await interaction.editReply({ content: '✅ クエストを完了状態にしました。', components: [] });
     } catch (error) {
-      console.error('クエスト完了の確認処理中にエラーが発生しました:', error);
-      await interaction.followUp({ content: 'エラーが発生したため、クエストを完了できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      console.error('クエスト完了UIの表示中にエラーが発生しました:', error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: 'エラーが発生したため、UIを表示できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
+      }
     }
   },
 };

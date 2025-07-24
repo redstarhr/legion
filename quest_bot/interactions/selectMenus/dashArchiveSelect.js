@@ -33,7 +33,7 @@ module.exports = {
                 return interaction.editReply({ content: '⚠️ クエストの更新に失敗しました。' });
             }
 
-            await logAction(interaction, {
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                 title: '✅ クエスト完了',
                 color: '#95a5a6', // grey
                 details: {

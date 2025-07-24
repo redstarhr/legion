@@ -1,8 +1,8 @@
-// e:/\u5171\u6709\u30d5\u30a9\u30eb\u30c0/legion/quest_bot/interactions/selectMenus/dashAddQuestKamaSelect.js
-
+const { MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 /**
  * Helper function to create a quest and log the action.
@@ -18,7 +18,7 @@ async function createAndLogQuest(interaction, name, count) {
     const newQuest = await questDataManager.createQuest(interaction.guildId, questDetails, interaction.user);
 
     if (newQuest) {
-        await logAction(interaction, {
+        await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
             title: '➕ クエスト追加',
             color: '#2ecc71',
             details: {
@@ -32,13 +32,13 @@ async function createAndLogQuest(interaction, name, count) {
 }
 
 module.exports = {
-    customId: 'dash_select_addQuest_kama_', // Prefix match
+    customId: 'dash_submit_addQuest_', // Prefix match
     async handle(interaction) {
         try {
-            await interaction.deferUpdate();
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const kamaCount = parseInt(interaction.values[0], 10);
-            const praCount = parseInt(interaction.customId.split('_')[4], 10);
+            const praCount = parseInt(interaction.fields.getTextInputValue('pra_count'), 10) || 0;
+            const kamaCount = parseInt(interaction.fields.getTextInputValue('kama_count'), 10) || 0;
 
             const createdQuests = [];
 
@@ -49,24 +49,14 @@ module.exports = {
             if (newKamaQuest) createdQuests.push(newKamaQuest);
 
             if (createdQuests.length > 0) {
-                // Update the dashboard to show the new quests
                 await updateDashboard(interaction.client, interaction.guildId);
-
                 const questNames = createdQuests.map(q => `「${q.name}」`).join('と');
-                await interaction.editReply({
-                    content: `✅ クエスト${questNames}を追加しました！`,
-                    components: [], // Remove the select menu
-                });
+                await interaction.editReply({ content: `✅ クエスト${questNames}を追加しました！` });
             } else {
-                await interaction.editReply({
-                    content: '人数が0人のため、クエストは追加されませんでした。',
-                    components: [],
-                });
+                await interaction.editReply({ content: '人数が0人のため、クエストは追加されませんでした。' });
             }
-
         } catch (error) {
-            console.error('カマ人数選択・クエスト作成処理中にエラーが発生しました:', error);
-            await interaction.editReply({ content: 'エラーが発生したため、クエストを追加できませんでした。', components: [] }).catch(console.error);
+            await handleInteractionError({ interaction, error, context: 'クエスト一括追加処理' });
         }
     },
 };

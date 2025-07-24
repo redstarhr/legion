@@ -59,6 +59,25 @@ async function canManageQuests(interaction) {
 }
 
 /**
+ * Checks if the user has permission to edit or manage a specific quest.
+ * This includes the quest issuer and anyone who can manage quests in general.
+ * @param {import('discord.js').Interaction} interaction
+ * @param {object} quest The quest object to check against.
+ * @returns {Promise<boolean>}
+ */
+async function canEditQuest(interaction, quest) {
+    if (!quest) return false;
+
+    // 1. Check if the user is the issuer of the quest.
+    if (quest.issuerId === interaction.user.id) {
+        return true;
+    }
+
+    // 2. Check if the user has general quest management permissions.
+    return await canManageQuests(interaction);
+}
+
+/**
  * Checks if the user has permission to manage the ChatGPT Bot.
  * This includes Discord Admins, Legion Admins, and ChatGPT Admins.
  * @param {import('discord.js').Interaction} interaction
@@ -76,5 +95,6 @@ module.exports = {
     isLegionAdmin,
     isQuestAdmin,
     canManageQuests,
+    canEditQuest,
     isChatGptAdmin,
 };

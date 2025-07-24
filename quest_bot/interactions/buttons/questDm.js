@@ -1,51 +1,57 @@
-// quest_bot/interactions/buttons/questDm.js
-const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
+// quest_bot/interactions/buttons/questCloseConfirm.js
 const questDataManager = require('../../utils/questDataManager');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const { MessageFlags } = require('discord.js');
+const { updateQuestMessage } = require('../../utils/questMessageManager');
+const { updateDashboard } = require('../../utils/dashboardManager');
+const { logAction } = require('../../utils/logger');
+const { canEditQuest } = require('../../../permissionManager');
 
 module.exports = {
-  customId: 'quest_open_dmModal_', // Prefix match
+  customId: 'quest_confirm_close_', // Prefix match
   async handle (interaction) {
     try {
+      // 確認メッセージを更新する準備
+      await interaction.deferUpdate();
+
       const questId = interaction.customId.split('_')[3];
       const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
       if (!quest) {
-        return interaction.reply({ content: '対象のクエストが見つかりませんでした。', flags: MessageFlags.Ephemeral });
+        return interaction.editReply({ content: '対象のクエストが見つかりませんでした。', components: [] });
       }
 
-      // Permission check: issuer or manager
-      const isIssuer = quest.issuerId === interaction.user.id;
-      const isManager = await isQuestAdmin(interaction);
-
-      if (!isIssuer && !isManager) {
-        return interaction.reply({ content: '参加者への連絡は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
+      if (quest.isClosed) {
+        return interaction.followUp({ content: '⚠️ このクエストは既に締め切られています。', flags: MessageFlags.Ephemeral });
       }
 
-      // Double-check for participants, though the button should be disabled.
-      if (!quest.accepted || quest.accepted.length === 0) {
-          return interaction.reply({ content: 'このクエストにはまだ参加者がいません。', flags: MessageFlags.Ephemeral });
+      // Final permission check
+      if (!(await canEditQuest(interaction, quest))) {
+        return interaction.editReply({ content: 'クエストの〆切は、発注者または管理者のみが行えます。', components: [] });
       }
 
-      const modal = new ModalBuilder()
-        .setCustomId(`quest_submit_dmModal_${questId}`)
-        .setTitle('参加者への一斉連絡');
+      // 1. クエストデータを更新
+      await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: true }, interaction.user);
 
-      const messageInput = new TextInputBuilder()
-        .setCustomId('dm_message')
-        .setLabel('参加者全員に送信するメッセージ')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('リマインダーや変更点などを入力してください。このメッセージはBotから各参加者にDMで送信されます。')
-        .setRequired(true);
+      // 2. Use the centralized function to update the quest message
+      const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
+      await updateQuestMessage(interaction.client, updatedQuest);
+      await updateDashboard(interaction.client, interaction.guildId);
 
-      modal.addComponents(new ActionRowBuilder().addComponents(messageInput));
+      // 3. アクションをログに記録
+      await logAction(interaction, {
+        title: '🚫 募集〆切',
+        color: '#e74c3c', // red
+        details: {
+          'クエストタイトル': updatedQuest.title || '無題',
+          'クエストID': questId,
+        },
+      });
 
-      await interaction.showModal(modal);
+      // 4. 確認メッセージを更新して処理完了を通知
+      await interaction.editReply({ content: '✅ クエストの募集を締め切りました。', components: [] });
     } catch (error) {
-      console.error('参加者連絡モーダルの表示中にエラーが発生しました:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、連絡を開始できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
-      }
+      console.error('募集〆切の確認処理中にエラーが発生しました:', error);
+      await interaction.followUp({ content: 'エラーが発生したため、募集を締め切れませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
     }
   },
 };

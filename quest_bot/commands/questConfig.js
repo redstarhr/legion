@@ -7,7 +7,7 @@ const { createConfigPanel } = require('../components/configPanel');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('クエスト設定')
-    .setDescription('Botの各種設定を行います。(管理者・クエスト管理者のみ)')
+    .setDescription('Botの各種設定を行います。')
     // Discordのデフォルト権限からは外す。実行時に動的にチェックするため。
     .setDefaultMemberPermissions(0),
 
