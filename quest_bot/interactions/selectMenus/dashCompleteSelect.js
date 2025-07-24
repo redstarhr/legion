@@ -25,7 +25,7 @@ module.exports = {
 
             // 受注リストから対象のユーザーを削除
             const updatedAccepted = quest.accepted.filter(a => a.userId !== userId);
-            await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
 
             await logAction(interaction, {
                 title: '🏆 討伐完了',
@@ -40,7 +40,6 @@ module.exports = {
             });
 
             // クエストメッセージとダッシュボードを更新
-            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
             await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 

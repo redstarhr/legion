@@ -10,6 +10,7 @@ const path = require('path');
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./quest_bot/utils/questDataManager');
+const { logError } = require('./utils/errorLogger');
 // TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
 // const chatGptDataManager = require('./chat_gpt_bot/utils/dataManager');
 
@@ -123,12 +124,13 @@ client.on('interactionCreate', async interaction => {
     } else if (interaction.isModalSubmit()) {
       let handler;
       // customIdの前方一致でハンドラを検索 (例: 'quest_accept_submit_12345')
-      for (const [key, value] of client.modals) {
+      for (const [key, value] of client.modals) { 
         if (interaction.customId.startsWith(key)) {
           handler = value;
           break;
         }
       }
+
       if (handler) await handler.handle(interaction);
     }
   } catch (error) {
@@ -139,8 +141,12 @@ client.on('interactionCreate', async interaction => {
         interactionDetails = `Component: ${interaction.customId}`;
     }
 
-    console.error(`❌ [ERROR] An error occurred in [${interactionDetails}] triggered by [${interaction.user.tag} (${interaction.user.id})] in guild [${interaction.guild.name} (${interaction.guild.id})]:`);
-    console.error(error);
+    // Use the centralized error logger
+    await logError({
+      error,
+      interaction,
+      customContext: `Unhandled error in interactionCreate event for ${interactionDetails}`,
+    });
 
     // 10062: Unknown interaction. これは通常、インタラクションが3秒以内に応答されずタイムアウトしたことを意味する。
     // このエラーに対して再度応答しようとするとクラッシュするため、ログに記録するだけで処理を終了する。

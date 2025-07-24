@@ -31,7 +31,7 @@ module.exports = {
             const updatedAccepted = [...quest.accepted];
             updatedAccepted[acceptanceIndex].status = 'failed';
 
-            await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
 
             await logAction(interaction, {
                 title: '❌ 討伐失敗',
@@ -46,7 +46,6 @@ module.exports = {
             });
 
             // クエストメッセージとダッシュボードを更新
-            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
             await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 

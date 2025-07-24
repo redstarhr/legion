@@ -21,17 +21,16 @@ module.exports = {
       const guildId = interaction.guildId;
 
       // 1. Update quest status (unarchive, reopen for recruitment)
-      const success = await questDataManager.updateQuest(guildId, questIdToUnarchive, {
+      const unarchivedQuest = await questDataManager.updateQuest(guildId, questIdToUnarchive, {
         isArchived: false,
         completedAt: null, // Clear the completion timestamp
       }, interaction.user);
 
-      if (!success) {
+      if (!unarchivedQuest) {
         return interaction.followUp({ content: '⚠️ クエストの状態を戻すのに失敗しました。', flags: MessageFlags.Ephemeral });
       }
 
       // 2. クエストメッセージとダッシュボードを更新
-      const unarchivedQuest = await questDataManager.getQuest(guildId, questIdToUnarchive);
       await updateQuestMessage(interaction.client, unarchivedQuest);
       await updateDashboard(interaction.client, guildId);
 

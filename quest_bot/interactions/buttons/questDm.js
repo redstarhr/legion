@@ -30,10 +30,9 @@ module.exports = {
       }
 
       // 1. クエストデータを更新
-      await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: true }, interaction.user);
+      const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: true }, interaction.user);
 
       // 2. Use the centralized function to update the quest message
-      const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
       await updateQuestMessage(interaction.client, updatedQuest);
       await updateDashboard(interaction.client, interaction.guildId);
 

@@ -28,14 +28,12 @@ module.exports = {
         return interaction.followUp({ content: 'クエストの完了は、発注者または管理者のみが行えます。', flags: MessageFlags.Ephemeral });
       }
 
-      await questDataManager.updateQuest(interaction.guildId, questId, {
+      const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, {
         isArchived: true,
         isClosed: true,
         completedAt: new Date().toISOString(), // Used for sorting in listCompletedQuests
       }, interaction.user);
 
-      // 2. Fetch updated quest and update the original message
-      const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
       await updateQuestMessage(interaction.client, updatedQuest);
 
       // 3. Update the dashboard

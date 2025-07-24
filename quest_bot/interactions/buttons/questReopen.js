@@ -33,10 +33,9 @@ module.exports = {
       }
 
       // 1. クエストデータを更新して募集を再開
-      await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: false }, interaction.user);
+      const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: false }, interaction.user);
 
       // 2. 更新後のクエストを取得し、全てのメッセージを更新
-      const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
       await updateQuestMessage(interaction.client, updatedQuest);
       await updateDashboard(interaction.client, interaction.guildId);
 

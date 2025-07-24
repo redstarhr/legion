@@ -62,10 +62,9 @@ module.exports = {
             };
 
             // 6. クエストデータを更新
-            await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
             // 7. クエストメッセージと掲示板を更新
-            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
             await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 

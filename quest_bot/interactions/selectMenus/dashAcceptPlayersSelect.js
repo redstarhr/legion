@@ -51,7 +51,7 @@ module.exports = {
                 accepted: updatedAccepted,
                 isClosed: isNowFull ? true : quest.isClosed, // Close if full
             };
-            await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
             await logAction(interaction, {
                 title: '👍 クエスト受注',
@@ -64,7 +64,6 @@ module.exports = {
                 },
             });
 
-            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
             await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 

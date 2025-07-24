@@ -35,13 +35,12 @@ module.exports = {
       };
 
       // Update quest data
-      const success = await questDataManager.updateQuest(guildId, questId, updates, interaction.user);
-      if (!success) {
+      const updatedQuest = await questDataManager.updateQuest(guildId, questId, updates, interaction.user);
+      if (!updatedQuest) {
         return interaction.editReply({ content: '⚠️ クエストデータの更新に失敗しました。', components: [] });
       }
 
       // Update all messages
-      const updatedQuest = await questDataManager.getQuest(guildId, questId); // Re-fetch for the most current state
       await updateQuestMessage(interaction.client, updatedQuest);
       await updateDashboard(interaction.client, guildId);
 

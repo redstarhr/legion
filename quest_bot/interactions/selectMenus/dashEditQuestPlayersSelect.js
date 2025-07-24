@@ -22,7 +22,7 @@ module.exports = {
                 players: newPlayerCount,
                 people: newPlayerCount, // 互換性のために追加
             };
-            await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
             await logAction(interaction, {
                 title: '📝 クエスト修正',
@@ -35,7 +35,6 @@ module.exports = {
             });
 
             // クエストメッセージとダッシュボードを更新
-            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
             await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 
