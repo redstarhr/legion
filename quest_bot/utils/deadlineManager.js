@@ -30,10 +30,12 @@ async function checkAndCloseExpiredQuests(client) {
               // Found an expired quest.
               console.log(`[${guildId}] Expired quest found: ${questId}`);
 
-              // 1. Update the quest to be closed.
-              await questDataManager.updateQuest(guildId, questId, { isClosed: true });
-              const updatedQuest = await questDataManager.getQuest(guildId, questId);
-              if (!updatedQuest) continue;
+              // 1. Update the quest to be closed and get the updated object.
+              const updatedQuest = await questDataManager.updateQuest(guildId, questId, { isClosed: true });
+              if (!updatedQuest) {
+                console.warn(`[${guildId}] Failed to update expired quest ${questId}, or it was not found.`);
+                continue;
+              }
 
               // 2. Update the original quest message
               await updateQuestMessage(client, updatedQuest);

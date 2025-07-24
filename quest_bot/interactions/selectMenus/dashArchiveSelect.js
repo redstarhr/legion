@@ -28,19 +28,21 @@ module.exports = {
                 completedAt: new Date().toISOString(),
                 isClosed: true, // Archiving should also close it
             };
-            await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
+            if (!updatedQuest) {
+                return interaction.editReply({ content: '⚠️ クエストの更新に失敗しました。' });
+            }
 
             await logAction(interaction, {
                 title: '✅ クエスト完了',
                 color: '#95a5a6', // grey
                 details: {
-                    'クエスト名': quest.name,
+                    'クエスト名': updatedQuest.name,
                     'クエストID': quest.id,
                 },
             });
 
             // クエストメッセージとダッシュボードを更新
-            const updatedQuest = await questDataManager.getQuest(interaction.guildId, questId);
             await updateQuestMessage(interaction.client, updatedQuest);
             await updateDashboard(interaction.client, interaction.guildId);
 

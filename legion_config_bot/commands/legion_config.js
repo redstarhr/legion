@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
-const configManager = require('../utils/configDataManager');
+const configManager = require('../../configDataManager');
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -132,13 +132,13 @@ async function createQuest(guildId, questDetails, user) {
  * @param {string} questId
  * @param {object} updates 更新するデータ
  * @param {import('discord.js').User} [user] - The user performing the update. Optional for system updates.
- * @returns {Promise<boolean>} 成功したかどうか
+ * @returns {Promise<object|null>} The updated quest object, or null if not found.
  */
 async function updateQuest(guildId, questId, updates, user) {
   const quests = await getAllQuests(guildId);
   if (!quests[questId]) {
     console.warn(`[updateQuest] Quest not found: ${questId} in guild ${guildId}`);
-    return false;
+    return null;
   }
 
   const updatedQuest = { ...quests[questId], ...updates };
@@ -154,7 +154,7 @@ async function updateQuest(guildId, questId, updates, user) {
 
   quests[questId] = updatedQuest;
   await writeGcsFile(guildId, QUESTS_FILE_NAME, quests);
-  return true;
+  return updatedQuest;
 }
 
 // --- Config Data Functions ---

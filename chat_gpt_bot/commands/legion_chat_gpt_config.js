@@ -1,7 +1,7 @@
 // commands/legion_chat_gpt_config.js
 
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, MessageFlagsBitField } = require('discord.js');
-const { checkAdmin } = require('../utils/permissions/checkAdmin');
+const { isChatGptAdmin } = require('../../permissionManager');
 const { logAndReplyError } = require('../utils/errorHelper');
 const { getChatGPTConfig } = require('../utils/star_chat_gpt_config/configManager');
 const { idManager } = require('../utils/idManager');
@@ -13,7 +13,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-      const isAdmin = await checkAdmin(interaction);
+      const isAdmin = await isChatGptAdmin(interaction);
       if (!isAdmin) {
         return await interaction.reply({
           content: '❌ 権限がありません。管理者のみ使用可能です。',

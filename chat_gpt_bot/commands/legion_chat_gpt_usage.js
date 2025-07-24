@@ -1,7 +1,7 @@
 // commands/legion_chat_gpt_usage.js
 
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { checkAdmin } = require('../utils/permissions/checkAdmin');
+const { isChatGptAdmin } = require('../../permissionManager');
 const { getOpenAIUsage } = require('../utils/openaiUsage');
 const { configManager } = require('../utils/configManager');
 const {
@@ -22,7 +22,7 @@ module.exports = {
       await interaction.deferReply({ ephemeral: true });
 
       // 管理者権限チェック
-      const isAdmin = await checkAdmin(interaction);
+      const isAdmin = await isChatGptAdmin(interaction);
       if (!isAdmin) {
         const noPermissionEmbed = createAdminEmbed(
           '❌ 権限がありません',

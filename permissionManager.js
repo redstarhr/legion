@@ -64,7 +64,6 @@ async function canManageQuests(interaction) {
  * @param {import('discord.js').Interaction} interaction
  * @returns {Promise<boolean>}
  */
-async function is
 async function isChatGptAdmin(interaction) {
     if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return true;

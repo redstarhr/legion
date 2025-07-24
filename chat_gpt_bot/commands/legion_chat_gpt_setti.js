@@ -7,7 +7,7 @@ const {
   ButtonStyle,
   MessageFlagsBitField,
 } = require('discord.js');
-const { checkAdmin } = require('../utils/permissions/checkAdmin');
+const { isChatGptAdmin } = require('../../permissionManager');
 const { createAdminEmbed } = require('../utils/embedHelper');
 const { idManager } = require('../utils/idManager');
 const { logAndReplyError } = require('../utils/errorHelper');
@@ -22,7 +22,7 @@ module.exports = {
       // すぐに deferReply で応答確保（遅延を避ける）
       await interaction.deferReply({ flags: MessageFlagsBitField.Flags.Ephemeral });
 
-      const isAdmin = await checkAdmin(interaction);
+      const isAdmin = await isChatGptAdmin(interaction);
       if (!isAdmin) {
         return await interaction.editReply({
           embeds: [createAdminEmbed('❌ 権限がありません', 'このコマンドは管理者専用です。')],
