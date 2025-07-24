@@ -1,4 +1,4 @@
-// devcmdup.js - スラッシュコマンド登録用スクリリプト
+// devcmd.js - スラッシュコマンド登録用スクリプト
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -22,32 +22,36 @@ if (!DISCORD_TOKEN || !CLIENT_ID) {
  */
 async function main() {
   const commands = [];
-  // プロジェクトの構成に合わせてパスを修正
-  const commandsPath = path.join(__dirname, 'quest_bot', 'commands');
+  const botModules = ['quest_bot', 'chat_gpt_bot', 'legion_config_bot'];
 
-  if (!fs.existsSync(commandsPath)) {
-    console.error(`${RED}❌ エラー: 'commands' ディレクトリが見つかりません。${NC}`);
-    process.exit(1);
-  }
-
-  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-
-  console.log(`${YELLOW}🔍 コマンドファイルを読み込んでいます...${NC}`);
+  console.log(`${YELLOW}🔍 全モジュールのコマンドファイルを読み込んでいます...${NC}`);
 
   // --- コマンドの読み込みとデータ整形 ---
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    try {
-      // 開発中にファイルを変更した場合でも最新版を読み込むためにキャッシュをクリア
-      delete require.cache[require.resolve(filePath)];
-      const command = require(filePath);
-      if ('data' in command && 'execute' in command) {
-        commands.push(command.data.toJSON());
-      } else {
-        console.warn(`${YELLOW}[⚠️警告] スラッシュコマンドの形式が不正です: ${path.relative(__dirname, filePath)}${NC}`);
+  for (const moduleName of botModules) {
+    const commandsPath = path.join(__dirname, moduleName, 'commands');
+    if (!fs.existsSync(commandsPath)) {
+      continue; // モジュールにコマンドディレクトリがなくてもエラーではない
+    }
+
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    if (commandFiles.length > 0) {
+        console.log(`  📁 モジュール [${moduleName}] から ${commandFiles.length} 個のコマンドを検出。`);
+    }
+
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      try {
+        // 開発中にファイルを変更した場合でも最新版を読み込むためにキャッシュをクリア
+        delete require.cache[require.resolve(filePath)];
+        const command = require(filePath);
+        if ('data' in command && 'execute' in command) {
+          commands.push(command.data.toJSON());
+        } else {
+          console.warn(`${YELLOW}[⚠️警告] スラッシュコマンドの形式が不正です: ${path.relative(__dirname, filePath)}${NC}`);
+        }
+      } catch (error) {
+        console.error(`${RED}[❌エラー] コマンドの読み込みに失敗しました: ${path.relative(__dirname, filePath)}${NC}`, error);
       }
-    } catch (error) {
-      console.error(`${RED}[❌エラー] コマンドの読み込みに失敗しました: ${path.relative(__dirname, filePath)}${NC}`, error);
     }
   }
   console.log(`${GREEN}✅ 合計 ${commands.length} 個のコマンドを読み込みました。${NC}`);

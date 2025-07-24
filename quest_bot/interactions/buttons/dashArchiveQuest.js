@@ -1,14 +1,13 @@
 // quest_bot/interactions/buttons/dashArchiveQuest.js
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
     customId: 'dash_open_archiveQuestSelect',
     async handle(interaction) {
         try {
-            const isManager = await isQuestAdmin(interaction);
-            if (!isManager) {
+            if (!(await hasQuestManagerPermission(interaction))) {
                 return interaction.reply({ content: 'クエストの完了は、管理者またはクエスト管理者ロールを持つユーザーのみが行えます。', flags: MessageFlags.Ephemeral });
             }
 

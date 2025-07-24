@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
-const { isQuestAdmin } = require('../../../utils/permissionManager');
+const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 
 module.exports = {
     customId: 'quest_edit_', // 'quest_edit_{questId}' に前方一致でマッチ

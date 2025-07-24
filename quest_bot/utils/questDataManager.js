@@ -178,15 +178,6 @@ async function updateGuildConfig(guildId, updates) {
   await writeGcsFile(guildId, getGuildConfigFileName(guildId), newConfig);
 }
 
-async function getQuestManagerRole(guildId) {
-  const config = await getGuildConfig(guildId);
-  return config.questManagerRoleId || null;
-}
-
-async function setQuestManagerRole(guildId, roleId) {
-  await updateGuildConfig(guildId, { questManagerRoleId: roleId });
-}
-
 async function getLogChannel(guildId) {
   const config = await getGuildConfig(guildId);
   return config.logChannelId || null;
@@ -461,8 +452,6 @@ module.exports = {
   createQuest,
   updateQuest,
   getGuildConfig,
-  getQuestManagerRole,
-  setQuestManagerRole,
   getLogChannel,
   setLogChannel,
   getNotificationChannel,

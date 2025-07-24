@@ -1,7 +1,7 @@
 // commands/questConfig.js
 
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
-const { isQuestAdmin } = require('../../utils/permissionManager');
+const { isQuestAdmin } = require('../../permissionManager');
 const { createConfigPanel } = require('../components/configPanel');
 
 module.exports = {

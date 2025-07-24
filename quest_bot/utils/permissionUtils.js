@@ -1,25 +1,13 @@
 // utils/permissionUtils.js
-const { PermissionFlagsBits } = require('discord.js');
-const questDataManager = require('./questDataManager');
+const { canManageQuests } = require('../../permissionManager');
 
 /**
- * ユーザーがクエストを管理する権限を持っているかチェックする
+ * ユーザーがクエストを管理する権限を持っているかチェックする (エイリアス)
  * @param {import('discord.js').Interaction} interaction
  * @returns {Promise<boolean>}
  */
 async function hasQuestManagerPermission(interaction) {
-  // 1. サーバーの管理者かチェック
-  if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-    return true;
-  }
-
-  // 2. 設定されたロールを持っているかチェック
-  const managerRoleId = await questDataManager.getQuestManagerRole(interaction.guildId);
-  if (managerRoleId && interaction.member.roles.cache.has(managerRoleId)) {
-    return true;
-  }
-
-  return false;
+  return await canManageQuests(interaction);
 }
 
 module.exports = { hasQuestManagerPermission };

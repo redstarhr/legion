@@ -42,6 +42,9 @@ async function setLegionAdminRole(guildId, roleId) {
 async function setQuestAdminRole(guildId, roleId) {
   await saveLegionConfig(guildId, { questAdminRoleId: roleId });
 }
+async function setQuestCreatorRoleIds(guildId, roleIds) {
+  await saveLegionConfig(guildId, { questCreatorRoleIds: roleIds });
+}
 async function setChatGptAdminRole(guildId, roleId) {
   await saveLegionConfig(guildId, { chatGptAdminRoleId: roleId });
 }
@@ -51,5 +54,6 @@ module.exports = {
   saveLegionConfig,
   setLegionAdminRole,
   setQuestAdminRole,
+  setQuestCreatorRoleIds,
   setChatGptAdminRole,
 };

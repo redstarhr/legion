@@ -1,5 +1,5 @@
 const { PermissionFlagsBits } = require('discord.js');
-const configManager = require('../legion_config_bot/utils/configDataManager');
+const configManager = require('./configDataManager');
 
 /**
  * Checks if a member has a specific role.
@@ -40,6 +40,25 @@ async function isQuestAdmin(interaction) {
 }
 
 /**
+ * Checks if the user has permission to create/manage quests.
+ * This includes Quest Admins and users with a Quest Creator Role.
+ * @param {import('discord.js').Interaction} interaction
+ * @returns {Promise<boolean>}
+ */
+async function canManageQuests(interaction) {
+    // First, check for administrator-level permissions
+    if (await isQuestAdmin(interaction)) {
+        return true;
+    }
+
+    // Then, check for the quest creator roles
+    const config = await configManager.getLegionConfig(interaction.guildId);
+    const creatorRoleIds = config.questCreatorRoleIds || [];
+
+    return creatorRoleIds.length > 0 && interaction.member.roles.cache.some(role => creatorRoleIds.includes(role.id));
+}
+
+/**
  * Checks if the user has permission to manage the ChatGPT Bot.
  * This includes Discord Admins, Legion Admins, and ChatGPT Admins.
  * @param {import('discord.js').Interaction} interaction
@@ -57,5 +76,6 @@ async function isChatGptAdmin(interaction) {
 module.exports = {
     isLegionAdmin,
     isQuestAdmin,
+    canManageQuests,
     isChatGptAdmin,
 };
