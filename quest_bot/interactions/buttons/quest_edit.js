@@ -43,13 +43,6 @@ module.exports = {
                 .setRequired(false)
                 .setMaxLength(1000);
 
-            const teamsInput = new TextInputBuilder()
-                .setCustomId('quest_teams')
-                .setLabel('募集 組数')
-                .setStyle(TextInputStyle.Short)
-                .setValue(String(quest.teams || '1'))
-                .setRequired(true);
-
             const peopleInput = new TextInputBuilder()
                 .setCustomId('quest_people')
                 .setLabel('募集 人数（1組あたり）')
@@ -68,7 +61,6 @@ module.exports = {
             modal.addComponents(
                 new ActionRowBuilder().addComponents(titleInput),
                 new ActionRowBuilder().addComponents(descriptionInput),
-                new ActionRowBuilder().addComponents(teamsInput),
                 new ActionRowBuilder().addComponents(peopleInput),
                 new ActionRowBuilder().addComponents(deadlineInput)
             );

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { createLegionConfigPanel } = require('../components/configPanel');
-const { handleInteractionError } = require('../../interactionErrorLogger');
+const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
 module.exports = {
   data: new SlashCommandBuilder()

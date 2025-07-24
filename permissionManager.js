@@ -1,5 +1,5 @@
 const { PermissionFlagsBits } = require('discord.js');
-const configManager = require('./manager/configDataManager');
+const configDataManager = require('./manager/configDataManager');
 
 /**
  * Checks if a member has a specific role.
@@ -21,7 +21,7 @@ async function isLegionAdmin(interaction) {
     if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return true;
     }
-    const config = await configManager.getLegionConfig(interaction.guildId);
+    const config = await configDataManager.getLegionConfig(interaction.guildId);
     return hasRole(interaction.member, config.legionAdminRoleId);
 }
 
@@ -35,7 +35,7 @@ async function isQuestAdmin(interaction) {
     if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return true;
     }
-    const config = await configManager.getLegionConfig(interaction.guildId);
+    const config = await configDataManager.getLegionConfig(interaction.guildId);
     return hasRole(interaction.member, config.legionAdminRoleId) || hasRole(interaction.member, config.questAdminRoleId);
 }
 
@@ -52,7 +52,7 @@ async function canManageQuests(interaction) {
     }
 
     // Then, check for the quest creator roles
-    const config = await configManager.getLegionConfig(interaction.guildId);
+    const config = await configDataManager.getLegionConfig(interaction.guildId);
     const creatorRoleIds = config.questCreatorRoleIds || [];
 
     return creatorRoleIds.length > 0 && interaction.member.roles.cache.some(role => creatorRoleIds.includes(role.id));
@@ -87,7 +87,7 @@ async function isChatGptAdmin(interaction) {
     if (interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
         return true;
     }
-    const config = await configManager.getLegionConfig(interaction.guildId);
+    const config = await configDataManager.getLegionConfig(interaction.guildId);
     return hasRole(interaction.member, config.legionAdminRoleId) || hasRole(interaction.member, config.chatGptAdminRoleId);
 }
 

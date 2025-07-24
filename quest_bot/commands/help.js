@@ -12,19 +12,21 @@ module.exports = {
     try {
       const embed = new EmbedBuilder()
         .setTitle('🤖 Bot コマンドヘルプ')
-        .setColor(0x00bfff)
-        .setDescription('このBotで利用できるコマンドの一覧です。');
+        .setColor(0x00bfff);
 
-      embed.addFields(
-        { name: '`/クエスト掲示板設置`', value: 'クエスト掲示板を設置/移動するチャンネルを選択します。' },
-        { name: '`/完了クエスト一覧`', value: '完了（アーカイブ）済みのクエストを一覧表示します。' }
-      );
+      const commandList = interaction.client.commands.map(cmd => {
+        return `**/${cmd.data.name}**\n${cmd.data.description}`;
+      }).join('\n\n');
 
-      embed.addFields({
-        name: '​', value: '--- **管理者向けコマンド** ---' }, // ​はゼロ幅スペース
-        { name: '`/クエスト設定`', value: 'Botの各種設定をボタン操作で行います。' },
-        { name: '`/ヘルプ`', value: 'このヘルプメッセージを表示します。' }
-      );
+      embed.setDescription(commandList);
+
+      // If you want to separate commands by module, you can implement more complex logic here.
+      // For now, a single list is more maintainable.
+
+      // Example of separating by permission (optional)
+      // const adminCommands = client.commands.filter(cmd => cmd.data.default_member_permissions !== '0').map(c => c.data.name);
+      // const userCommands = client.commands.filter(cmd => cmd.data.default_member_permissions === '0').map(c => c.data.name);
+
 
       await interaction.reply({
         embeds: [embed],

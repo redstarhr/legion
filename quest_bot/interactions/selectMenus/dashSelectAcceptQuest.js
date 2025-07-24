@@ -1,11 +1,11 @@
-// quest_bot/interactions/selectMenus/dashAcceptQuestSelect.js
+// quest_bot/interactions/selectMenus/dashSelectAcceptQuest.js
 const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const questDataManager = require('../../utils/questDataManager');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
-    customId: 'dash_select_acceptQuest_', // Prefix match
+    customId: 'dash_select_acceptQuest_', // セレクトメニューからの選択を処理
     async handle (interaction) {
         try {
             const questId = interaction.values[0];

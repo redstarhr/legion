@@ -1,37 +1,31 @@
-// commands/help.js
+const { MessageFlags } = require('discord.js');
 
-const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
-const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+/**
+ * A standardized error handler for Discord.js interactions.
+ * It logs the error with a context message and sends a generic error reply to the user.
+ * @param {object} options
+ * @param {import('discord.js').Interaction} options.interaction - The interaction that failed.
+ * @param {Error} options.error - The caught error object.
+ * @param {string} options.context - A brief message describing where the error occurred (for logging).
+ */
+async function handleInteractionError({ interaction, error, context }) {
+    console.error(`❌ Error during [${context}] for interaction [${interaction.customId || interaction.commandName}] by [${interaction.user.tag}]:`, error);
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('ヘルプ')
-    .setDescription('利用可能なすべてのコマンドの一覧を表示します。'),
+    const errorMessage = {
+        content: '❌ 処理中にエラーが発生しました。しばらくしてからもう一度お試しください。',
+        flags: MessageFlags.Ephemeral,
+        components: [], // Remove any components to prevent further interaction
+    };
 
-  async execute(interaction) {
     try {
-      const embed = new EmbedBuilder()
-        .setTitle('🤖 Bot コマンドヘルプ')
-        .setColor(0x00bfff)
-        .setDescription('このBotで利用できるコマンドの一覧です。');
-
-      embed.addFields(
-        { name: '`/クエスト掲示板設置`', value: 'クエスト掲示板を設置/移動するチャンネルを選択します。' },
-        { name: '`/完了クエスト一覧`', value: '完了（アーカイブ）済みのクエストを一覧表示します。' }
-      );
-
-      embed.addFields({
-        name: '​', value: '--- **管理者向けコマンド** ---' }, // ​はゼロ幅スペース
-        { name: '`/クエスト設定`', value: 'Botの各種設定をボタン操作で行います。' },
-        { name: '`/ヘルプ`', value: 'このヘルプメッセージを表示します。' }
-      );
-
-      await interaction.reply({
-        embeds: [embed],
-        flags: MessageFlags.Ephemeral, // コマンド実行者のみに見えるようにする
-      });
-    } catch (error) {
-      await handleInteractionError({ interaction, error, context: 'ヘルプコマンド実行' });
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(errorMessage);
+        } else {
+            await interaction.reply(errorMessage);
+        }
+    } catch (replyError) {
+        console.error(`[ErrorLogger] Failed to send error reply for interaction [${interaction.id}]:`, replyError);
     }
-  },
-};
+}
+
+module.exports = { handleInteractionError };

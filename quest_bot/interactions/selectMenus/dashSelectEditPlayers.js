@@ -1,4 +1,4 @@
-// quest_bot/interactions/selectMenus/dashEditQuestPlayersSelect.js
+// quest_bot/interactions/selectMenus/dashSelectEditPlayers.js
 const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
@@ -6,7 +6,7 @@ const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
-    customId: 'dash_select_editPlayers_', // Prefix match
+    customId: 'dash_select_editPlayers_', // セレクトメニューからの選択を処理
     async handle(interaction) {
         try {
             await interaction.deferUpdate();

@@ -12,10 +12,6 @@ const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
 const { handleInteractionError } = require('./utils/interactionErrorLogger');
-// ChatGPT Bot 用のマネージャーをインポート
-const { getConfig: getGptConfig, generateReply: generateGptReply } = require('./chat_gpt_bot/manager/chatGptManager');
-// TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
-// const chatGptDataManager = require('./chat_gpt_bot/utils/dataManager');
 
 // Botクライアントを作成（必要なIntentを指定）
 const client = new Client({
@@ -161,47 +157,12 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// ✅ ChatGPT Auto-response on messageCreate
-client.on('messageCreate', async message => {
-  // Ignore messages from bots, and DMs
-  if (message.author.bot || !message.guild) return;
-
-  try {
-    const config = await getGptConfig(message.guild.id);
-
-    // Check if the channel is an auto-response channel and if the feature is enabled
-    if (config.chat_gpt_channels && config.chat_gpt_channels.includes(message.channel.id)) {
-
-      // Show a "typing..." indicator
-      await message.channel.sendTyping();
-
-      const userPrompt = message.content;
-      const reply = await generateGptReply(message.guild.id, userPrompt);
-
-      // Send the reply
-      await message.reply({ content: reply, allowedMentions: { repliedUser: false } });
-    }
-  } catch (error) {
-    // Do not send an error message to the channel to avoid spam.
-    // Log the error for the administrator.
-    console.error(`[❌エラー] ChatGPT自動応答エラー in guild ${message.guild.id}:`, error);
-    await logError({
-      client: message.client,
-      guildId: message.guild.id,
-      error,
-      context: `ChatGPT自動応答 (Channel: #${message.channel.name})`,
-    });
-  }
-});
-
 // ✅ Botがサーバーから退出した際のデータクリーンアップ
 client.on('guildDelete', async (guild) => {
   console.log(`Bot was removed from guild: ${guild.name} (${guild.id}). Cleaning up data...`);
   try {
     // quest_bot のデータを削除
     await require('./manager/questDataManager').deleteGuildData(guild.id);
-    // TODO: chat_gpt_bot のデータも削除する処理を後で追加
-    // await chatGptDataManager.deleteGuildData(guild.id);
   } catch (error) {
     console.error(`Failed to execute cleanup for guild ${guild.id}:`, error);
   }

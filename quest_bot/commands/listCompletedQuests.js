@@ -1,7 +1,7 @@
 // commands/listCompletedQuests.js
 
 const { SlashCommandBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../manager/questDataManager');
+const questDataManager = require('../../manager/questDataManager');
 const { generateCompletedQuestsView } = require('../utils/paginationUtils');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
