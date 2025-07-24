@@ -1,4 +1,4 @@
-const configDataManager = require('../../../configDataManager');
+const configDataManager = require('../../../manager/configDataManager');
 const { createConfigPanel } = require('../../components/configPanel');
 const { handleInteractionError } = require('../../../interactionErrorLogger');
 

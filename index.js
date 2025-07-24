@@ -9,7 +9,7 @@ const path = require('path');
 // 各機能のメインファイルをインポート
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
-const questDataManager = require('./quest_bot/utils/questDataManager');
+const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
 const { handleInteractionError } = require('./utils/interactionErrorLogger');
 // TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
@@ -164,7 +164,7 @@ client.on('guildDelete', async (guild) => {
   console.log(`Bot was removed from guild: ${guild.name} (${guild.id}). Cleaning up data...`);
   try {
     // quest_bot のデータを削除
-    await questDataManager.deleteGuildData(guild.id);
+    await require('./manager/questDataManager').deleteGuildData(guild.id);
     // TODO: chat_gpt_bot のデータも削除する処理を後で追加
     // await chatGptDataManager.deleteGuildData(guild.id);
   } catch (error) {

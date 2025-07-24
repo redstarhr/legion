@@ -1,5 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const configDataManager = require('../../configDataManager');
+const configDataManager = require('../manager/configDataManager');
 
 async function createConfigPanel(interaction) {
     const config = await configDataManager.getLegionConfig(interaction.guildId);

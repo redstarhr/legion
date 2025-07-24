@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/questArchive.js
 const { MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
-const { canEditQuest } = require('../../../permissionManager');
+const questDataManager = require('../../../manager/questDataManager');
+const { canEditQuest } = require('../../../manager/permissionManager');
 const { replyWithConfirmation } = require('../../components/confirmationUI');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 

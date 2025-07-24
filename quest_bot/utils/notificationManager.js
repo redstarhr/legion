@@ -1,6 +1,6 @@
 // quest_bot/utils/notificationManager.js
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const configDataManager = require('../../configDataManager');
+const configDataManager = require('../../manager/configDataManager');
 
 /**
  * A generic function to send a notification embed to the configured channel.

@@ -1,5 +1,5 @@
 const { PermissionFlagsBits } = require('discord.js');
-const configManager = require('./manager/configDataManager');
+const configManager = require('./configDataManager');
 
 /**
  * Checks if a member has a specific role.

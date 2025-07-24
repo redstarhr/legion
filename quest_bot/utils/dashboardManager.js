@@ -1,7 +1,7 @@
 // quest_bot/utils/dashboardManager.js
 const { EmbedBuilder, RESTJSONErrorCodes } = require('discord.js');
 const questDataManager = require('./questDataManager');
-const configDataManager = require('../../configDataManager');
+const configDataManager = require('../../manager/configDataManager');
 const { createDashboardActionRows } = require('../components/dashboardActionButtons');
 
 /**

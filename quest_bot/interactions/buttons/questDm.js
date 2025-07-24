@@ -1,56 +1,48 @@
-// quest_bot/interactions/buttons/questCloseConfirm.js
+// quest_bot/interactions/selectMenus/dashEditQuestPlayersSelect.js
 const questDataManager = require('../../utils/questDataManager');
-const { MessageFlags } = require('discord.js');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
-const { canEditQuest } = require('../../../permissionManager');
-const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
-  customId: 'quest_confirm_close_', // Prefix match
-  async handle (interaction) {
-    try {
-      // 確認メッセージを更新する準備
-      await interaction.deferUpdate();
+    customId: 'dash_select_editPlayers_', // Prefix match
+    async handle(interaction) {
+        try {
+            await interaction.deferUpdate();
 
-      const questId = interaction.customId.split('_')[3];
-      const quest = await questDataManager.getQuest(interaction.guildId, questId);
+            const questId = interaction.customId.split('_')[3];
+            const newPlayerCount = parseInt(interaction.values[0], 10);
 
-      if (!quest) {
-        return interaction.editReply({ content: '対象のクエストが見つかりませんでした。', components: [] });
-      }
+            const quest = await questDataManager.getQuest(interaction.guildId, questId);
+            if (!quest) {
+                return interaction.editReply({ content: '⚠️ 対象のクエストが見つかりませんでした。', components: [] });
+            }
 
-      if (quest.isClosed) {
-        return interaction.followUp({ content: '⚠️ このクエストは既に締め切られています。', flags: MessageFlags.Ephemeral });
-      }
+            const updates = {
+                players: newPlayerCount,
+                people: newPlayerCount, // 互換性のために追加
+            };
+            const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
-      // Final permission check
-      if (!(await canEditQuest(interaction, quest))) {
-        return interaction.editReply({ content: 'クエストの〆切は、発注者または管理者のみが行えます。', components: [] });
-      }
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
+                title: '📝 クエスト修正',
+                color: '#f1c40f',
+                details: {
+                    'クエスト名': quest.name,
+                    '新しい募集人数': `${newPlayerCount}人`,
+                    'クエストID': questId,
+                },
+            });
 
-      // 1. クエストデータを更新
-      const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { isClosed: true }, interaction.user);
+            // クエストメッセージとダッシュボードを更新
+            await updateQuestMessage(interaction.client, updatedQuest);
+            await updateDashboard(interaction.client, interaction.guildId);
 
-      // 2. Use the centralized function to update the quest message
-      await updateQuestMessage(interaction.client, updatedQuest);
-      await updateDashboard(interaction.client, interaction.guildId);
+            await interaction.editReply({ content: `✅ クエスト「${quest.name}」の募集人数を ${newPlayerCount}人 に修正しました。`, components: [] });
 
-      // 3. アクションをログに記録
-      await logAction(interaction, {
-        title: '🚫 募集〆切',
-        color: '#e74c3c', // red
-        details: {
-          'クエストタイトル': updatedQuest.title || '無題',
-          'クエストID': questId,
-        },
-      });
-
-      // 4. 確認メッセージを更新して処理完了を通知
-      await interaction.editReply({ content: '✅ クエストの募集を締め切りました。', components: [] });
-    } catch (error) {
-      await handleInteractionError({ interaction, error, context: '募集〆切確認' });
-    }
-  },
+        } catch (error) {
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからの人数修正' });
+        }
+    },
 };

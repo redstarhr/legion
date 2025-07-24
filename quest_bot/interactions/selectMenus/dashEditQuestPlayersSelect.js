@@ -25,7 +25,7 @@ module.exports = {
             };
             const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
-            await logAction(interaction, {
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                 title: '📝 クエスト修正',
                 color: '#f1c40f',
                 details: {

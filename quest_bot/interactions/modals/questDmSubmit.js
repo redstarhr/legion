@@ -50,7 +50,7 @@ module.exports = {
       }
 
       // Log the action
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '✉️ 参加者へ一斉連絡',
         color: '#3498db',
         description: `**送信メッセージ:**\n>>> ${messageContent}`,

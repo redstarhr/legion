@@ -1,6 +1,6 @@
 // quest_bot/interactions/buttons/configDeleteDashboardConfirm.js
 const { RESTJSONErrorCodes, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 

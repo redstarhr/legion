@@ -1,5 +1,5 @@
 const { ActionRowBuilder, RoleSelectMenuBuilder } = require('discord.js');
-const configDataManager = require('../../../configDataManager');
+const configDataManager = require('../../../manager/configDataManager');
 
 module.exports = {
     customId: 'setting_set_creator_roles',

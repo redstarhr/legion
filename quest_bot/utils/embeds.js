@@ -1,7 +1,7 @@
 // quest_bot/utils/embeds.js
 
 const { EmbedBuilder } = require('discord.js');
-const configDataManager = require('../../configDataManager');
+const configDataManager = require('../../manager/configDataManager');
 
 /**
  * Creates a standardized embed for a quest object.

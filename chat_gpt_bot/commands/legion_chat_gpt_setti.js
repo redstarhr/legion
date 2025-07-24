@@ -9,25 +9,21 @@ const {
   EmbedBuilder,
 } = require('discord.js');
 const { isChatGptAdmin } = require('../../permissionManager');
-const { createAdminEmbed } = require('../utils/star_chat_gpt_usage/embedHelper');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
-
-
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('legion_chatgpt_パネル')
+    .setName('chatgpt-panel')
     .setDescription('現在のチャンネルにChatGPT機能のパネルを設置します。'),
 
   async execute(interaction) {
     try {
-      // すぐに deferReply で応答確保（遅延を避ける）
-      await interaction.deferReply({ flags: MessageFlagsBitField.Flags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
 
       const isAdmin = await isChatGptAdmin(interaction);
       if (!isAdmin) {
         return await interaction.editReply({
-          embeds: [createAdminEmbed('❌ 権限がありません', 'このコマンドは管理者専用です。')],
+          content: '❌ 権限がありません。このコマンドは管理者専用です。',
         });
       }
 
@@ -53,7 +49,7 @@ module.exports = {
       // Confirm to the user that the panel was placed
       await interaction.editReply({ content: '✅ ChatGPTパネルを設置しました。' });
     } catch (error) {
-      await handleInteractionError({ interaction, error, context: 'ChatGPTパネル設置' });
+      await handleInteractionError({ interaction, error, context: 'ChatGPT案内メッセージ設置' });
     }
   },
 };

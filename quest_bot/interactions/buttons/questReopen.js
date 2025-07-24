@@ -38,7 +38,7 @@ module.exports = {
       await updateDashboard(interaction.client, interaction.guildId);
 
       // 3. アクションをログに記録
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '🟢 募集再開',
         color: '#2ecc71', // green
         details: {

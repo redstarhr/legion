@@ -1,6 +1,6 @@
 // quest_bot/interactions/buttons/dashEditQuest.js
 const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 

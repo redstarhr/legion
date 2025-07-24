@@ -8,7 +8,7 @@ const {
   createAdminEmbed,
   createErrorEmbed,
   createSuccessEmbed,
-} = require('../utils/star_chat_gpt_usage/embedHelper');
+} = require('../utils/embedHelper');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 
 

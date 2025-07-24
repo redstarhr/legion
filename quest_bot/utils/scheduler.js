@@ -2,7 +2,7 @@
 const cron = require('node-cron');
 const { EmbedBuilder } = require('discord.js');
 const questDataManager = require('./questDataManager');
-const configDataManager = require('../../configDataManager');
+const configDataManager = require('../../manager/configDataManager');
 const { logError } = require('../../errorLogger');
 
 /**

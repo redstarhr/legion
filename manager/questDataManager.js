@@ -1,4 +1,4 @@
-// quest_bot/utils/questDataManager.js
+// manager/questDataManager.js
 
 const { Storage } = require('@google-cloud/storage');
 const { nanoid } = require('nanoid');

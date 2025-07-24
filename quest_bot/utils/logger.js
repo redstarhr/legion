@@ -1,7 +1,7 @@
 // utils/logger.js
 
 const { EmbedBuilder } = require('discord.js');
-const { getLogChannel } = require('../../configDataManager');
+const { getLogChannel } = require('../../manager/configDataManager');
 
 /**
  * アクションログを特定のチャンネルに送信する

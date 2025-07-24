@@ -1,6 +1,6 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
-const { canEditQuest } = require('../../../permissionManager');
+const questDataManager = require('../../../manager/questDataManager');
+const { canEditQuest } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {

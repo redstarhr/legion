@@ -83,7 +83,7 @@ module.exports = {
       await updateDashboard(interaction.client, guildId);
 
       // 8. Log action
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '👍 クエスト受注',
         color: '#2ecc71',
         details: {

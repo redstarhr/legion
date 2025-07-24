@@ -1,7 +1,7 @@
 // quest_bot/components/questActionButtons.js
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const configDataManager = require('../../configDataManager');
+const configDataManager = require('../manager/configDataManager');
 
 /**
  * クエストの現在の状態に基づいてアクションボタンの行を生成します。

@@ -1,6 +1,6 @@
 // quest_bot/interactions/buttons/questCancelConfirm.js
 const { EmbedBuilder } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');

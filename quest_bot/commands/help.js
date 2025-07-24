@@ -5,7 +5,7 @@ const { handleInteractionError } = require('../../utils/interactionErrorLogger')
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('legion-help')
+    .setName('ヘルプ')
     .setDescription('利用可能なすべてのコマンドの一覧を表示します。'),
 
   async execute(interaction) {
@@ -17,13 +17,13 @@ module.exports = {
 
       embed.addFields(
         { name: '`/クエスト掲示板設置`', value: 'クエスト掲示板を設置/移動するチャンネルを選択します。' },
-        { name: '`/完了クエスト一覧`', value: '完了（アーカイブ）済みのクエストを一覧表示します。' },
-        { name: '`/legion-help`', value: 'このヘルプメッセージを表示します。' }
+        { name: '`/完了クエスト一覧`', value: '完了（アーカイブ）済みのクエストを一覧表示します。' }
       );
 
       embed.addFields({
         name: '​', value: '--- **管理者向けコマンド** ---' }, // ​はゼロ幅スペース
-        { name: '`/クエスト設定`', value: 'Botの各種設定をボタン操作で行います。' }
+        { name: '`/クエスト設定`', value: 'Botの各種設定をボタン操作で行います。' },
+        { name: '`/ヘルプ`', value: 'このヘルプメッセージを表示します。' }
       );
 
       await interaction.reply({

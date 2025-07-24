@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
-const configDataManager = require('../../../configDataManager');
+const configDataManager = require('../../../manager/configDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
