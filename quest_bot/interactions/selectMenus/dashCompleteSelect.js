@@ -4,6 +4,7 @@ const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_select_completeQuest_', // Prefix match
@@ -27,7 +28,7 @@ module.exports = {
             const updatedAccepted = quest.accepted.filter(a => a.userId !== userId);
             const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, { accepted: updatedAccepted }, interaction.user);
 
-            await logAction(interaction, {
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                 title: '🏆 討伐完了',
                 color: '#f1c40f', // yellow
                 details: {
@@ -46,12 +47,7 @@ module.exports = {
             await interaction.editReply({ content: `✅ クエスト「${quest.name}」における ${acceptance.userTag} さんの討伐完了を報告しました。` });
 
         } catch (error) {
-            console.error('討伐完了処理中にエラーが発生しました:', error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.editReply({ content: '❌ エラーが発生したため、討伐完了を報告できませんでした。' }).catch(console.error);
-            } else {
-                await interaction.reply({ content: '❌ エラーが発生したため、討伐完了を報告できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
-            }
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからの討伐完了報告' });
         }
     },
 };

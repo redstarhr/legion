@@ -4,6 +4,7 @@ const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_select_acceptPlayers_', // Prefix match
@@ -53,7 +54,7 @@ module.exports = {
             };
             const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
-            await logAction(interaction, {
+            await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                 title: '👍 クエスト受注',
                 color: '#2ecc71',
                 details: {
@@ -72,8 +73,7 @@ module.exports = {
 
             await interaction.editReply({ content: replyMessage, components: [] });
         } catch (error) {
-            console.error('クエスト受注処理中にエラーが発生しました:', error);
-            await interaction.editReply({ content: '❌ エラーが発生したため、クエストを受注できませんでした。', components: [] }).catch(console.error);
+            await handleInteractionError({ interaction, error, context: 'ダッシュボードからのクエスト受注' });
         }
     },
 };

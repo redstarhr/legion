@@ -25,7 +25,7 @@ async function createQuestActionRows(quest) {
       .setStyle(ButtonStyle.Danger)
       .setDisabled(isClosed),
     edit: new ButtonBuilder()
-      .setCustomId(`quest_open_editModal_${quest.id}`)
+      .setCustomId(`quest_edit_${quest.id}`)
       .setLabel('編集')
       .setStyle(ButtonStyle.Primary)
       .setDisabled(isClosed),

@@ -1,21 +1,23 @@
 // quest_bot/utils/notificationManager.js
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const configDataManager = require('../../configDataManager');
 
 /**
  * A generic function to send a notification embed to the configured channel.
  * @param {import('discord.js').Client} client
  * @param {string} guildId
- * @param {EmbedBuilder} embed
+ * @param {object} payload - The message payload.
+ * @param {EmbedBuilder[]} payload.embeds
+ * @param {ActionRowBuilder[]} [payload.components]
  */
-async function sendNotification(client, guildId, embed) {
+async function sendNotification(client, guildId, { embeds, components = [] }) {
     const notificationChannelId = await configDataManager.getNotificationChannel(guildId);
     if (!notificationChannelId) return;
 
     try {
         const channel = await client.channels.fetch(notificationChannelId);
         if (channel?.isTextBased()) {
-            await channel.send({ embeds: [embed] });
+            await channel.send({ embeds, components });
         }
     } catch (error) {
         console.error(`[NotificationManager] Failed to send notification to channel ${notificationChannelId} in guild ${guildId}:`, error);
@@ -31,7 +33,7 @@ async function sendNotification(client, guildId, embed) {
  * @param {boolean} context.wasFull - Whether the quest became full with this acceptance.
  */
 async function sendAcceptanceNotification({ interaction, quest, acceptance, wasFull }) {
-    const questUrl = `https://discord.com/channels/${quest.guildId}/${quest.channelId}/${quest.messageId}`;
+    const questUrl = `https://discord.com/channels/${interaction.guildId}/${quest.channelId}/${quest.messageId}`;
 
     const embed = new EmbedBuilder()
         .setColor(0x57f287) // Green
@@ -51,7 +53,11 @@ async function sendAcceptanceNotification({ interaction, quest, acceptance, wasF
         embed.setFooter({ text: 'ℹ️ この受注により、募集が自動的に締め切られました。' });
     }
 
-    await sendNotification(interaction.client, interaction.guildId, embed);
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setLabel('クエストへ移動').setStyle(ButtonStyle.Link).setURL(questUrl)
+    );
+
+    await sendNotification(interaction.client, interaction.guildId, { embeds: [embed], components: [row] });
 }
 
 /**
@@ -62,7 +68,7 @@ async function sendAcceptanceNotification({ interaction, quest, acceptance, wasF
  * @param {boolean} context.wasFull - Whether the quest was full before this cancellation.
  */
 async function sendCancellationNotification({ interaction, quest, wasFull }) {
-    const questUrl = `https://discord.com/channels/${quest.guildId}/${quest.channelId}/${quest.messageId}`;
+    const questUrl = `https://discord.com/channels/${interaction.guildId}/${quest.channelId}/${quest.messageId}`;
 
     const embed = new EmbedBuilder()
         .setColor(0xf4900c) // Orange
@@ -75,7 +81,11 @@ async function sendCancellationNotification({ interaction, quest, wasFull }) {
         embed.setFooter({ text: 'ℹ️ この取消により、募集が自動的に再開されました。' });
     }
 
-    await sendNotification(interaction.client, interaction.guildId, embed);
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setLabel('クエストへ移動').setStyle(ButtonStyle.Link).setURL(questUrl)
+    );
+
+    await sendNotification(interaction.client, interaction.guildId, { embeds: [embed], components: [row] });
 }
 
 /**
@@ -85,8 +95,14 @@ async function sendCancellationNotification({ interaction, quest, wasFull }) {
  * @param {object} context.quest - The quest object that expired.
  */
 async function sendDeadlineNotification({ client, quest }) {
+    const questUrl = `https://discord.com/channels/${quest.guildId}/${quest.channelId}/${quest.messageId}`;
+
     const embed = new EmbedBuilder().setColor(0xf4900c).setTitle('⏰ クエスト期限切れ').setDescription(`クエスト「${quest.title || '無題のクエスト'}」が設定された期限を過ぎたため、自動的に募集を締め切りました。`).setTimestamp();
-    await sendNotification(client, quest.guildId, embed);
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setLabel('クエストへ移動').setStyle(ButtonStyle.Link).setURL(questUrl)
+    );
+    await sendNotification(client, quest.guildId, { embeds: [embed], components: [row] });
 }
 
 module.exports = { sendAcceptanceNotification, sendCancellationNotification, sendDeadlineNotification };

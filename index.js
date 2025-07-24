@@ -10,7 +10,7 @@ const path = require('path');
 const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./quest_bot/utils/questDataManager');
-const { logError } = require('./errorLogger');
+const { logError } = require('./utils/errorLogger');
 // TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
 // const chatGptDataManager = require('./chat_gpt_bot/utils/dataManager');
 

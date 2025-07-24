@@ -6,6 +6,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { sendCancellationNotification } = require('../../utils/notificationManager');
+const { handleInteractionError } = require('../../../interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_confirm_cancel_', // Prefix match
@@ -46,7 +47,7 @@ module.exports = {
       await updateDashboard(interaction.client, guildId);
 
       // Log action
-      await logAction(interaction, {
+      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
         title: '↩️ 受注取消',
         color: '#e67e22', // orange
         details: {
@@ -63,8 +64,7 @@ module.exports = {
       if (wasFullAndClosed) { replyMessage += '\nℹ️ 募集が再開されました。'; }
       await interaction.editReply({ content: replyMessage, components: [] });
     } catch (error) {
-      console.error('受注取消の処理中にエラーが発生しました:', error);
-      await interaction.editReply({ content: 'エラーが発生したため、受注を取り消せませんでした。', components: [] }).catch(console.error);
+      await handleInteractionError({ interaction, error, context: '受注取消確認' });
     }
   },
 };
