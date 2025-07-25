@@ -1,6 +1,6 @@
 // legion/chat_gpt_bot/interactions/modals/submitGptConfig.js
 const { MessageFlags } = require('discord.js');
-const { isChatGptAdmin } = require('../../../manager/permissionManager');
+const { isChatGptAdmin } = require('../../../permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
 const { gptConfigModal, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');

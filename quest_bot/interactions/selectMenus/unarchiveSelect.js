@@ -5,7 +5,7 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { generateCompletedQuestsView } = require('../../utils/paginationUtils');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'list_select_unarchive_', // Prefix match
