@@ -66,7 +66,7 @@ module.exports = {
 
             const peopleInput = new TextInputBuilder()
                 .setCustomId('quest_people')
-                .setLabel('募集 人数（1組あたり）')
+                .setLabel('募集人数')
                 .setStyle(TextInputStyle.Short)
                 .setValue(String(quest.people || quest.players || '1'))
                 .setRequired(true);

@@ -48,10 +48,29 @@ if [ -d "$PROJECT_DIR" ]; then
     exit 1
 fi
 
-# この辺りにssh接続の設定作成を追加
+# --- 2a. SSH Key Setup for GitHub ---
+echo -e "\n${YELLOW}2a. GitHub接続用のSSHキーを設定します...${NC}"
+SSH_KEY_PATH="$HOME/.ssh/id_ed25519"
+if [ ! -f "$SSH_KEY_PATH" ]; then
+    echo "🔑 SSHキーが見つかりません。新しいSSHキーを生成します。"
+    # パスフレーズなし(-N "")、ファイルパス指定(-f)、コメント付き(-C)でキーを生成
+    ssh-keygen -t ed25519 -N "" -f "$SSH_KEY_PATH" -C "legion-bot-deploy@$(hostname)"
+    echo "✅ 新しいSSHキーを生成しました: $SSH_KEY_PATH"
+else
+    echo "🔑 既存のSSHキーが見つかりました: $SSH_KEY_PATH"
+fi
+
+echo -e "\n${YELLOW}*** 重要: GitHubに公開鍵を登録してください ***${NC}"
+echo "以下の公開鍵の内容をコピーし、リポジトリの 'Deploy Keys' に登録する必要があります。"
+echo "リポジトリURL: https://github.com/star-discord/legion_kanri_bot/settings/keys"
+echo "タイトルは 'Legion Bot Server' など分かりやすい名前を設定してください。"
+echo "（書き込み権限 'Allow write access' のチェックは不要です）"
+echo "--- PUBLIC KEY ---"
+cat "${SSH_KEY_PATH}.pub"
+echo "--- END PUBLIC KEY ---"
+read -p "GitHubに公開鍵を登録したら、Enterキーを押して続行してください..."
 
 echo "📂 GitHubからリポジトリをクローンします (SSH経由): ${PROJECT_DIR}"
-# SSHキーがサーバーに設定済みであることを前提とします
 git clone git@github.com:star-discord/legion_kanri_bot.git "$PROJECT_DIR"
 
 cd "$PROJECT_DIR"

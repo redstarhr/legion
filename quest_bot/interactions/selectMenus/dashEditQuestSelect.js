@@ -72,19 +72,10 @@ module.exports = {
                 .setValue(String(quest.people || quest.players || '1'))
                 .setRequired(true);
 
-            const deadlineInput = new TextInputBuilder()
-                .setCustomId('quest_deadline')
-                .setLabel('募集期限（YYYY-MM-DD HH:MM形式）')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('例：2024-12-31 23:59 (未入力で無期限)')
-                .setValue(formatISODateForInput(quest.deadline))
-                .setRequired(false);
-
             modal.addComponents(
                 new ActionRowBuilder().addComponents(titleInput),
                 new ActionRowBuilder().addComponents(descriptionInput),
-                new ActionRowBuilder().addComponents(peopleInput),
-                new ActionRowBuilder().addComponents(deadlineInput)
+                new ActionRowBuilder().addComponents(peopleInput)
             );
 
             await interaction.showModal(modal);
