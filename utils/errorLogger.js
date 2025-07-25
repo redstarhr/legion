@@ -1,5 +1,8 @@
+// utils/errorLogger.js
+
 const { EmbedBuilder } = require('discord.js');
-const { getLogChannel } = require('../utils/configManager'); // ← 修正済み
+const { getLogChannel } = require('../manager/configDataManager');
+
 
 /**
  * Logs an error to the console and to a configured Discord channel.

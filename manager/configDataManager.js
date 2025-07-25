@@ -1,3 +1,5 @@
+// manager/configDataManager.js
+
 const { Storage } = require('@google-cloud/storage');
 
 const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
