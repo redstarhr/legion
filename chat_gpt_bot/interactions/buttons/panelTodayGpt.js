@@ -17,7 +17,7 @@ module.exports = {
             }
             if (!config.today_gpt_channel_id) {
                 return interaction.editReply({
-                    content: '⚠️ 「今日のChatGPT」を投稿するチャンネルが設定されていません。\n「「今日のGPT」CH設定」から設定してください。',
+                    content: '⚠️ 「今日のChatGPT」を投稿するチャンネルが設定されていません。\n「「今日のGPT」CH設定」から設定してください。'
                 });
             }
 

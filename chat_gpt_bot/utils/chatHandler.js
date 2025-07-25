@@ -20,7 +20,6 @@ async function handleGptChat(message, client) {
 
         if (!isMentioned && !isReplyToBot) return;
 
-        // APIキーが設定されていない場合は静かに無視する
         if (!gptConfig.apiKey) {
             return;
         }
