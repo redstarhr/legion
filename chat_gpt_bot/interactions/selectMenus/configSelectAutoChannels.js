@@ -19,7 +19,7 @@ module.exports = {
             await setChatGPTConfig(interaction.guildId, { chat_gpt_channels: selectedChannelIds });
 
             await interaction.update({
-                content: '✅ 自動応答チャンネルの設定を更新しました。\n再度 `/legion_chatgpt_設定` を実行して確認してください。',
+                content: '✅ 自動応答チャンネルの設定を更新しました。\n再度 `/legion_chatgpt_使用率` を実行して確認してください。',
                 components: [],
             });
         } catch (error) {

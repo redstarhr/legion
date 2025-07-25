@@ -92,7 +92,7 @@ module.exports = {
       const temperature = gptConfig.temperature !== null && gptConfig.temperature !== undefined ? String(gptConfig.temperature) : 'デフォルト (1.0)';
       const model = gptConfig.model || 'デフォルト (gpt-4o)';
       const todayChannel = gptConfig.today_gpt_channel_id ? `<#${gptConfig.today_gpt_channel_id}>` : '未設定';
-      const autoChannels = gptConfig.chat_gpt_channels.length > 0 ? gptConfig.chat_gpt_channels.map(id => `<#${id}>`).join(' ') : '未設定';
+      const autoChannels = gptConfig.allowedChannels?.length > 0 ? gptConfig.allowedChannels.map(id => `<#${id}>`).join(' ') : '未設定';
 
       embed.addFields(
         { name: '\u200B', value: '**⚙️ 現在の設定**' }, // Separator and title

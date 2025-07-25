@@ -1,106 +1,50 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/manager/gptManager.js
+// e:/共有フォルダ/legion/chat_gpt_bot/utils/chatHandler.js
 const { getChatGPTConfig } = require('../utils/configManager');
-
-const MAX_HISTORY_MESSAGES = 10; // 遡る会話の最大数
-
-/**
- * OpenAI APIにリクエストを送信するコア関数
- * @param {string} apiKey
- * @param {object} payload
- * @returns {Promise<string|null>}
- */
-async function callOpenAI(apiKey, payload) {
-  const url = 'https://api.openai.com/v1/chat/completions';
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API Error:', errorData);
-      return `APIエラー: ${errorData.error?.message || '不明なエラー'}`;
-    }
-
-    const data = await response.json();
-    return data.choices[0]?.message?.content?.trim() || null;
-  } catch (error) {
-    console.error('Failed to call OpenAI API:', error);
-    return 'APIへの接続中にエラーが発生しました。';
-  }
-}
+const { generateReply } = require('../manager/gptManager');
+const { logError } = require('../../utils/errorLogger');
 
 /**
- * 会話の文脈を考慮して応答を生成する
+ * Handles incoming messages to determine if a ChatGPT response is needed.
  * @param {import('discord.js').Message} message
  * @param {import('discord.js').Client} client
- * @returns {Promise<string|null>}
  */
-async function generateReply(message, client) {
-  const guildId = message.guild.id;
-  const config = await getChatGPTConfig(guildId);
+async function handleGptChat(message, client) {
+    try {
+        if (message.author.bot || !message.guild) return;
 
-  if (!config.apiKey) {
-    return 'APIキーが設定されていません。';
-  }
+        const gptConfig = await getChatGPTConfig(message.guild.id);
+        if (!gptConfig.allowedChannels?.includes(message.channel.id)) return;
 
-  const messages = [{ role: 'system', content: config.systemPrompt || 'You are a helpful assistant.' }];
+        const isMentioned = message.mentions.has(client.user.id);
+        const isReplyToBot = message.reference && (await message.fetchReference()).author.id === client.user.id;
 
-  const history = await message.channel.messages.fetch({ limit: MAX_HISTORY_MESSAGES, before: message.id });
-  const conversationHistory = [];
+        if (!isMentioned && !isReplyToBot) return;
 
-  history.reverse().forEach(msg => {
-    if (msg.author.id === client.user.id) {
-      conversationHistory.push({ role: 'assistant', content: msg.content });
-    } else if (!msg.author.bot) {
-      conversationHistory.push({ role: 'user', content: msg.content });
+        if (!gptConfig.apiKey) {
+            return; // APIキーがなければ静かに無視
+        }
+
+        await message.channel.sendTyping();
+
+        const reply = await generateReply(message, client);
+
+        if (reply) {
+            for (let i = 0; i < reply.length; i += 2000) {
+                const chunk = reply.substring(i, i + 2000);
+                if (i === 0) {
+                    await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+                } else {
+                    await message.channel.send(chunk);
+                }
+            }
+        }
+    } catch (error) {
+        console.error(`[ChatGPT] 自動応答エラー (Guild: ${message.guild.id}, Channel: #${message.channel.name}):`, error);
+        await logError({ client, error, context: `ChatGPT自動応答 (Channel: #${message.channel.name})`, guildId: message.guild.id });
+        await message.reply({ content: '🤖 エラーが発生したため、応答できませんでした。' }).catch(() => {});
     }
-  });
-
-  messages.push(...conversationHistory);
-  messages.push({ role: 'user', content: message.content });
-
-  const payload = {
-    model: config.model || 'gpt-4o',
-    messages: messages,
-    temperature: config.temperature ?? 1.0,
-  };
-
-  return await callOpenAI(config.apiKey, payload);
-}
-
-/**
- * 単発のプロンプトに対して応答を生成する (会話履歴を考慮しない)
- * @param {string} guildId
- * @param {string} prompt
- * @returns {Promise<string|null>}
- */
-async function generateOneOffReply(guildId, prompt) {
-  const config = await getChatGPTConfig(guildId);
-  if (!config.apiKey) {
-    return 'APIキーが設定されていません。';
-  }
-
-  const messages = [
-    { role: 'system', content: config.systemPrompt || 'You are a helpful assistant.' },
-    { role: 'user', content: prompt },
-  ];
-
-  const payload = {
-    model: config.model || 'gpt-4o',
-    messages: messages,
-    temperature: config.temperature ?? 1.0,
-  };
-
-  return await callOpenAI(config.apiKey, payload);
 }
 
 module.exports = {
-  generateReply,
-  generateOneOffReply,
+  handleGptChat,
 };

@@ -30,7 +30,7 @@ module.exports = {
             });
 
             await interaction.update({
-                content: `✅ 「今日のChatGPT」投稿チャンネルを <#${selectedChannelId}> に設定しました。\n再度 \`/legion_chatgpt_設定\` を実行して確認してください。`,
+                content: `✅ 「今日のChatGPT」投稿チャンネルを <#${selectedChannelId}> に設定しました。\n再度 \`/legion_chatgpt_使用率\` を実行して確認してください。`,
                 components: [],
             });
 

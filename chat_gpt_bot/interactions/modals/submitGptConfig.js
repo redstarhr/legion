@@ -1,7 +1,7 @@
 const { MessageFlags } = require('discord.js');
 const { isChatGptAdmin } = require('../../../permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
-const { gptConfigModal, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
+const { gptConfigModal, gptApiKeyInput, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
@@ -14,17 +14,22 @@ module.exports = {
         return interaction.editReply({ content: '🚫 この操作を実行する権限がありません。' });
       }
 
+      const apiKey = interaction.fields.getTextInputValue(gptApiKeyInput);
       // 入力値取得＆trim
       const systemPromptRaw = interaction.fields.getTextInputValue(gptSystemPromptInput)?.trim();
       const temperatureRaw = interaction.fields.getTextInputValue(gptTemperatureInput)?.trim();
       const modelRaw = interaction.fields.getTextInputValue(gptModelInput)?.trim();
+
+      if (!apiKey || !apiKey.startsWith('sk-')) {
+        return interaction.editReply({ content: '⚠️ APIキーの形式が正しくありません。`sk-`で始まるキーを入力してください。' });
+      }
 
       // 空文字はnullに統一
       const systemPrompt = systemPromptRaw === '' ? null : systemPromptRaw;
       const model = modelRaw === '' ? null : modelRaw;
 
       // 更新オブジェクトを作成
-      const updates = { systemPrompt, model };
+      const updates = { apiKey, systemPrompt, model };
 
       // temperatureの検証とセット
       if (temperatureRaw === '' || temperatureRaw === undefined || temperatureRaw === null) {
@@ -44,7 +49,7 @@ module.exports = {
       await setChatGPTConfig(interaction.guildId, updates);
 
       await interaction.editReply({
-        content: '✅ ChatGPTの基本設定を保存しました。\n再度 `/legion_chatgpt_設定 表示` を実行して確認してください。',
+        content: '✅ ChatGPTの基本設定を保存しました。\n再度 `/legion_chatgpt_使用率` を実行して確認してください。',
       });
 
     } catch (error) {

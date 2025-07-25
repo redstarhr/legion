@@ -38,7 +38,7 @@ module.exports = {
       await interaction.deferUpdate();
 
       const config = await getChatGPTConfig(interaction.guildId);
-      const currentChannels = config.chat_gpt_channels || [];
+      const currentChannels = config.allowedChannels || [];
 
       const selectMenu = new ChannelSelectMenuBuilder()
         .setCustomId(CUSTOM_ID.selectAutoChannels)

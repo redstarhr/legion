@@ -10,7 +10,7 @@ const defaultChatGptConfig = {
   temperature: 1.0,
   model: 'gpt-4o',
   today_gpt_channel_id: '',
-  chat_gpt_channels: [],
+  allowedChannels: [],
 };
 
 function sanitizeConfig(config) {
@@ -30,8 +30,9 @@ async function getChatGPTConfig(guildId) {
   return {
     ...defaultChatGptConfig,
     ...rawConfig,
-    chat_gpt_channels: Array.isArray(rawConfig.chat_gpt_channels)
-      ? rawConfig.chat_gpt_channels
+    // Ensure allowedChannels is always an array
+    allowedChannels: Array.isArray(rawConfig.allowedChannels)
+      ? rawConfig.allowedChannels
       : [],
   };
 }

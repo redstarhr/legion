@@ -1,13 +1,13 @@
 // quest_bot/interactions/buttons/dash_open_addQuestSelect.js
 const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
-const { hasQuestManagerPermission } = require('../../utils/permissionUtils');
+const { canManageQuests } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
     customId: 'dash_open_addQuestSelect',
     async handle(interaction) {
         // 1. 権限チェック (クエスト作成者ロール or 管理者)
-        if (!(await hasQuestManagerPermission(interaction))) {
+        if (!(await canManageQuests(interaction))) {
             return interaction.reply({
                 content: 'クエストを追加する権限がありません。',
                 flags: MessageFlags.Ephemeral,

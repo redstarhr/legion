@@ -22,16 +22,13 @@ async function callOpenAI(apiKey, payload) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: { message: 'Unknown API error' } }));
       console.error('OpenAI API Error:', errorData);
-      return `APIエラー: ${errorData.error?.message || '不明なエラー'}`;
+      throw new Error(errorData.error?.message || 'Unknown API error');
     }
 
     const data = await response.json();
     return data.choices[0]?.message?.content?.trim() || null;
-  } catch (error) {
-    console.error('Failed to call OpenAI API:', error);
-    return 'APIへの接続中にエラーが発生しました。';
   }
 }
 
@@ -46,7 +43,7 @@ async function generateReply(message, client) {
   const config = await getChatGPTConfig(guildId);
 
   if (!config.apiKey) {
-    return 'APIキーが設定されていません。';
+    throw new Error('APIキーが設定されていません。');
   }
 
   const messages = [{ role: 'system', content: config.systemPrompt || 'You are a helpful assistant.' }];
@@ -83,7 +80,7 @@ async function generateReply(message, client) {
 async function generateOneOffReply(guildId, prompt) {
   const config = await getChatGPTConfig(guildId);
   if (!config.apiKey) {
-    return 'APIキーが設定されていません。';
+    throw new Error('APIキーが設定されていません。');
   }
 
   const messages = [
