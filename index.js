@@ -6,12 +6,16 @@ const fs = require('fs');
 const path = require('path');
 
 // --- Bot Modules ---
-// 各機能のメインファイルやユーティリティをインポート
+// 各機能のメインファイルをインポート
+const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
 const { handleInteractionError } = require('./utils/interactionErrorLogger');
-const { handleGptChat } = require('./chat_gpt_bot/utils/chatHandler');
+// ChatGPT Bot 用のマネージャーをインポート
+const { getConfig: getGptConfig, generateReply: generateGptReply } = require('./chat_gpt_bot/manager/chatGptManager');
+// TODO: chat_gpt_bot用のデータマネージャーも後で作成・インポートする
+// const chatGptDataManager = require('./chat_gpt_bot/utils/dataManager');
 
 // Botクライアントを作成（必要なIntentを指定）
 const client = new Client({
@@ -95,19 +99,6 @@ for (const moduleName of botModules) {
 }
 console.log('✅ ハンドラの読み込みが完了しました。');
 
-// ✅ messageCreate イベントのハンドリング (ChatGPT用)
-client.on('messageCreate', async message => {
-    // ボットがクラッシュしないように、個別のメッセージ処理をtry-catchで囲む
-    try {
-        // ChatGPT関連のロジックは専用のハンドラに委任
-        // これによりindex.jsはイベントの振り分けに集中できる
-        await handleGptChat(message, client);
-    } catch (error) {
-        // ハンドラ自体で発生した予期せぬエラーを捕捉するセーフティネット
-        console.error(`[FATAL] messageCreateハンドラで捕捉されなかったエラー (messageId: ${message.id}):`, error);
-    }
-});
-
 
 // ✅ interactionCreate イベントのハンドリング
 client.on('interactionCreate', async interaction => {
@@ -161,14 +152,44 @@ client.on('interactionCreate', async interaction => {
         interactionDetails = `Component: ${interaction.customId}`;
     }
 
-    // Log the detailed error to the console and to the configured log channel
-    await logError({ client, error, context: `Unhandled error in interactionCreate for ${interactionDetails}`, guildId: interaction.guildId });
-
-    // Also, reply to the user with a generic error message.
+    // The handleInteractionError function will log the error AND reply to the user.
     await handleInteractionError({
         interaction,
         error,
-        context: 'Interaction Handler' // A simpler context for the user-facing message
+        context: `Unhandled error in interactionCreate event for ${interactionDetails}`
+    });
+  }
+});
+
+// ✅ ChatGPT Auto-response on messageCreate
+client.on('messageCreate', async message => {
+  // Ignore messages from bots, and DMs
+  if (message.author.bot || !message.guild) return;
+
+  try {
+    const config = await getGptConfig(message.guild.id);
+
+    // Check if the channel is an auto-response channel and if the feature is enabled
+    if (config.chat_gpt_channels && config.chat_gpt_channels.includes(message.channel.id)) {
+
+      // Show a "typing..." indicator
+      await message.channel.sendTyping();
+
+      const userPrompt = message.content;
+      const reply = await generateGptReply(message.guild.id, userPrompt);
+
+      // Send the reply
+      await message.reply({ content: reply, allowedMentions: { repliedUser: false } });
+    }
+  } catch (error) {
+    // Do not send an error message to the channel to avoid spam.
+    // Log the error for the administrator.
+    console.error(`[❌エラー] ChatGPT自動応答エラー in guild ${message.guild.id}:`, error);
+    await logError({
+      client: message.client,
+      guildId: message.guild.id,
+      error,
+      context: `ChatGPT自動応答 (Channel: #${message.channel.name})`,
     });
   }
 });
@@ -179,6 +200,8 @@ client.on('guildDelete', async (guild) => {
   try {
     // quest_bot のデータを削除
     await require('./manager/questDataManager').deleteGuildData(guild.id);
+    // TODO: chat_gpt_bot のデータも削除する処理を後で追加
+    // await chatGptDataManager.deleteGuildData(guild.id);
   } catch (error) {
     console.error(`Failed to execute cleanup for guild ${guild.id}:`, error);
   }
@@ -189,7 +212,12 @@ client.on('guildDelete', async (guild) => {
 client.once('ready', () => {
   console.log(`✅ Botが起動しました：${client.user.tag}`);
 
-  // 定時実行タスク（毎日午前6時のクエスト掲示板更新など）を初期化
+  // Start checking for expired quests every minute.
+  setInterval(() => {
+    checkAndCloseExpiredQuests(client);
+  }, 60 * 1000); // 60000ms = 1 minute
+
+  // 定時実行タスクを初期化
   initializeScheduler(client);
 });
 
