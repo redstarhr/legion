@@ -55,7 +55,17 @@ async function updateDashboard(client, guildId) {
             await configDataManager.setDashboard(guildId, null, null);
         }
     } catch (error) {
-        console.error(`[Dashboard] Failed to update dashboard for guild ${guildId}:`, error);
+        // 権限不足やチャンネル/メッセージの喪失など、特定のエラーをより詳細にハンドリング
+        if (error.code === RESTJSONErrorCodes.MissingPermissions) {
+            console.error(`[Dashboard] 掲示板を編集する権限がありません。 Channel: ${dashboardConfig?.channelId}, Guild: ${guildId}`);
+            // ここで管理者に通知するなどの処理を追加することも可能
+        } else if (error.code === RESTJSONErrorCodes.UnknownChannel || error.code === RESTJSONErrorCodes.UnknownMessage) {
+            // fetchで既にハンドリングされているが、念のため
+            console.warn(`[Dashboard] 掲示板のチャンネルまたはメッセージが見つかりません。設定をクリアします。 Guild: ${guildId}`);
+            await configDataManager.setDashboard(guildId, null, null);
+        } else {
+            console.error(`[Dashboard] 掲示板の更新中に予期せぬエラーが発生しました。 Guild: ${guildId}:`, error);
+        }
     }
 }
 

@@ -10,10 +10,12 @@ module.exports = {
 
   async execute(interaction) {
     try {
+      // GCSへのアクセス等で3秒以内に応答できない可能性があるため、先に応答を保留
+      await interaction.deferReply();
+
       if (!(await isChatGptAdmin(interaction))) {
-        return interaction.reply({
+        return interaction.editReply({
           content: '❌ このコマンドを実行する権限がありません。',
-          ephemeral: true,
         });
       }
 
@@ -55,7 +57,7 @@ module.exports = {
         );
 
       // パネルはコマンドを実行したチャンネルに投稿されます
-      await interaction.reply({
+      await interaction.editReply({
         content: '✅ ChatGPT操作パネルを設置しました。',
         embeds: [embed],
         components: [row1, row2],

@@ -1,25 +1,39 @@
 // e:/共有フォルダ/legion/chat_gpt_bot/interactions/buttons/chatgpt_panel_open_config_modal.js
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
-const { isChatGptAdmin } = require('../../../manager/permissionManager');
-const { getChatGPTConfig } = require('../../utils/configManager');
+const { checkChatGptAdmin } = require('../../../manager/permissionManager'); // 同期的な権限チェック関数
+const { getLegionConfig } = require('../../../manager/configDataManager'); // ボット全体のコンフィグゲッター
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
-const { gptConfigModal, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
+const { gptConfigModal, gptApiKeyInput, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
 
 module.exports = {
     customId: 'chatgpt_panel_open_config_modal',
     async handle(interaction) {
         try {
-            if (!(await isChatGptAdmin(interaction))) {
+            // GCSへのアクセスを1回にまとめることで、タイムアウトのリスクを軽減します
+            const legionConfig = await getLegionConfig(interaction.guildId);
+
+            // 権限チェックは取得したコンフィグを渡して同期的に行います
+            if (!checkChatGptAdmin(interaction.member, legionConfig)) {
                 return interaction.reply({ content: '🚫 この操作を実行する権限がありません。', flags: MessageFlags.Ephemeral });
             }
 
-            const gptConfig = await getChatGPTConfig(interaction.guildId);
+            // ChatGPT用の設定をlegionConfigから抽出します
+            const gptConfig = legionConfig.chatGptConfig || {}; // chatGptConfigが存在しない場合も考慮
 
             const modal = new ModalBuilder()
                 .setCustomId(gptConfigModal)
                 .setTitle('ChatGPT 設定の編集');
 
             modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId(gptApiKeyInput)
+                        .setLabel('OpenAI APIキー (sk-...)')
+                        .setStyle(TextInputStyle.Short)
+                        .setPlaceholder('APIキーはGCSに保存されます。取扱いには注意してください。')
+                        .setValue(gptConfig.apiKey || '')
+                        .setRequired(true)
+                ),
                 new ActionRowBuilder().addComponents(
                     new TextInputBuilder().setCustomId(gptSystemPromptInput).setLabel('システムプロンプト (空欄でリセット)').setPlaceholder('例: あなたは〇〇軍団の優秀なアシスタントです。').setStyle(TextInputStyle.Paragraph).setValue(gptConfig.systemPrompt || '').setRequired(false)
                 ),

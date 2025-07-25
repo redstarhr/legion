@@ -93,10 +93,25 @@ async function isChatGptAdmin(interaction) {
     return hasRole(interaction.member, config.legionAdminRoleId) || hasRole(interaction.member, config.chatGptAdminRoleId);
 }
 
+/**
+ * Checks if the user has permission to manage the ChatGPT Bot using a pre-fetched config.
+ * This is a synchronous version for performance-critical paths.
+ * @param {import('discord.js').GuildMember} member The member to check.
+ * @param {object} config The pre-fetched legion config object.
+ * @returns {boolean}
+ */
+function checkChatGptAdmin(member, config) {
+    if (member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return true;
+    }
+    return hasRole(member, config.legionAdminRoleId) || hasRole(member, config.chatGptAdminRoleId);
+}
+
 module.exports = {
     isLegionAdmin,
     isQuestAdmin,
     canManageQuests,
     canEditQuest,
     isChatGptAdmin,
+    checkChatGptAdmin,
 };
