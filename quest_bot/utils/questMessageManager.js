@@ -1,7 +1,7 @@
 // quest_bot/utils/questMessageManager.js
 
 const { createQuestEmbed } = require('./embeds');
-const { createQuestActionRows } = require('../components/questActionButtons');
+const { createQuestActionButtons } = require('../components/questActionButtons');
 
 /**
  * Updates the original quest message with the latest quest data.
@@ -22,8 +22,8 @@ async function updateQuestMessage(client, quest) {
         }
         const questMessage = await questChannel.messages.fetch(quest.messageId);
         const newEmbed = await createQuestEmbed(quest);
-        const newButtons = await createQuestActionRows(quest);
-        await questMessage.edit({ embeds: [newEmbed], components: newButtons });
+        const newButtonsRow = await createQuestActionButtons(quest, quest.guildId);
+        await questMessage.edit({ embeds: [newEmbed], components: [newButtonsRow] });
     } catch (e) {
         console.error(`[MessageUpdate] Failed to update original quest message ${quest.messageId} for quest ${quest.id}:`, e);
     }
