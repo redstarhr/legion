@@ -1,78 +1,52 @@
-// utils/deadlineManager.js
-
-const { EmbedBuilder } = require('discord.js');
-const questDataManager = require('./questDataManager');
-const { logAction } = require('./logger');
+// e:/共有フォルダ/legion/quest_bot/utils/deadlineManager.js
+const questDataManager = require('../../manager/questDataManager');
 const { updateQuestMessage } = require('./questMessageManager');
+const { updateDashboard } = require('./dashboardManager');
 const { sendDeadlineNotification } = require('./notificationManager');
-
-let isChecking = false; // Lock to prevent overlapping executions
+const { logAction } = require('./logger');
 
 /**
- * Checks for and closes any quests that have passed their deadline.
+ * Checks for quests whose deadline has passed and automatically closes them.
  * @param {import('discord.js').Client} client The Discord client instance.
  */
 async function checkAndCloseExpiredQuests(client) {
-  if (isChecking) {
-    console.log('[DeadlineManager] A check is already in progress. Skipping.');
-    return;
-  }
-  isChecking = true;
+    try {
+        const allGuildsData = await questDataManager.getAllGuildsData();
 
-  try {
-    const guildIds = await questDataManager.getAllGuildIds();
-    if (guildIds.length === 0) {
-      return;
-    }
+        for (const guildId of Object.keys(allGuildsData)) {
+            const quests = allGuildsData[guildId];
+            const now = new Date();
 
-    for (const guildId of guildIds) {
-      const allQuests = await questDataManager.getAllQuests(guildId);
+            for (const questId of Object.keys(quests)) {
+                const quest = quests[questId];
 
-      for (const questId in allQuests) {
-        const quest = allQuests[questId];
+                // 期限があり、まだ締め切られておらず、アーカイブもされていないクエストを対象
+                if (quest.deadline && !quest.isClosed && !quest.isArchived) {
+                    const deadlineDate = new Date(quest.deadline);
 
-        // Check only quests that have a deadline and are not already closed or archived.
-        if (quest.deadline && !quest.isClosed && !quest.isArchived) {
-          try {
-            const deadlineDate = new Date(quest.deadline);
-            if (deadlineDate < new Date()) {
-              // Found an expired quest.
-              console.log(`[${guildId}] Expired quest found: ${questId}`);
+                    if (now > deadlineDate) {
+                        console.log(`[Deadline] Quest "${quest.name}" (ID: ${questId}) in guild ${guildId} has expired. Closing...`);
 
-              // 1. Update the quest to be closed and get the updated object.
-              const updatedQuest = await questDataManager.updateQuest(guildId, questId, { isClosed: true });
-              if (!updatedQuest) {
-                console.warn(`[${guildId}] Failed to update expired quest ${questId}, or it was not found.`);
-                continue;
-              }
+                        const updatedQuest = await questDataManager.updateQuest(guildId, questId, { isClosed: true }, client.user);
 
-              // 2. Update the original quest message
-              await updateQuestMessage(client, updatedQuest);
+                        await updateQuestMessage(client, updatedQuest);
+                        await updateDashboard(client, guildId);
 
-              // 3. Send a notification to the notification channel.
-              await sendDeadlineNotification({ client, quest: updatedQuest });
+                        await logAction({ client, guildId, user: client.user }, {
+                            title: '⏰ 募集期限切れ',
+                            color: '#e67e22',
+                            description: `クエスト「${quest.name}」が期限を過ぎたため、自動的に募集を締め切りました。`,
+                            details: { 'クエストID': questId },
+                        });
 
-              // 4. Log the action.
-              await logAction({ client, guildId, user: client.user }, {
-                title: '⏰ クエスト期限切れ',
-                color: '#e67e22',
-                details: {
-                  'クエストタイトル': updatedQuest.title || '無題',
-                  'クエストID': questId,
-                },
-              });
+                        await sendDeadlineNotification({ client, quest: updatedQuest });
+                    }
+                }
             }
-          } catch (e) {
-            console.error(`[${guildId}] Deadline check failed for quest ${questId}:`, e);
-          }
         }
-      }
+    } catch (error) {
+        console.error('[Deadline] Error during checkAndCloseExpiredQuests:', error);
     }
-  } catch (error) {
-    console.error('Error fetching guilds for deadline check:', error);
-  } finally {
-    isChecking = false;
-  }
 }
 
 module.exports = { checkAndCloseExpiredQuests };

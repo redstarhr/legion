@@ -31,6 +31,7 @@ module.exports = {
       const header = [
         'UserID',
         'UserTag',
+        'Status',
         'Teams',
         'People',
         'Comment',
@@ -39,14 +40,21 @@ module.exports = {
       ];
       let csvContent = header.join(',') + '\n';
 
+      const statusMap = {
+        completed: '完了',
+        failed: '失敗',
+      };
+
       // 2. 参加者データを追加
       for (const p of quest.accepted) {
         const timestamp = new Date(p.timestamp).toISOString();
         // コメント内のカンマとダブルクォートをエスケープ
         const comment = p.comment ? `"${p.comment.replace(/"/g, '""')}"` : '';
+        const status = statusMap[p.status] || '受注中';
         const row = [
           p.userId,
           p.userTag,
+          status,
           p.teams,
           p.people,
           comment,
@@ -69,7 +77,7 @@ module.exports = {
         details: {
           'クエストタイトル': quest.title || '無題',
           'クエストID': questId,
-          '参加者数': `${quest.accepted.length}人`,
+          'エントリー数': `${quest.accepted.length}件`,
         },
       });
 
