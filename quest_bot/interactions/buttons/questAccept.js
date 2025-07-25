@@ -1,7 +1,8 @@
 // quest_bot/interactions/buttons/questAccept.js
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_open_acceptModal_', // Prefix match
@@ -55,10 +56,7 @@ module.exports = {
       );
       await interaction.showModal(modal);
     } catch (error) {
-      console.error('クエスト受注モーダルの表示中にエラーが発生しました:', error);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'エラーが発生したため、受注を開始できませんでした。', flags: MessageFlags.Ephemeral }).catch(console.error);
-      }
+      await handleInteractionError({ interaction, error, context: 'クエスト受注モーダル表示' });
     }
   },
 };

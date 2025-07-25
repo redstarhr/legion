@@ -1,6 +1,6 @@
 const configDataManager = require('../../../manager/configDataManager');
 const { createConfigPanel } = require('../../components/configPanel');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 const { logAction } = require('../../utils/logger');
 module.exports = {

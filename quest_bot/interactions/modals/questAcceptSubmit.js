@@ -1,12 +1,12 @@
 // quest_bot/interactions/modals/questAcceptSubmit.js
 const { EmbedBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { sendAcceptanceNotification } = require('../../utils/notificationManager');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_submit_acceptModal_', // Prefix match

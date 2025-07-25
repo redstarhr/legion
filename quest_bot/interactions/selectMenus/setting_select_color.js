@@ -2,7 +2,7 @@ const configDataManager = require('../../../manager/configDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 const colorOptions = [
     { label: 'デフォルト (水色)', value: '#00bfff' },
     { label: '青', value: '#3498db' },

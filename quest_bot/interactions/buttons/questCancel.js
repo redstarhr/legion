@@ -1,6 +1,6 @@
 // quest_bot/interactions/buttons/questCancel.js
 const { MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { replyWithConfirmation } = require('../../components/confirmationUI');
 
 module.exports = {

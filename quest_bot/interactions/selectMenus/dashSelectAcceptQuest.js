@@ -1,6 +1,6 @@
 // quest_bot/interactions/selectMenus/dashSelectAcceptQuest.js
 const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 

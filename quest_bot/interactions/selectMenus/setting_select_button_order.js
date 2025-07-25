@@ -3,7 +3,7 @@ const configDataManager = require('../../../manager/configDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 const allButtonOptions = [
     { label: '受注する', value: 'accept' }, { label: '受注取消', value: 'cancel' },
     { label: '編集', value: 'edit' }, { label: '参加者に連絡', value: 'dm' },

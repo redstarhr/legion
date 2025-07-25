@@ -4,6 +4,27 @@ const questDataManager = require('../../../manager/questDataManager');
 const { canEditQuest } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
+/**
+ * Formats an ISO date string into 'YYYY-MM-DD HH:MM' format for display.
+ * @param {string | null} isoString The ISO date string to format.
+ * @returns {string} The formatted date string or an empty string.
+ */
+function formatISODateForInput(isoString) {
+    if (!isoString) return '';
+    try {
+        const date = new Date(isoString);
+        const pad = (num) => num.toString().padStart(2, '0');
+        const year = date.getFullYear();
+        const month = pad(date.getMonth() + 1);
+        const day = pad(date.getDate());
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    } catch (e) {
+        return ''; // Return empty if parsing fails
+    }
+}
+
 module.exports = {
     customId: 'quest_edit_', // Prefix match
     async handle(interaction) {
@@ -55,7 +76,7 @@ module.exports = {
                 .setLabel('募集期限（YYYY-MM-DD HH:MM形式）')
                 .setStyle(TextInputStyle.Short)
                 .setPlaceholder('例：2024-12-31 23:59 (未入力で無期限)')
-                .setValue(quest.deadline || '')
+                .setValue(formatISODateForInput(quest.deadline))
                 .setRequired(false);
 
             modal.addComponents(

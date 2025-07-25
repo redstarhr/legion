@@ -1,6 +1,6 @@
 // quest_bot/interactions/modals/questDmSubmit.js
 const { EmbedBuilder, MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../interactionErrorLogger');
 

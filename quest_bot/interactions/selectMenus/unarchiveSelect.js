@@ -1,6 +1,6 @@
 // quest_bot/interactions/selectMenus/unarchiveSelect.js
 const { MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
