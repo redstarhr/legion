@@ -2,7 +2,7 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../../manager/questDataManager');
 const { logAction } = require('../../utils/logger');
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
   customId: 'quest_submit_dmModal_', // Prefix match
@@ -19,8 +19,10 @@ module.exports = {
         return interaction.editReply({ content: '⚠️ 対象のクエストが見つかりませんでした。' });
       }
 
-      // Get unique participant IDs to avoid sending multiple DMs to the same person
-      const participantIds = [...new Set(quest.accepted.map(a => a.userId))];
+      // Get unique IDs of *active* participants to avoid sending multiple DMs to the same person
+      const participantIds = [...new Set(
+        quest.accepted.filter(a => !a.status).map(a => a.userId)
+      )];
 
       if (participantIds.length === 0) {
         return interaction.editReply({ content: '⚠️ 連絡対象の参加者がいません。' });
