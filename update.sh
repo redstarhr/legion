@@ -104,8 +104,16 @@ echo "✅ 実行権限の更新が完了しました。"
 
 # --- 4. Install Dependencies & Deploy Commands ---
 echo -e "\n${YELLOW}4. 依存関係のインストールとコマンドのデプロイ...${NC}"
-echo "📦 npm パッケージをインストール中..."
-npm install --no-audit --no-fund
+
+# package.json または package-lock.json に変更があった場合のみ npm install を実行
+# `HEAD@{1}` は git pull/reset を実行する直前の状態を指す
+if git diff --quiet HEAD@{1} HEAD -- package.json package-lock.json; then
+  echo "ℹ️ 'package.json' と 'package-lock.json' に変更はありません。依存関係のインストールをスキップします。"
+else
+  echo "ℹ️ 'package.json' または 'package-lock.json' に変更が検出されました。依存関係をインストールします..."
+  npm install --no-audit --no-fund
+  echo -e "${GREEN}✅ 依存関係のインストールが完了しました。${NC}"
+fi
 
 # スラッシュコマンド登録は通常不要なため、必要に応じて手動で実行
 # echo "📡 スラッシュコマンドをDiscordに登録中..."
