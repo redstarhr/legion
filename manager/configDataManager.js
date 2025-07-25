@@ -35,6 +35,7 @@ async function saveLegionConfig(guildId, updates) {
   const currentConfig = await getLegionConfig(guildId).catch(() => ({}));
   const newConfig = { ...currentConfig, ...updates };
   await file.save(JSON.stringify(newConfig, null, 2), { contentType: 'application/json' });
+  console.log(`[GCS] Successfully saved config for guild ${guildId} to gs://${GCS_BUCKET_NAME}/${filePath}`);
   return newConfig;
 }
 
