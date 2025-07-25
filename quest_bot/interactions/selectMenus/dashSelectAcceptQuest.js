@@ -16,14 +16,14 @@ module.exports = {
             }
 
             // ユーザーが既にこのクエストを受注しているか確認
-            const { remainingTeams, remainingPeople, activeAccepted } = calculateRemainingSlots(quest);
+            const { remainingPeople, activeAccepted } = calculateRemainingSlots(quest);
             const hasAccepted = activeAccepted.some(a => a.userId === interaction.user.id);
             if (hasAccepted) {
                 return interaction.update({ content: `⚠️ あなたは既にクエスト「${quest.name}」を受注済みです。変更する場合は、一度討伐/失敗報告をしてから再度受注してください。`, components: [] });
             }
 
-            // 1組も受注できない場合は定員とみなす
-            if (remainingTeams < 1 || remainingPeople <= 0) {
+            // 定員に達しているか確認
+            if (remainingPeople <= 0) {
                  return interaction.update({ content: '⚠️ このクエストは既に定員に達しています。', components: [] });
             }
 

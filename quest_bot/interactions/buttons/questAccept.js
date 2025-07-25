@@ -25,10 +25,9 @@ module.exports = {
       }
 
       // Use the new utility function to calculate remaining slots
-      const { remainingTeams, remainingPeople } = calculateRemainingSlots(quest);
+      const { remainingPeople } = calculateRemainingSlots(quest);
 
-      // 1組受注する前提でチェック
-      if (remainingTeams < 1 || remainingPeople <= 0) {
+      if (remainingPeople <= 0) {
           return interaction.reply({ content: '⚠️ このクエストは既に定員に達しています。', flags: MessageFlags.Ephemeral });
       }
 

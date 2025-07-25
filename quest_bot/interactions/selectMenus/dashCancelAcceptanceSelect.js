@@ -29,8 +29,8 @@ module.exports = {
             }
 
             // Check if the quest was full before cancellation
-            const { currentAcceptedTeams, currentAcceptedPeople } = calculateRemainingSlots(quest);
-            const wasFullAndClosed = quest.isClosed && (currentAcceptedTeams >= (quest.teams || 1) && currentAcceptedPeople >= (quest.people || quest.players || 1));
+            const { currentAcceptedPeople } = calculateRemainingSlots(quest);
+            const wasFullAndClosed = quest.isClosed && (currentAcceptedPeople >= (quest.people || quest.players || 1));
 
             // Remove only the specific active acceptance from the list
             const updatedAccepted = quest.accepted.filter(a => a !== activeAcceptance);

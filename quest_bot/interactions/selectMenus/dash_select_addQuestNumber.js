@@ -16,7 +16,6 @@ async function createAndLogQuest(interaction, name, playerCount) {
     const questDetails = {
         name: name,
         players: playerCount,
-        teams: 1, // 組は1で固定
         people: playerCount, // 互換性のため
     };
     const newQuest = await questDataManager.createQuest(interaction.guildId, questDetails, interaction.user);

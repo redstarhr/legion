@@ -14,7 +14,7 @@ const { handleInteractionError } = require('../../../utils/interactionErrorLogge
 async function createAndLogQuest(interaction, name, count) {
     if (count <= 0) return null;
 
-    const questDetails = { name, players: count, teams: 1 };
+    const questDetails = { name, players: count };
     const newQuest = await questDataManager.createQuest(interaction.guildId, questDetails, interaction.user);
 
     if (newQuest) {

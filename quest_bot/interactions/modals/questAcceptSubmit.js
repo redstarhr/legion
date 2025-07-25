@@ -22,7 +22,6 @@ module.exports = {
       const comment = interaction.fields.getTextInputValue('accept_comment');
 
       // 2. Validate input
-      const teamsNum = 1; // 組数は1で固定
       const peopleNum = parseInt(peopleStr, 10);
 
       if (isNaN(peopleNum) || peopleNum <= 0) {
@@ -42,10 +41,10 @@ module.exports = {
       }
 
       // 4. Check for available slots
-      const { remainingTeams, remainingPeople, currentAcceptedTeams, currentAcceptedPeople } = calculateRemainingSlots(quest);
+      const { remainingPeople, currentAcceptedPeople } = calculateRemainingSlots(quest);
 
-      if (teamsNum > remainingTeams || peopleNum > remainingPeople) {
-        return interaction.editReply({ content: `⚠️ 募集枠を超えています。(残り: ${remainingTeams}組 / ${remainingPeople}人)` });
+      if (peopleNum > remainingPeople) {
+        return interaction.editReply({ content: `⚠️ 募集枠を超えています。(残り: ${remainingPeople}人)` });
       }
 
       // 5. Prepare update data
@@ -53,7 +52,6 @@ module.exports = {
         userId: interaction.user.id,
         userTag: interaction.user.tag,
         channelName: interaction.channel.name,
-        teams: teamsNum,
         people: peopleNum,
         players: peopleNum, // 互換性のために両方追加
         comment: comment || null,
@@ -63,9 +61,8 @@ module.exports = {
       const updatedAccepted = [...(quest.accepted || []), newAcceptance];
 
       // Check if the quest is now full
-      const newTotalTeams = currentAcceptedTeams + teamsNum;
-      const newTotalPeople = currentAcceptedPeople + peopleNum; // Use the same variable as above
-      const isNowFull = newTotalTeams >= (quest.teams || 1) && newTotalPeople >= (quest.people || quest.players || 1);
+      const newTotalPeople = currentAcceptedPeople + peopleNum;
+      const isNowFull = newTotalPeople >= (quest.people || quest.players || 1);
 
       const updates = {
         accepted: updatedAccepted,
