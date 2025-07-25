@@ -12,7 +12,7 @@ if (!GCS_BUCKET_NAME) {
 const storage = new Storage();
 const bucket = storage.bucket(GCS_BUCKET_NAME);
 
-const DATA_DIR_BASE = 'data-legion/quest';
+const DATA_DIR_BASE = 'data-legion/guilds'; // configDataManagerとパスを統一
 const QUESTS_FILE_NAME = 'quests.json';
 const QUEST_LOG_DIR = 'quest';
 
@@ -162,32 +162,6 @@ async function updateQuest(guildId, questId, updates, user) {
   quests[questId] = updatedQuest;
   await writeGcsFile(guildId, QUESTS_FILE_NAME, quests);
   return updatedQuest;
-}
-
-// --- Utility for Deadline Manager ---
-
-/**
- * データが存在するすべてのギルドIDのリストを取得する
- * @returns {Promise<string[]>}
- */
-async function getAllGuildIds() {
-  // GCSで 'data/' プレフィックス以下の "ディレクトリ" (共通プレフィックス) を一覧する
-  try {
-    const query = {
-      prefix: `${DATA_DIR_BASE}/`,
-      delimiter: '/',
-    };
-    const [_, __, apiResponse] = await bucket.getFiles(query);
-
-    if (apiResponse.prefixes) {
-      // apiResponse.prefixes は 'data/guildId1/', 'data/guildId2/' のような形式で返ってくる
-      return apiResponse.prefixes.map(p => p.replace(query.prefix, '').replace('/', ''));
-    }
-    return [];
-  } catch (error) {
-    console.error('Error listing guild directories in GCS:', error);
-    return []; // エラー時は空配列を返し、ボットのクラッシュを防ぐ
-  }
 }
 
 /**
@@ -377,7 +351,6 @@ module.exports = {
   getQuest,
   createQuest,
   updateQuest,
-  getAllGuildIds, // deadlineManagerのためにエクスポート
   getActiveAcceptances,
   processEndOfDay,
   deleteGuildData,

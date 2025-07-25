@@ -9,10 +9,11 @@ if (!GCS_BUCKET_NAME) {
 const storage = new Storage();
 const bucket = storage.bucket(GCS_BUCKET_NAME);
 
-const DATA_DIR_BASE = 'data-legion';
+const DATA_DIR_BASE = 'data-legion/guilds';
 
 function getGuildConfigPath(guildId) {
-  return `${DATA_DIR_BASE}/${guildId}/${guildId}.json`;
+  // ファイル名をより具体的にし、パス構造を統一
+  return `${DATA_DIR_BASE}/${guildId}/config.json`;
 }
 
 async function getLegionConfig(guildId) {
@@ -101,7 +102,7 @@ async function getDashboard(guildId) {
  * @returns {Promise<string[]>}
  */
 async function getAllGuildIds() {
-  // GCSで 'data-legion/' プレフィックス以下の "ディレクトリ" (共通プレフィックス) を一覧する
+  // GCSで 'data-legion/guilds/' プレフィックス以下の "ディレクトリ" (共通プレフィックス) を一覧する
   try {
     const query = {
       prefix: `${DATA_DIR_BASE}/`,
@@ -110,7 +111,7 @@ async function getAllGuildIds() {
     const [_, __, apiResponse] = await bucket.getFiles(query);
 
     if (apiResponse.prefixes) {
-      // apiResponse.prefixes は 'data-legion/guildId1/', 'data-legion/guildId2/' のような形式で返ってくる
+      // apiResponse.prefixes は 'data-legion/guilds/guildId1/', 'data-legion/guilds/guildId2/' のような形式で返ってくる
       return apiResponse.prefixes.map(p => p.replace(query.prefix, '').replace('/', ''));
     }
     return [];

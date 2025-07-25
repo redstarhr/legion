@@ -1,6 +1,6 @@
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getChatGPTConfig } = require('../../utils/configManager');
-const { generateOneOffReply } = require('../../manager/gptManager');
+const { generateOneOffReply } = require('../manager/gptManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {
