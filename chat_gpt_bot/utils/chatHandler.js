@@ -1,6 +1,6 @@
 // e:/共有フォルダ/legion/chat_gpt_bot/utils/chatHandler.js
 const { getChatGPTConfig } = require('./configManager');
-const { generateReply } = require('../manager/gptManager'); // API通信用の新しいマネージャー
+const { generateReply } = require('../manager/gptManager');
 const { logError } = require('../../utils/errorLogger');
 
 /**
@@ -9,34 +9,37 @@ const { logError } = require('../../utils/errorLogger');
  * @param {import('discord.js').Client} client
  */
 async function handleGptChat(message, client) {
-    // ボットからのメッセージ、DMは無視
-    if (message.author.bot || !message.guild) return;
-
-    const gptConfig = await getChatGPTConfig(message.guild.id);
-    const allowedChannels = gptConfig.allowedChannels || [];
-
-    // 設定されたチャンネル以外、またはAPIキーがなければ何もしない
-    if (!allowedChannels.includes(message.channel.id) || !process.env.OPENAI_API_KEY) {
-        return;
-    }
-
     try {
-        // "typing..."インジケーターを表示
+        if (message.author.bot || !message.guild) return;
+
+        const gptConfig = await getChatGPTConfig(message.guild.id);
+        if (!gptConfig.allowedChannels?.includes(message.channel.id)) return;
+
+        const isMentioned = message.mentions.has(client.user.id);
+        const isReplyToBot = message.reference && (await message.fetchReference()).author.id === client.user.id;
+
+        if (!isMentioned && !isReplyToBot) return;
+
+        // APIキーが設定されていない場合は静かに無視する
+        if (!gptConfig.apiKey) {
+            return;
+        }
+
         await message.channel.sendTyping();
 
-        const reply = await generateReply(message);
+        const reply = await generateReply(message, client);
 
-        // 2000文字を超える場合は分割して送信
-        if (reply.length > 2000) {
-            const chunks = reply.match(/.{1,2000}/gs) || [];
-            for (const chunk of chunks) {
-                await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+        if (reply) {
+            for (let i = 0; i < reply.length; i += 2000) {
+                const chunk = reply.substring(i, i + 2000);
+                if (i === 0) {
+                    await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+                } else {
+                    await message.channel.send(chunk);
+                }
             }
-        } else {
-            await message.reply({ content: reply, allowedMentions: { repliedUser: false } });
         }
     } catch (error) {
-        // ユーザーにはエラーを返さず、管理者向けのログに記録する
         console.error(`[ChatGPT] 自動応答エラー (Guild: ${message.guild.id}, Channel: #${message.channel.name}):`, error);
         await logError({
             client,
@@ -44,6 +47,7 @@ async function handleGptChat(message, client) {
             context: `ChatGPT自動応答 (Channel: #${message.channel.name})`,
             guildId: message.guild.id,
         });
+        await message.reply({ content: '🤖 エラーが発生したため、応答できませんでした。' }).catch(() => {});
     }
 }
 

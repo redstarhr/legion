@@ -21,11 +21,12 @@ module.exports = {
 
       await interaction.deferReply({ ephemeral: true });
 
-      const apiKey = process.env.OPENAI_API_KEY;
+      const gptConfig = await getChatGPTConfig(interaction.guildId);
+      const apiKey = gptConfig.apiKey;
 
       if (!apiKey) {
         return interaction.editReply({
-          content: '❌ OpenAI APIキーがサーバーに設定されていません。\n管理者に連絡して、サーバーの `.env` ファイルにキーを設定してもらってください。',
+          content: '❌ OpenAI APIキーが設定されていません。\n`/legion_chatgpt_パネル設置`の「基本設定を編集」から設定してください。',
         });
       }
 
