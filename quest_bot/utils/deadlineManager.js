@@ -11,10 +11,10 @@ const { logAction } = require('./logger');
  */
 async function checkAndCloseExpiredQuests(client) {
     try {
-        const allGuildsData = await questDataManager.getAllGuildsData();
+        const guilds = client.guilds.cache;
 
-        for (const guildId of Object.keys(allGuildsData)) {
-            const quests = allGuildsData[guildId];
+        for (const guild of guilds.values()) {
+            const quests = await questDataManager.getAllQuests(guild.id);
             const now = new Date();
 
             for (const questId of Object.keys(quests)) {
@@ -25,14 +25,14 @@ async function checkAndCloseExpiredQuests(client) {
                     const deadlineDate = new Date(quest.deadline);
 
                     if (now > deadlineDate) {
-                        console.log(`[Deadline] Quest "${quest.name}" (ID: ${questId}) in guild ${guildId} has expired. Closing...`);
+                        console.log(`[Deadline] Quest "${quest.name}" (ID: ${questId}) in guild ${guild.id} has expired. Closing...`);
 
-                        const updatedQuest = await questDataManager.updateQuest(guildId, questId, { isClosed: true }, client.user);
+                        const updatedQuest = await questDataManager.updateQuest(guild.id, questId, { isClosed: true }, client.user);
 
                         await updateQuestMessage(client, updatedQuest);
-                        await updateDashboard(client, guildId);
+                        await updateDashboard(client, guild.id);
 
-                        await logAction({ client, guildId, user: client.user }, {
+                        await logAction({ client, guildId: guild.id, user: client.user }, {
                             title: '⏰ 募集期限切れ',
                             color: '#e67e22',
                             description: `クエスト「${quest.name}」が期限を過ぎたため、自動的に募集を締め切りました。`,
