@@ -11,9 +11,7 @@ const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
 const { handleInteractionError } = require('./utils/interactionErrorLogger');
-
-// ChatGPT Bot 用のマネージャーをインポート
-const { getConfig: getGptConfig, generateReply: generateGptReply } = require('./chat_gpt_bot/manager/gptManager');
+const { handleGptChat } = require('./chat_gpt_bot/utils/chatHandler');
 
 // Discordクライアント初期化
 const client = new Client({
@@ -125,28 +123,9 @@ client.on('interactionCreate', async interaction => {
 });
 
 // --- messageCreate (ChatGPT自動応答) ---
-client.on('messageCreate', async message => {
-  if (message.author.bot || !message.guild) return;
-
-  try {
-    const config = await getGptConfig(message.guild.id);
-    if (config.chat_gpt_channels?.includes(message.channel.id)) {
-      await message.channel.sendTyping();
-
-      const userPrompt = message.content;
-      const reply = await generateGptReply(message.guild.id, userPrompt);
-
-      await message.reply({ content: reply, allowedMentions: { repliedUser: false } });
-    }
-  } catch (error) {
-    console.error(`[ChatGPT応答エラー] guild: ${message.guild.id}`, error);
-    await logError({
-      client: message.client,
-      guildId: message.guild.id,
-      error,
-      context: `ChatGPT自動応答 (channel: ${message.channel.name})`
-    });
-  }
+client.on('messageCreate', (message) => {
+  // Delegate all message handling to the specialized chat handler
+  handleGptChat(message, client);
 });
 
 // --- Botがサーバーから削除された場合のデータ削除 ---

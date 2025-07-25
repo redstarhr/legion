@@ -1,6 +1,6 @@
 // utils/chatHandler.js
 const { getChatGPTConfig } = require('./configManager');
-const { generateReply } = require('../manager/gptManager');
+const { generateReply } = require('../../manager/gptManager');
 const { logError } = require('../../utils/errorLogger');
 
 /**

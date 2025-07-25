@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
-const { isChatGptAdmin } = require('../../permissionManager');
+const { isChatGptAdmin } = require('../../manager/permissionManager');
 const { getChatGPTConfig } = require('../utils/configManager');
 
 /** YYYY-MM-DD フォーマット関数 */
