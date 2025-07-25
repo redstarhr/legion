@@ -14,44 +14,63 @@ module.exports = {
         try {
             await interaction.deferUpdate();
 
-            // Re-check admin permission
-            if (!(await isChatGptAdmin(interaction))) {
-                const noPermissionEmbed = createErrorEmbed(
-                    '❌ 権限がありません',
-                    'この操作は管理者のみ実行可能です。'
-                );
-                return await interaction.editReply({ embeds: [noPermissionEmbed], components: [] });
+            const isAdmin = await isChatGptAdmin(interaction);
+            if (!isAdmin) {
+                return interaction.editReply({
+                    embeds: [
+                        createErrorEmbed(
+                            '❌ 権限がありません',
+                            'この操作は ChatGPT 設定管理者のみが実行できます。'
+                        )
+                    ],
+                    components: []
+                });
             }
 
-            const guildId = interaction.guildId;
-            const config = await getChatGPTConfig(guildId);
+            const { apiKey } = await getChatGPTConfig(interaction.guildId);
 
-            if (!config.apiKey) {
-                const noApiKeyEmbed = createErrorEmbed(
-                    'APIキー未設定',
-                    'ChatGPTのAPIキーが未設定のため、使用量を取得できません。'
-                );
-                return await interaction.editReply({ embeds: [noApiKeyEmbed], components: [] });
+            if (!apiKey || apiKey.trim() === '') {
+                return interaction.editReply({
+                    embeds: [
+                        createErrorEmbed(
+                            '⚠️ APIキーが未設定です',
+                            'ChatGPT APIキーが設定されていないため、使用量の取得ができません。'
+                        )
+                    ],
+                    components: []
+                });
             }
 
-            const usageResult = await getOpenAIUsage(config.apiKey);
+            const usageResult = await getOpenAIUsage(apiKey);
 
             if (usageResult.error) {
-                const errorEmbed = createErrorEmbed(
-                    '使用量取得エラー',
-                    usageResult.message || '不明なエラーが発生しました。'
-                );
-                return await interaction.editReply({ embeds: [errorEmbed], components: [] });
+                return interaction.editReply({
+                    embeds: [
+                        createErrorEmbed(
+                            '使用量の取得に失敗しました',
+                            usageResult.message || 'OpenAI APIからの情報取得時にエラーが発生しました。'
+                        )
+                    ],
+                    components: []
+                });
             }
 
-            const usageEmbed = createSuccessEmbed(
-                '💸 OpenAI 今月の使用量',
-                `現在の使用量は **$${usageResult.usage} USD** です。\n\n※この値は OpenAI ダッシュボードから取得された最新データです。`
-            );
+            return interaction.editReply({
+                embeds: [
+                    createSuccessEmbed(
+                        '💸 OpenAI 今月の使用量',
+                        `現在の使用量は **$${usageResult.usage} USD** です。\n\n※この数値は OpenAI ダッシュボードのデータを元にしています。`
+                    )
+                ],
+                components: []
+            });
 
-            await interaction.editReply({ embeds: [usageEmbed], components: [] });
         } catch (error) {
-            await handleInteractionError({ interaction, error, context: 'ChatGPT使用量表示' });
+            await handleInteractionError({
+                interaction,
+                error,
+                context: 'ChatGPT使用量表示'
+            });
         }
     }
 };
