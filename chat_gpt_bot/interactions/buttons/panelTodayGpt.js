@@ -8,7 +8,7 @@ module.exports = {
     async handle(interaction) {
         try {
             // まずはEphemeralで応答し、処理中であることをユーザーに伝えます
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const config = await getConfig(interaction.guildId);
             if (!config.today_gpt_channel_id) {
