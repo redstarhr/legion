@@ -24,8 +24,7 @@ async function handleGptChat(message, client) {
         // "typing..."インジケーターを表示
         await message.channel.sendTyping();
 
-        const userPrompt = message.content;
-        const reply = await generateReply(message.guild.id, userPrompt);
+        const reply = await generateReply(message);
 
         // 2000文字を超える場合は分割して送信
         if (reply.length > 2000) {
