@@ -1,104 +1,66 @@
-// quest_bot/components/questActionButtons.js
-
+// e:/共有フォルダ/legion/quest_bot/components/questActionButtons.js
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const configDataManager = require('../manager/configDataManager');
+const configDataManager = require('../../manager/configDataManager');
 
 /**
- * クエストの現在の状態に基づいてアクションボタンの行を生成します。
- * @param {object} quest - クエストオブジェクト
- * @returns {Promise<ActionRowBuilder[]>} An array of action rows.
+ * Creates the action row of buttons for a quest message based on the quest's state and guild configuration.
+ * @param {object} quest The quest object.
+ * @param {string} guildId The ID of the guild.
+ * @returns {Promise<ActionRowBuilder>} A promise that resolves to the action row builder.
  */
-async function createQuestActionRows(quest) {
-  const isClosed = quest.isClosed || quest.isArchived;
-  const guildId = quest.guildId;
+async function createQuestActionButtons(quest, guildId) {
+    const buttonOrder = await configDataManager.getButtonOrder(guildId);
+    const row = new ActionRowBuilder();
 
-  // Define all possible main action buttons
-  const allButtons = {
-    accept: new ButtonBuilder()
-      .setCustomId(`quest_open_acceptModal_${quest.id}`)
-      .setLabel('受注する')
-      .setStyle(ButtonStyle.Success)
-      .setDisabled(isClosed),
-    cancel: new ButtonBuilder()
-      .setCustomId(`quest_open_cancelConfirm_${quest.id}`)
-      .setLabel('受注取消')
-      .setStyle(ButtonStyle.Danger)
-      .setDisabled(isClosed),
-    edit: new ButtonBuilder()
-      .setCustomId(`quest_edit_${quest.id}`)
-      .setLabel('編集')
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(isClosed),
-    dm: new ButtonBuilder()
-      .setCustomId(`quest_open_dmModal_${quest.id}`)
-      .setLabel('参加者に連絡')
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(isClosed || !quest.accepted || quest.accepted.length === 0),
-  };
+    const buttonMap = {
+        accept: new ButtonBuilder()
+            .setCustomId(`quest_open_acceptModal_${quest.id}`)
+            .setLabel('受注する')
+            .setStyle(ButtonStyle.Success)
+            .setDisabled(quest.isClosed || quest.isArchived),
+        cancel: new ButtonBuilder()
+            .setCustomId(`quest_open_cancelConfirm_${quest.id}`)
+            .setLabel('受注取消')
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(quest.isArchived),
+        edit: new ButtonBuilder()
+            .setCustomId(`quest_edit_${quest.id}`)
+            .setLabel('編集')
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(quest.isArchived),
+        dm: new ButtonBuilder()
+            .setCustomId(`quest_open_dmModal_${quest.id}`)
+            .setLabel('参加者に連絡')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(quest.isArchived),
+    };
 
-  // Get custom order from the database
-  const buttonOrder = await configDataManager.getButtonOrder(guildId);
+    const specialButtons = {
+        reopen: new ButtonBuilder()
+            .setCustomId(`quest_toggle_reopen_${quest.id}`)
+            .setLabel('募集再開')
+            .setStyle(ButtonStyle.Success),
+        download: new ButtonBuilder()
+            .setCustomId(`quest_action_downloadCsv_${quest.id}`)
+            .setLabel('参加者リストDL')
+            .setStyle(ButtonStyle.Secondary),
+    };
 
-  // Build the first row based on the custom order
-  const mainActionRow = new ActionRowBuilder();
-  for (const key of buttonOrder) {
-    if (allButtons[key]) {
-      mainActionRow.addComponents(allButtons[key]);
-    }
-  }
-
-  // Build the second row for state management
-  const stateManagementRow = new ActionRowBuilder();
-
-  if (quest.isArchived) {
-    stateManagementRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`quest_archived_${quest.id}`)
-        .setLabel('アーカイブ済')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true)
-    );
-  } else {
-    // 募集再開/〆切ボタン
-    if (quest.isClosed) {
-      stateManagementRow.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`quest_toggle_reopen_${quest.id}`)
-          .setLabel('募集再開')
-          .setStyle(ButtonStyle.Primary)
-      );
+    const buttonsToShow = [];
+    if (quest.isArchived) {
+        buttonsToShow.push(specialButtons.download);
+    } else if (quest.isClosed) {
+        buttonsToShow.push(specialButtons.reopen, specialButtons.download);
     } else {
-      stateManagementRow.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`quest_open_closeConfirm_${quest.id}`)
-          .setLabel('募集〆切')
-          .setStyle(ButtonStyle.Secondary)
-      );
+        for (const key of buttonOrder) {
+            if (buttonMap[key]) buttonsToShow.push(buttonMap[key]);
+        }
+        buttonsToShow.push(specialButtons.download);
     }
 
-    // クエスト完了ボタン
-    stateManagementRow.addComponents(
-      new ButtonBuilder().setCustomId(`quest_open_archiveConfirm_${quest.id}`).setLabel('クエスト完了').setStyle(ButtonStyle.Secondary)
-    );
-    // 参加者リストDLボタン
-    stateManagementRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`quest_action_downloadCsv_${quest.id}`)
-        .setLabel('参加者リストDL')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!quest.accepted || quest.accepted.length === 0)
-    );
-  }
+    row.addComponents(buttonsToShow.slice(0, 5));
 
-  const rows = [];
-  if (mainActionRow.components.length > 0) {
-    rows.push(mainActionRow);
-  }
-  if (stateManagementRow.components.length > 0) {
-    rows.push(stateManagementRow);
-  }
-
-  return rows;
+    return row;
 }
 
-module.exports = { createQuestActionRows };
+module.exports = { createQuestActionButtons };
