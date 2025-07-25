@@ -2,13 +2,14 @@ const { EmbedBuilder } = require('discord.js');
 
 /**
  * 統一された埋め込みメッセージの色設定
+ * 成功・エラー・情報・警告などの用途で使用
  */
-const EmbedColors = {
+const EmbedColors = Object.freeze({
   success: 0x57F287, // 緑（成功）
   error: 0xED4245,   // 赤（エラー）
-  info: 0x5865F2,    // ブループル（管理者・情報）
-  warning: 0xFEE75C, // 黄色（警告など。必要なら）
-};
+  info: 0x5865F2,    // ブループル（情報・通知）
+  warning: 0xFEE75C, // 黄色（警告など）
+});
 
 /**
  * Embedを生成する共通関数
@@ -30,7 +31,7 @@ function createEmbed(title, description, color, options = {}) {
   if (options.footerText) {
     embed.setFooter({
       text: options.footerText,
-      iconURL: options.iconURL || undefined,
+      iconURL: options.iconURL ?? null,
     });
   }
 
@@ -43,6 +44,9 @@ function createEmbed(title, description, color, options = {}) {
 
 /**
  * 成功メッセージ用のEmbedを生成
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
  */
 function createSuccessEmbed(title, description, options) {
   return createEmbed(title, description, EmbedColors.success, options);
@@ -50,20 +54,29 @@ function createSuccessEmbed(title, description, options) {
 
 /**
  * エラーメッセージ用のEmbedを生成
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
  */
 function createErrorEmbed(title, description, options) {
   return createEmbed(title, description, EmbedColors.error, options);
 }
 
 /**
- * 管理者/情報メッセージ用のEmbedを生成
+ * 情報表示用のEmbedを生成（管理者通知などにも）
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
  */
-function createAdminEmbed(title, description, options) {
+function createInfoEmbed(title, description, options) {
   return createEmbed(title, description, EmbedColors.info, options);
 }
 
 /**
- * 警告Embed（必要であれば）
+ * 警告表示用のEmbedを生成（任意）
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
  */
 function createWarningEmbed(title, description, options) {
   return createEmbed(title, description, EmbedColors.warning, options);
@@ -72,8 +85,8 @@ function createWarningEmbed(title, description, options) {
 module.exports = {
   createSuccessEmbed,
   createErrorEmbed,
-  createAdminEmbed,
+  createInfoEmbed,
   createWarningEmbed,
-  createEmbed,       // 任意で自由に作る用
-  EmbedColors,       // 他でも使えるように export
+  createEmbed,     // 任意用途用
+  EmbedColors,     // 他で再利用できるように
 };

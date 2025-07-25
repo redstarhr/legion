@@ -1,50 +1,39 @@
-// utils/configManager.js
-
 const configDataManager = require('../../manager/configDataManager');
 
 const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
 
-/**
- * デフォルト設定（必要に応じて拡張可）
- */
 const defaultChatGptConfig = {
   apiKey: '',
   systemPrompt: '',
   temperature: 1.0,
   model: 'gpt-4o',
-  todayChannelId: '',
+  today_gpt_channel_id: '',
+  chat_gpt_channels: [],
 };
 
-/**
- * 無効なプロパティを除外
- * @param {object} config 
- * @returns {object}
- */
 function sanitizeConfig(config) {
   return Object.fromEntries(
     Object.entries(config).filter(
-      ([, value]) => value !== null && value !== undefined
+      ([, value]) =>
+        value !== null &&
+        value !== undefined &&
+        !(Array.isArray(value) && value.length === 0)
     )
   );
 }
 
-/**
- * 指定されたギルドの ChatGPT 設定を取得
- * @param {string} guildId
- * @returns {Promise<object>} ChatGPT設定オブジェクト
- */
 async function getChatGPTConfig(guildId) {
   const fullConfig = await configDataManager.getLegionConfig(guildId);
-  return fullConfig[CHAT_GPT_CONFIG_KEY] || { ...defaultChatGptConfig };
+  const rawConfig = fullConfig[CHAT_GPT_CONFIG_KEY] || {};
+  return {
+    ...defaultChatGptConfig,
+    ...rawConfig,
+    chat_gpt_channels: Array.isArray(rawConfig.chat_gpt_channels)
+      ? rawConfig.chat_gpt_channels
+      : [],
+  };
 }
 
-/**
- * 指定されたギルドの ChatGPT 設定を更新・保存
- * null/undefined の値は削除
- * @param {string} guildId
- * @param {object} updates
- * @returns {Promise<object>} 更新後の設定
- */
 async function setChatGPTConfig(guildId, updates) {
   const currentGptConfig = await getChatGPTConfig(guildId);
   const merged = { ...currentGptConfig, ...updates };
