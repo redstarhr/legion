@@ -1,6 +1,5 @@
-// e:/共有フォルダ/legion/utils/errorLogger.js
 const { EmbedBuilder } = require('discord.js');
-const { getLogChannel } = require('../manager/configDataManager');
+const { getLogChannel } = require('../utils/configManager'); // ← 修正済み
 
 /**
  * Logs an error to the console and to a configured Discord channel.
@@ -31,7 +30,7 @@ async function logError({ client, error, context = 'Unspecified Context', guildI
     // 3. Create a detailed embed
     const embed = new EmbedBuilder()
       .setTitle(`❌ エラー発生`)
-      .setColor(0xED4245) // Red
+      .setColor(0xED4245)
       .setTimestamp()
       .addFields(
         { name: 'コンテキスト', value: `\`\`\`${context}\`\`\`` },

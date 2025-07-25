@@ -1,4 +1,6 @@
-const configDataManager = require('../../manager/configDataManager');
+// chat_gpt_bot/utils/configManager.js
+
+const { getLegionConfig, saveLegionConfig } = require('../../../utils/configManager');
 
 const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
 
@@ -23,7 +25,7 @@ function sanitizeConfig(config) {
 }
 
 async function getChatGPTConfig(guildId) {
-  const fullConfig = await configDataManager.getLegionConfig(guildId);
+  const fullConfig = await getLegionConfig(guildId);
   const rawConfig = fullConfig[CHAT_GPT_CONFIG_KEY] || {};
   return {
     ...defaultChatGptConfig,
@@ -39,7 +41,7 @@ async function setChatGPTConfig(guildId, updates) {
   const merged = { ...currentGptConfig, ...updates };
   const sanitized = sanitizeConfig(merged);
 
-  await configDataManager.saveLegionConfig(guildId, {
+  await saveLegionConfig(guildId, {
     [CHAT_GPT_CONFIG_KEY]: sanitized,
   });
 
