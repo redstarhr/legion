@@ -1,6 +1,6 @@
 // e:/共有フォルダ/legion/chat_gpt_bot/utils/chatHandler.js
 
-const { getChatGPTConfig } = require('../../manager/configDataManager');
+const { getChatGPTConfig } = require('./configManager');
 
 /**
  * Processes an incoming message to potentially generate a ChatGPT response.

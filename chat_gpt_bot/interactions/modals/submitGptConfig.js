@@ -4,7 +4,6 @@ const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
 const { gptConfigModal, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
-const { logAction } = require('../../../utils/logger');
 
 module.exports = {
     customId: gptConfigModal,
