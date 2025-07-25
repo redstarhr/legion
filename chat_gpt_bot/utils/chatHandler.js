@@ -18,7 +18,7 @@ async function handleGptChat(message, client) {
     const gptConfig = await getChatGPTConfig(guildId);
 
     // 応答対象チャンネル判定
-    if (!Array.isArray(gptConfig.allowedChannels) || !gptConfig.allowedChannels.includes(channelId)) {
+    if (!Array.isArray(gptConfig.chat_gpt_channels) || !gptConfig.chat_gpt_channels.includes(channelId)) {
       return;
     }
 

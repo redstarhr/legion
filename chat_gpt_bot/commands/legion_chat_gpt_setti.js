@@ -7,7 +7,7 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
-const { isChatGptAdmin } = require('../../manager/permissionManager');
+const { isChatGptAdmin } = require('../../permissionManager');
 
 module.exports = {
   data: new SlashCommandBuilder()

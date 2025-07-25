@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { getLogChannel } = require('../manager/configDataManager');
+const { getLogChannel } = require('../../manager/configDataManager');
 
 const DEFAULT_EMBED_COLOR = '#5865F2';
 

@@ -1,6 +1,6 @@
 // chat_gpt_bot/utils/configManager.js
 
-const { getLegionConfig, saveLegionConfig } = require('../../../utils/configManager');
+const { getLegionConfig, saveLegionConfig } = require('../../manager/configDataManager');
 
 const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
 

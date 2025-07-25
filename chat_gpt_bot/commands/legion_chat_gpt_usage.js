@@ -9,7 +9,7 @@ const formatDate = (date) => date.toISOString().split('T')[0];
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('legion_chatgpt_使用率')
-    .setDescription('今月のOpenAI API使用量を表示します。(管理者のみ)')
+    .setDescription('今月のAPI使用量と現在の設定を表示します。(管理者のみ)')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction) {
@@ -54,13 +54,9 @@ module.exports = {
       const totalUsageDollars = (usageData.total_usage || 0) / 100;
 
       const embed = new EmbedBuilder()
-        .setTitle(`🤖 OpenAI API 使用状況 (${now.getFullYear()}年${now.getMonth() + 1}月)`)
+        .setTitle(`🤖 ChatGPT 状況確認 (${now.getFullYear()}年${now.getMonth() + 1}月)`)
         .setColor(0x10A37F)
-        .setDescription('今月のAPI使用量 (USD)。\n※データ反映には数時間かかることがあります。')
-        .addFields({
-          name: '合計使用額',
-          value: `**$${totalUsageDollars.toFixed(4)}**${totalUsageDollars === 0 ? '（まだ使用されていない可能性あり）' : ''}`,
-        })
+        .setDescription('今月のAPI使用量 (USD) と現在のBot設定です。\n※使用量データの反映には数時間かかることがあります。')
         .setTimestamp()
         .setFooter({
           text: 'Powered by OpenAI ・ JST時間基準',
@@ -68,6 +64,12 @@ module.exports = {
         });
 
       // モデル別使用額の内訳を計算
+      embed.addFields({
+        name: '💰 合計使用額',
+        value: `**$${totalUsageDollars.toFixed(4)}**`,
+        inline: true,
+      });
+
       const modelUsage = {};
       usageData.daily_costs?.forEach(daily => {
         daily.line_items?.forEach(item => {
@@ -81,13 +83,31 @@ module.exports = {
           .map(([name, cost]) => `**${name}**: $${(cost / 100).toFixed(4)}`)
           .join('\n');
 
-        embed.addFields({ name: 'モデル別内訳', value: breakdown });
+        embed.addFields({ name: '📊 モデル別内訳', value: breakdown, inline: true });
       }
+
+      // --- Config Section ---
+      const apiKeyStatus = `✅ 設定済み (\`${apiKey.slice(0, 5)}...${apiKey.slice(-4)}\`)`;
+      const systemPrompt = gptConfig.systemPrompt || '未設定';
+      const temperature = gptConfig.temperature !== null && gptConfig.temperature !== undefined ? String(gptConfig.temperature) : 'デフォルト (1.0)';
+      const model = gptConfig.model || 'デフォルト (gpt-4o)';
+      const todayChannel = gptConfig.today_gpt_channel_id ? `<#${gptConfig.today_gpt_channel_id}>` : '未設定';
+      const autoChannels = gptConfig.chat_gpt_channels.length > 0 ? gptConfig.chat_gpt_channels.map(id => `<#${id}>`).join(' ') : '未設定';
+
+      embed.addFields(
+        { name: '\u200B', value: '**⚙️ 現在の設定**' }, // Separator and title
+        { name: '🧠 システムプロンプト', value: `\`\`\`${systemPrompt.substring(0, 1000)}\`\`\``, inline: false },
+        { name: '🌡️ Temperature', value: `\`${temperature}\``, inline: true },
+        { name: '🤖 モデル', value: `\`${model}\``, inline: true },
+        { name: '☀️ 「今日のGPT」CH', value: todayChannel, inline: false },
+        { name: '🗣️ 自動応答CH', value: autoChannels, inline: false },
+        { name: '🔑 APIキー', value: apiKeyStatus, inline: false }
+      );
 
       await interaction.editReply({ embeds: [embed] });
 
     } catch (error) {
-      await handleInteractionError({ interaction, error, context: 'ChatGPT使用率表示' });
+      await handleInteractionError({ interaction, error, context: 'ChatGPT状況確認' });
     }
   },
 };
