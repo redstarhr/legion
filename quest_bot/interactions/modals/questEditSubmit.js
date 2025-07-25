@@ -7,31 +7,6 @@ const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
-/**
- * Parses a date string in 'YYYY-MM-DD HH:MM' format.
- * @param {string} dateString The date string to parse.
- * @returns {{isValid: boolean, error: string|null, date: Date|null}}
- */
-function parseDate(dateString) {
-    const regex = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/;
-    const match = dateString.match(regex);
-
-    if (!match) {
-        return { isValid: false, error: '`YYYY-MM-DD HH:MM` 形式で入力してください。', date: null };
-    }
-
-    const [, year, month, day, hour, minute] = match.map(Number);
-    const date = new Date(year, month - 1, day, hour, minute);
-
-    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-        return { isValid: false, error: '存在しない日付です（例: 2月30日）。', date: null };
-    }
-    if (date < new Date()) {
-        return { isValid: false, error: '過去の日時は設定できません。', date: null };
-    }
-    return { isValid: true, error: null, date: date };
-}
-
 module.exports = {
     customId: 'quest_edit_submit_', // Prefix match
     async handle(interaction) {
