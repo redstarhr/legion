@@ -41,7 +41,7 @@ module.exports = {
             }
 
             if (quest.isArchived) {
-                return interaction.reply({ content: '⚠️ 完了済みのクエストは編集できません。', flags: MessageFlags.Ephemeral });
+                return interaction.reply({ content: '⚠️ 終了済みのクエストは編集できません。', flags: MessageFlags.Ephemeral });
             }
 
             const modal = new ModalBuilder()

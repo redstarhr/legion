@@ -17,7 +17,7 @@ module.exports = {
       }
 
       if (quest.isArchived) {
-        return interaction.followUp({ content: '⚠️ このクエストは既に完了（アーカイブ）済みです。', flags: MessageFlags.Ephemeral });
+        return interaction.followUp({ content: '⚠️ このクエストは既に終了済みです。', flags: MessageFlags.Ephemeral });
       }
 
       // Final permission check: issuer or quest manager/creator
@@ -38,7 +38,7 @@ module.exports = {
 
       // 4. Log the action
       await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
-        title: '✅ クエスト完了',
+        title: '✅ クエスト終了',
         color: '#95a5a6', // grey
         details: {
           'クエストタイトル': updatedQuest.title || '無題',
@@ -47,9 +47,9 @@ module.exports = {
       });
 
       // 5. Update the confirmation message
-      await interaction.editReply({ content: '✅ クエストを完了状態にしました。', components: [] });
+      await interaction.editReply({ content: '✅ クエストを終了状態にしました。', components: [] });
     } catch (error) {
-      await handleInteractionError({ interaction, error, context: 'クエスト完了確認' });
+      await handleInteractionError({ interaction, error, context: 'クエスト終了確認' });
     }
   },
 };

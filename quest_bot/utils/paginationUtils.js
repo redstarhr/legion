@@ -16,7 +16,7 @@ async function generateCompletedQuestsView(interaction, page = 1) {
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
 
     if (completedQuests.length === 0) {
-        return { content: '完了済みのクエストはありません。', embeds: [], components: [] };
+        return { content: '終了済みのクエストはありません。', embeds: [], components: [] };
     }
 
     const totalPages = Math.ceil(completedQuests.length / QUESTS_PER_PAGE);
@@ -26,12 +26,12 @@ async function generateCompletedQuestsView(interaction, page = 1) {
     const questsOnPage = completedQuests.slice(startIndex, startIndex + QUESTS_PER_PAGE);
 
     const embed = new EmbedBuilder()
-        .setTitle('✅ 完了済みクエスト一覧')
+        .setTitle('✅ 終了済みクエスト一覧')
         .setColor(0x95a5a6)
         .setFooter({ text: `ページ ${page} / ${totalPages}` });
 
     if (questsOnPage.length > 0) {
-        embed.setDescription(questsOnPage.map(quest => `📜 **${quest.name || '無題'}** (ID: \`${quest.id}\`)\n> 完了日: ${new Date(quest.completedAt).toLocaleString('ja-JP')}`).join('\n\n'));
+        embed.setDescription(questsOnPage.map(quest => `📜 **${quest.name || '無題'}** (ID: \`${quest.id}\`)\n> 終了日: ${new Date(quest.completedAt).toLocaleString('ja-JP')}`).join('\n\n'));
     } else {
         embed.setDescription('このページに表示するクエストはありません。');
     }

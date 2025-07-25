@@ -7,7 +7,6 @@ const path = require('path');
 
 // --- Bot Modules ---
 // 各機能のメインファイルをインポート
-const { checkAndCloseExpiredQuests } = require('./quest_bot/utils/deadlineManager');
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
@@ -172,11 +171,6 @@ client.on('guildDelete', async (guild) => {
 // ✅ Bot起動時
 client.once('ready', () => {
   console.log(`✅ Botが起動しました：${client.user.tag}`);
-
-  // Start checking for expired quests every minute.
-  setInterval(() => {
-    checkAndCloseExpiredQuests(client);
-  }, 60 * 1000); // 60000ms = 1 minute
 
   // 定時実行タスクを初期化
   initializeScheduler(client);

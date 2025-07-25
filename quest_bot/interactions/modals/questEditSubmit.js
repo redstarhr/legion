@@ -48,23 +48,13 @@ module.exports = {
             const title = interaction.fields.getTextInputValue('quest_title');
             const description = interaction.fields.getTextInputValue('quest_description');
             const peopleRaw = interaction.fields.getTextInputValue('quest_people');
-            const deadlineRaw = interaction.fields.getTextInputValue('quest_deadline');
 
             const people = parseInt(peopleRaw, 10);
             if (isNaN(people) || people < 1) {
                 return interaction.editReply({ content: '⚠️ 「募集 人数」には1以上の整数を入力してください。' });
             }
 
-            let deadline = null;
-            if (deadlineRaw.trim()) {
-                const parsedDate = parseDate(deadlineRaw.trim());
-                if (!parsedDate.isValid) {
-                    return interaction.editReply({ content: `⚠️ 募集期限の形式が正しくありません。\nエラー: ${parsedDate.error}\n例: \`2024-12-31 23:59\`` });
-                }
-                deadline = parsedDate.date.toISOString();
-            }
-
-            const updates = { name: title, title, description, people, players: people, deadline };
+            const updates = { name: title, title, description, people, players: people, deadline: null };
             const updatedQuest = await questDataManager.updateQuest(interaction.guildId, questId, updates, interaction.user);
 
             await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {

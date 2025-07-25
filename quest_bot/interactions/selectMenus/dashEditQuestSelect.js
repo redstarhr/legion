@@ -41,7 +41,7 @@ module.exports = {
             }
 
             if (quest.isArchived) {
-                return interaction.update({ content: '⚠️ 完了済みのクエストは編集できません。', components: [] });
+                return interaction.update({ content: '⚠️ 終了済みのクエストは編集できません。', components: [] });
             }
 
             // Build the same modal as the quest_edit button

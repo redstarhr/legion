@@ -88,21 +88,4 @@ async function sendCancellationNotification({ interaction, quest, wasFull }) {
     await sendNotification(interaction.client, interaction.guildId, { embeds: [embed], components: [row] });
 }
 
-/**
- * Sends a notification for an expired quest.
- * @param {object} context
- * @param {import('discord.js').Client} context.client
- * @param {object} context.quest - The quest object that expired.
- */
-async function sendDeadlineNotification({ client, quest }) {
-    const questUrl = `https://discord.com/channels/${quest.guildId}/${quest.channelId}/${quest.messageId}`;
-
-    const embed = new EmbedBuilder().setColor(0xf4900c).setTitle('⏰ クエスト期限切れ').setDescription(`クエスト「${quest.title || '無題のクエスト'}」が設定された期限を過ぎたため、自動的に募集を締め切りました。`).setTimestamp();
-
-    const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel('クエストへ移動').setStyle(ButtonStyle.Link).setURL(questUrl)
-    );
-    await sendNotification(client, quest.guildId, { embeds: [embed], components: [row] });
-}
-
-module.exports = { sendAcceptanceNotification, sendCancellationNotification, sendDeadlineNotification };
+module.exports = { sendAcceptanceNotification, sendCancellationNotification };

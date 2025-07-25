@@ -32,7 +32,7 @@ module.exports = {
                 components: [row],
             });
         } catch (error) {
-            await handleInteractionError({ interaction, error, context: '討伐報告UI表示' });
+            await handleInteractionError({ interaction, error, context: '討伐完了報告UI表示' });
         }
     },
 };

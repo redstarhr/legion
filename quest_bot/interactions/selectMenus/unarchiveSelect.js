@@ -37,7 +37,7 @@ module.exports = {
 
       // 3. Log the action
       await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
-        title: '↩️ クエスト完了状態の取消',
+        title: '↩️ クエスト終了状態の取消',
         color: '#3498db', // blue
         details: {
           'クエスト名': unarchivedQuest.name || '無題',
@@ -64,7 +64,7 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
-      await handleInteractionError({ interaction, error, context: 'クエスト完了状態取消' });
+      await handleInteractionError({ interaction, error, context: 'クエスト終了状態取消' });
     }
   },
 };
