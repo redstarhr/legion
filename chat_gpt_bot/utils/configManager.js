@@ -15,13 +15,22 @@ async function getChatGPTConfig(guildId) {
 
 /**
  * Updates and saves the ChatGPT-specific configuration for a guild.
+ * Handles resetting values if they are null or undefined.
  * @param {string} guildId The ID of the guild.
- * @param {object} updates The partial configuration updates.
+ * @param {object} updates The partial configuration updates. Values of `null` or `undefined` will be removed.
  * @returns {Promise<object>} The newly updated ChatGPT configuration object.
  */
 async function setChatGPTConfig(guildId, updates) {
     const currentGptConfig = await getChatGPTConfig(guildId);
     const newGptConfig = { ...currentGptConfig, ...updates };
+
+    // Clean up keys that are set to null or undefined, which signals a reset to default.
+    for (const key in newGptConfig) {
+        if (newGptConfig[key] === null || newGptConfig[key] === undefined) {
+            delete newGptConfig[key];
+        }
+    }
+
     await configDataManager.saveLegionConfig(guildId, { [CHAT_GPT_CONFIG_KEY]: newGptConfig });
     return newGptConfig;
 }

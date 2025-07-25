@@ -11,6 +11,7 @@ const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
 const { handleInteractionError } = require('./utils/interactionErrorLogger');
+const { handleGptChat } = require('./chat_gpt_bot/utils/chatHandler');
 
 // Botクライアントを作成（必要なIntentを指定）
 const client = new Client({
@@ -94,6 +95,19 @@ for (const moduleName of botModules) {
 }
 console.log('✅ ハンドラの読み込みが完了しました。');
 
+// ✅ messageCreate イベントのハンドリング (ChatGPT用)
+client.on('messageCreate', async message => {
+    // ボットがクラッシュしないように、個別のメッセージ処理をtry-catchで囲む
+    try {
+        // ChatGPT関連のロジックは専用のハンドラに委任
+        // これによりindex.jsはイベントの振り分けに集中できる
+        await handleGptChat(message, client);
+    } catch (error) {
+        // ハンドラ自体で発生した予期せぬエラーを捕捉するセーフティネット
+        console.error(`[FATAL] messageCreateハンドラで捕捉されなかったエラー (messageId: ${message.id}):`, error);
+    }
+});
+
 
 // ✅ interactionCreate イベントのハンドリング
 client.on('interactionCreate', async interaction => {
@@ -147,11 +161,14 @@ client.on('interactionCreate', async interaction => {
         interactionDetails = `Component: ${interaction.customId}`;
     }
 
-    // The handleInteractionError function will log the error AND reply to the user.
+    // Log the detailed error to the console and to the configured log channel
+    await logError({ client, error, context: `Unhandled error in interactionCreate for ${interactionDetails}`, guildId: interaction.guildId });
+
+    // Also, reply to the user with a generic error message.
     await handleInteractionError({
         interaction,
         error,
-        context: `Unhandled error in interactionCreate event for ${interactionDetails}`
+        context: 'Interaction Handler' // A simpler context for the user-facing message
     });
   }
 });

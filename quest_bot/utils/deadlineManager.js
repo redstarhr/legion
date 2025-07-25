@@ -39,7 +39,8 @@ async function checkAndCloseExpiredQuests(client) {
                             details: { 'クエストID': questId },
                         });
 
-                        await sendDeadlineNotification({ client, quest: updatedQuest });
+                        // 募集期限切れの通知は現在不要なため、処理をコメントアウト
+                        // await sendDeadlineNotification({ client, quest: updatedQuest });
                     }
                 }
             }

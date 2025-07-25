@@ -1,4 +1,4 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/commands/legion_chat_gpt_setti.js
+// legion/chat_gpt_bot/commands/legion_chat_gpt_setti.js
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 

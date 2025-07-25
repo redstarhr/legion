@@ -41,7 +41,7 @@ async function sendAcceptanceNotification({ interaction, quest, acceptance, wasF
         .setDescription(`${quest.title || '無題のクエスト'} に新しい受注がありました。`)
         .addFields(
             { name: '受注者', value: interaction.user.tag, inline: true },
-            { name: '受注内容', value: `${acceptance.teams}組 / ${acceptance.people}人`, inline: true },
+            { name: '受注人数', value: `${acceptance.people}人`, inline: true },
             { name: '受注チャンネル', value: `\`${interaction.channel.name}\``, inline: true }
         )
         .setTimestamp();

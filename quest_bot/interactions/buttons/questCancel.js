@@ -21,11 +21,10 @@ module.exports = {
         return interaction.reply({ content: 'あなたはこのクエストを受注していません。', flags: MessageFlags.Ephemeral });
       }
 
-      const totalAcceptedTeams = userAcceptances.reduce((sum, a) => sum + (a.teams || 0), 0);
       const totalAcceptedPeople = userAcceptances.reduce((sum, a) => sum + (a.people || 0), 0);
 
       await replyWithConfirmation(interaction, {
-        content: `本当にクエスト「${quest.title || '無題'}」の受注（合計 ${totalAcceptedTeams}組 / ${totalAcceptedPeople}人）を取り消しますか？`,
+        content: `本当にクエスト「${quest.title || '無題'}」の受注（合計 ${totalAcceptedPeople}人）を取り消しますか？`,
         confirmCustomId: `quest_confirm_cancel_${questId}`,
         confirmLabel: 'はい、取り消します',
         cancelCustomId: `quest_cancel_cancel_${questId}`,

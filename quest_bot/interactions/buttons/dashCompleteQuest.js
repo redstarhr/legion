@@ -16,7 +16,7 @@ module.exports = {
 
             const acceptanceOptions = allAccepted.map(acc => ({
                 label: `[${acc.questName}] ${acc.userTag}`,
-                description: `${acc.teams}組 / ${acc.players}人`,
+                description: `${acc.players}人`,
                 value: `${acc.questId}_${acc.userId}`,
             }));
 

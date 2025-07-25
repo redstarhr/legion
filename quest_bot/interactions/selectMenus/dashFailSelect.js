@@ -41,7 +41,7 @@ module.exports = {
                     'クエスト名': quest.name,
                     '報告者': interaction.user.tag,
                     '対象者': acceptance.userTag,
-                    '受注内容': `${acceptance.teams}組 / ${acceptance.players}人`,
+                    '受注人数': `${acceptance.players}人`,
                     'クエストID': quest.id,
                 },
             });

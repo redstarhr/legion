@@ -1,3 +1,5 @@
+// permissionManager.js
+
 const { PermissionFlagsBits } = require('discord.js');
 const configManager = require('./configDataManager');
 

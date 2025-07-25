@@ -80,6 +80,7 @@ cat > .env << EOL
 # Discord Bot Settings
 DISCORD_TOKEN=
 CLIENT_ID=
+OPENAI_API_KEY=
 GUILD_ID=
 
 # Google Cloud Storage Settings
@@ -95,7 +96,7 @@ echo "✅ すべてのシェルスクリプトに実行権限を付与しまし�
 
 echo -e "\n${YELLOW}*** 重要: .env ファイルを設定してください ***${NC}"
 echo "1. Botのトークン等を '.env' ファイルに設定する必要があります。"
-echo "   エディタでファイルを開き、必須項目を入力してください: ${GREEN}nano .env${NC}"
+echo "   エディタでファイルを開き、必須項目(DISCORD_TOKEN, CLIENT_ID, OPENAI_API_KEY)を入力してください: ${GREEN}nano .env${NC}"
 read -p ".envファイルの設定が完了したら、Enterキーを押して続行してください..."
 
 # --- 3. Dependencies & Deployment ---

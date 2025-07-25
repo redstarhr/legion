@@ -49,6 +49,41 @@ async function setChatGptAdminRole(guildId, roleId) {
   await saveLegionConfig(guildId, { chatGptAdminRoleId: roleId });
 }
 
+// --- ChatGPT Bot Config Functions ---
+
+const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
+
+/**
+ * Retrieves the ChatGPT-specific configuration for a guild.
+ * @param {string} guildId The ID of the guild.
+ * @returns {Promise<object>} The ChatGPT configuration object.
+ */
+async function getChatGPTConfig(guildId) {
+    const fullConfig = await getLegionConfig(guildId);
+    return fullConfig[CHAT_GPT_CONFIG_KEY] || {};
+}
+
+/**
+ * Updates and saves the ChatGPT-specific configuration for a guild.
+ * @param {string} guildId The ID of the guild.
+ * @param {object} updates The partial configuration updates. Values of `null` or `undefined` will be removed.
+ * @returns {Promise<object>} The newly updated ChatGPT configuration object.
+ */
+async function setChatGPTConfig(guildId, updates) {
+    const currentGptConfig = await getChatGPTConfig(guildId);
+    const newGptConfig = { ...currentGptConfig, ...updates };
+
+    // Clean up keys that are set to null or undefined, which signals a reset to default.
+    for (const key in newGptConfig) {
+        if (newGptConfig[key] === null || newGptConfig[key] === undefined) {
+            delete newGptConfig[key];
+        }
+    }
+
+    await saveLegionConfig(guildId, { [CHAT_GPT_CONFIG_KEY]: newGptConfig });
+    return newGptConfig;
+}
+
 // --- Quest Bot Config Functions ---
 
 async function setLogChannel(guildId, channelId) {
@@ -101,6 +136,10 @@ module.exports = {
   setQuestAdminRole,
   setQuestCreatorRoleIds,
   setChatGptAdminRole,
+
+  // ChatGPT Bot Configs
+  getChatGPTConfig,
+  setChatGPTConfig,
 
   // Quest Bot Configs
   setLogChannel,

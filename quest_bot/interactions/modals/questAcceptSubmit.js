@@ -89,7 +89,7 @@ module.exports = {
         details: {
           'クエストタイトル': updatedQuest.title || '無題', // Use updatedQuest for consistency
           'クエストID': questId,
-          '受注内容': `${teamsNum}組 / ${peopleNum}人`,
+          '受注人数': `${peopleNum}人`,
         },
       });
 

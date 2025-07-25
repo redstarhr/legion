@@ -46,7 +46,7 @@ module.exports = {
                 details: {
                     'クエスト名': quest.name,
                     '取消者': interaction.user.tag,
-                    '取消内容': `${activeAcceptance.teams}組 / ${activeAcceptance.players || activeAcceptance.people}人`,
+                    '取消人数': `${activeAcceptance.players || activeAcceptance.people}人`,
                     'クエストID': quest.id,
                 },
             });
