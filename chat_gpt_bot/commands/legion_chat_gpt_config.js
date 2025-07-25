@@ -13,6 +13,7 @@ const { handleInteractionError } = require('../../utils/interactionErrorLogger')
 const { isChatGptAdmin } = require('../../manager/permissionManager');
 const { getChatGPTConfig, setChatGPTConfig } = require('../utils/configManager');
 const { gptConfigModal, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../utils/customIds');
+const { logAction } = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -1,5 +1,5 @@
 // quest_bot/interactions/selectMenus/dashSelectEditPlayers.js
-const questDataManager = require('../../../manager/questDataManager');
+const questDataManager = require('../../utils/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');

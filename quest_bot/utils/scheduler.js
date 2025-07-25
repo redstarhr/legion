@@ -1,66 +1,77 @@
 // e:/共有フォルダ/legion/quest_bot/utils/scheduler.js
 const cron = require('node-cron');
-const { EmbedBuilder } = require('discord.js');
-const questDataManager = require('../../manager/questDataManager');
-const configDataManager = require('../../manager/configDataManager');
+const { getAllGuildIds, getDashboard, setDashboard } = require('../../manager/configDataManager');
+const { createQuestDashboardPanel } = require('../components/dashboardPanel');
+const { logError } = require('../../utils/errorLogger');
 
 /**
- * Sends a "start of day" message to configured notification channels.
- * @param {import('discord.js').Client} client
- */
-async function sendStartOfDayMessage(client) {
-    console.log('[Scheduler] Running start-of-day task...');
-    const guilds = client.guilds.cache;
-    for (const guild of guilds.values()) {
-        const channelId = await configDataManager.getNotificationChannel(guild.id);
-        if (channelId) {
-            const channel = await client.channels.fetch(channelId).catch(() => null);
-            if (channel && channel.isTextBased()) {
-                const embed = new EmbedBuilder()
-                    .setTitle('☀️ 活動開始')
-                    .setDescription('今日の活動を開始します！\nクエスト掲示板を確認して、参加できるクエストを探しましょう。')
-                    .setColor('#f1c40f')
-                    .setTimestamp();
-                await channel.send({ embeds: [embed] });
-            }
-        }
-    }
-}
-
-/**
- * Sends an "end of day" message to configured notification channels.
- * @param {import('discord.js').Client} client
- */
-async function sendEndOfDayMessage(client) {
-    console.log('[Scheduler] Running end-of-day task...');
-    const guilds = client.guilds.cache;
-    for (const guild of guilds.values()) {
-        const channelId = await configDataManager.getNotificationChannel(guild.id);
-        if (channelId) {
-            const channel = await client.channels.fetch(channelId).catch(() => null);
-            if (channel && channel.isTextBased()) {
-                const embed = new EmbedBuilder()
-                    .setTitle('🌙 活動終了')
-                    .setDescription('今日の活動は終了です。お疲れ様でした！')
-                    .setColor('#34495e')
-                    .setTimestamp();
-                await channel.send({ embeds: [embed] });
-            }
-        }
-    }
-}
-
-/**
- * Initializes the cron jobs for scheduled tasks.
+ * Initializes all scheduled tasks for the bot.
  * @param {import('discord.js').Client} client
  */
 function initializeScheduler(client) {
-    // JST is UTC+9. Cron uses server time, which should be set to JST.
-    cron.schedule('0 15 * * *', () => sendStartOfDayMessage(client), { scheduled: true, timezone: "Asia/Tokyo" });
-    console.log('✅ Start-of-day task scheduled for 3:00 PM JST.');
+    console.log('🕒 スケジューラを初期化中...');
 
-    cron.schedule('0 6 * * *', () => sendEndOfDayMessage(client), { scheduled: true, timezone: "Asia/Tokyo" });
-    console.log('✅ End-of-day task scheduled for 6:00 AM JST.');
+    // 毎日午前6時 (JST) に実行
+    // Cron format: '分 時 日 月 曜日'
+    cron.schedule('0 6 * * *', async () => {
+        console.log('⏰ 毎日のクエスト掲示板更新タスクを開始します...');
+        try {
+            const guildIds = await getAllGuildIds();
+            for (const guildId of guildIds) {
+                await refreshQuestDashboard(client, guildId);
+            }
+        } catch (error) {
+            // タスク全体の包括的なエラーハンドリング
+            await logError({ client, error, context: 'Daily Dashboard Refresh Task' });
+        }
+        console.log('✅ 毎日のクエスト掲示板更新タスクが完了しました。');
+    }, {
+        scheduled: true,
+        timezone: "Asia/Tokyo"
+    });
+
+    console.log('✅ スケジューラが正常に初期化されました。タスクは毎日午前6時に実行されます。');
+}
+
+/**
+ * Refreshes the quest dashboard for a specific guild.
+ * @param {import('discord.js').Client} client
+ * @param {string} guildId
+ */
+async function refreshQuestDashboard(client, guildId) {
+    const dashboardConfig = await getDashboard(guildId);
+    if (!dashboardConfig || !dashboardConfig.channelId) {
+        return; // ダッシュボードが設定されていなければスキップ
+    }
+
+    try {
+        const channel = await client.channels.fetch(dashboardConfig.channelId).catch(() => null);
+        if (!channel || !channel.isTextBased()) {
+            console.warn(`[Scheduler] Dashboard channel ${dashboardConfig.channelId} not found for guild ${guildId}.`);
+            return;
+        }
+
+        // 1. 古いダッシュボードメッセージを削除
+        if (dashboardConfig.messageId) {
+            await channel.messages.delete(dashboardConfig.messageId).catch(err => {
+                // メッセージが手動で削除されていた場合のエラーは無視
+                if (err.code !== 10008) {
+                    console.warn(`[Scheduler] Could not delete old dashboard message ${dashboardConfig.messageId} in guild ${guildId}:`, err.message);
+                }
+            });
+        }
+
+        // 2. 新しいダッシュボードを投稿
+        const newDashboardPanel = await createQuestDashboardPanel(channel.guild);
+        const newMessage = await channel.send(newDashboardPanel);
+
+        // 3. 新しいメッセージIDで設定を更新
+        await setDashboard(guildId, newMessage.id, channel.id);
+        console.log(`[Scheduler] Successfully refreshed quest dashboard for guild ${guildId} in channel ${channel.id}.`);
+
+    } catch (error) {
+        await logError({ client, error, context: `Dashboard Refresh for Guild ${guildId}`, guildId });
+    }
 }
 
 module.exports = { initializeScheduler };

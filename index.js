@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 // --- Bot Modules ---
-// 各機能のメインファイルをインポート
+// 各機能のメインファイルやユーティリティをインポート
 const { initializeScheduler } = require('./quest_bot/utils/scheduler');
 const questDataManager = require('./manager/questDataManager');
 const { logError } = require('./utils/errorLogger');
@@ -189,7 +189,7 @@ client.on('guildDelete', async (guild) => {
 client.once('ready', () => {
   console.log(`✅ Botが起動しました：${client.user.tag}`);
 
-  // 定時実行タスクを初期化
+  // 定時実行タスク（毎日午前6時のクエスト掲示板更新など）を初期化
   initializeScheduler(client);
 });
 

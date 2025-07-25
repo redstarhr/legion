@@ -93,6 +93,29 @@ async function getDashboard(guildId) {
   return config.dashboard || null;
 }
 
+/**
+ * データが存在するすべてのギルドIDのリストを取得する
+ * @returns {Promise<string[]>}
+ */
+async function getAllGuildIds() {
+  // GCSで 'data-legion/' プレフィックス以下の "ディレクトリ" (共通プレフィックス) を一覧する
+  try {
+    const query = {
+      prefix: `${DATA_DIR_BASE}/`,
+      delimiter: '/',
+    };
+    const [_, __, apiResponse] = await bucket.getFiles(query);
+
+    if (apiResponse.prefixes) {
+      // apiResponse.prefixes は 'data-legion/guildId1/', 'data-legion/guildId2/' のような形式で返ってくる
+      return apiResponse.prefixes.map(p => p.replace(query.prefix, '').replace('/', ''));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error listing guild directories in GCS:', error);
+    return []; // エラー時は空配列を返し、ボットのクラッシュを防ぐ
+  }
+}
 
 module.exports = {
   getLegionConfig,
@@ -101,6 +124,7 @@ module.exports = {
   setQuestAdminRole,
   setQuestCreatorRoleIds,
   setChatGptAdminRole,
+  getAllGuildIds,
 
   // Quest Bot Configs
   setLogChannel,

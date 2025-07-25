@@ -1,6 +1,6 @@
 // quest_bot/interactions/selectMenus/dashFailSelect.js
 const { MessageFlags } = require('discord.js');
-const questDataManager = require('../../../manager/questDataManager');
+const questDataManager = require('../../utils/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { logAction } = require('../../utils/logger');
@@ -41,7 +41,7 @@ module.exports = {
                     'クエスト名': quest.name,
                     '報告者': interaction.user.tag,
                     '対象者': acceptance.userTag,
-                    '受注人数': `${acceptance.players}人`,
+                    '受注内容': `${acceptance.teams}組 / ${acceptance.players}人`,
                     'クエストID': quest.id,
                 },
             });

@@ -96,34 +96,41 @@ async function getQuest(guildId, questId) {
 /**
  * 新しいクエストを作成する
  * @param {string} guildId
- * @param {object} questDetails - The details of the new quest (name, players, teams).
+ * @param {object} questDetails - The details of the new quest (name, title, description, players, deadline).
  * @param {import('discord.js').User} user - The user who created the quest.
  * @returns {Promise<object>} The newly created quest object.
  */
 async function createQuest(guildId, questDetails, user) {
   const quests = await getAllQuests(guildId);
   const newQuestId = `q_${nanoid(8)}`;
-
+ 
   if (quests[newQuestId]) {
       console.error(`[createQuest] Quest with ID ${newQuestId} already exists in guild ${guildId}. This is a rare collision.`);
       return null;
   }
-
+ 
   const newQuest = {
+    id: newQuestId,
+    guildId: guildId,
     name: questDetails.name,
+    title: questDetails.title,
+    description: questDetails.description,
     players: questDetails.players,
     people: questDetails.players, // 互換性のために追加
-    teams: questDetails.teams,
-    id: newQuestId,
+    teams: 0, // モーダルにないためデフォルト値
+    deadline: questDetails.deadline,
     issuerId: user.id,
+    issuerTag: user.tag,
     createdAt: new Date().toISOString(),
     accepted: [],
     isClosed: false,
     isArchived: false,
+    channelId: null,
+    messageId: null,
   };
   quests[newQuestId] = newQuest;
   await writeGcsFile(guildId, QUESTS_FILE_NAME, quests);
-  return newQuest;
+  return { ...newQuest };
 }
 
 /**
