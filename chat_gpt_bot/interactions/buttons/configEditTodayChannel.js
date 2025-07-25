@@ -1,4 +1,4 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/interactions/buttons/configEditTodayChannel.js
+// legion/chat_gpt_bot/interactions/buttons/configEditTodayChannel.js
 const { ActionRowBuilder, ChannelSelectMenuBuilder, ChannelType, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { isChatGptAdmin } = require('../../../permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');

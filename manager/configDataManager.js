@@ -49,9 +49,6 @@ async function setChatGptAdminRole(guildId, roleId) {
   await saveLegionConfig(guildId, { chatGptAdminRoleId: roleId });
 }
 
-// --- ChatGPT Bot Config Functions ---
-
-const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
 
 /**
  * Retrieves the ChatGPT-specific configuration for a guild.

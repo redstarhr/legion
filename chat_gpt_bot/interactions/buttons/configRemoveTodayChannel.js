@@ -1,4 +1,4 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/interactions/buttons/configRemoveTodayChannel.js
+// legion/chat_gpt_bot/interactions/buttons/configRemoveTodayChannel.js
 const { MessageFlags } = require('discord.js');
 const { isChatGptAdmin } = require('../../../permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');

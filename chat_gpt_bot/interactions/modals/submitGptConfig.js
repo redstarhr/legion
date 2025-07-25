@@ -1,14 +1,16 @@
 // e:/共有フォルダ/legion/chat_gpt_bot/interactions/modals/submitGptConfig.js
-const { isChatGptAdmin } = require('../../../permissionManager');
+const { MessageFlags } = require('discord.js');
+const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
+const { gptConfigModal, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
-const { gptSystemPromptInput, gptTemperatureInput, gptModelInput, gptConfigModal } = require('../../utils/customIds');
+const { logAction } = require('../../../utils/logger');
 
 module.exports = {
     customId: gptConfigModal,
     async handle(interaction) {
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             if (!(await isChatGptAdmin(interaction))) {
                 return interaction.editReply({ content: '🚫 この操作を実行する権限がありません。' });
@@ -18,12 +20,8 @@ module.exports = {
             const temperatureRaw = interaction.fields.getTextInputValue(gptTemperatureInput);
             const model = interaction.fields.getTextInputValue(gptModelInput) || null;
 
-            const updates = {
-                systemPrompt,
-                model,
-            };
+            const updates = { systemPrompt, model };
 
-            // --- Validation & Parsing ---
             if (temperatureRaw) {
                 const temperature = parseFloat(temperatureRaw);
                 if (isNaN(temperature) || temperature < 0.0 || temperature > 2.0) {
@@ -31,7 +29,6 @@ module.exports = {
                 }
                 updates.temperature = temperature;
             } else {
-                // If the field is empty, set to null to trigger a reset.
                 updates.temperature = null;
             }
 

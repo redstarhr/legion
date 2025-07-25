@@ -1,4 +1,4 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/interactions/buttons/panelTodayGpt.js
+// legion/chat_gpt_bot/interactions/buttons/panelTodayGpt.js
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getConfig, generateReply } = require('../../manager/chatGptManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
