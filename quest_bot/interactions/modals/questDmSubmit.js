@@ -35,21 +35,23 @@ module.exports = {
         .setFooter({ text: `送信者: ${interaction.user.tag} | サーバー: ${interaction.guild.name}` })
         .setTimestamp();
 
-      let successCount = 0;
-      let failCount = 0;
-      const failedUsers = [];
+      // Send DMs in parallel for better performance
+      const dmPromises = participantIds.map(userId => {
+        return interaction.client.users.fetch(userId)
+          .then(user => user.send({ embeds: [dmEmbed] }))
+          .then(() => ({ status: 'fulfilled', userId }))
+          .catch(error => {
+            console.error(`[DM] Failed to send DM to user ${userId} for quest ${questId}:`, error.message);
+            return { status: 'rejected', userId };
+          });
+      });
 
-      for (const userId of participantIds) {
-        try {
-          const user = await interaction.client.users.fetch(userId);
-          await user.send({ embeds: [dmEmbed] });
-          successCount++;
-        } catch (error) {
-          console.error(`[DM] Failed to send DM to user ${userId} for quest ${questId}:`, error.message);
-          failCount++;
-          failedUsers.push(`<@${userId}>`);
-        }
-      }
+      const results = await Promise.all(dmPromises);
+
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const failedResults = results.filter(r => r.status === 'rejected');
+      const failCount = failedResults.length;
+      const failedUsers = failedResults.map(r => `<@${r.userId}>`);
 
       // Log the action
       await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
