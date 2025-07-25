@@ -6,23 +6,24 @@ const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { QUEST_EDIT_MODAL, QUEST_EDIT_TITLE_INPUT, QUEST_EDIT_DESC_INPUT, QUEST_EDIT_PLAYERS_INPUT } = require('../../utils/customIds');
 
 module.exports = {
-    customId: 'quest_edit_submit_', // Prefix match
+    customId: QUEST_EDIT_MODAL,
     async handle(interaction) {
         try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-            const questId = interaction.customId.replace('quest_edit_submit_', '');
+            const questId = interaction.customId.replace(QUEST_EDIT_MODAL, '');
             const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
             if (!quest || !(await canEditQuest(interaction, quest))) {
                 return interaction.editReply({ content: '🚫 このクエストを編集する権限がありません。' });
             }
 
-            const title = interaction.fields.getTextInputValue('quest_title');
-            const description = interaction.fields.getTextInputValue('quest_description');
-            const peopleRaw = interaction.fields.getTextInputValue('quest_people');
+            const title = interaction.fields.getTextInputValue(QUEST_EDIT_TITLE_INPUT);
+            const description = interaction.fields.getTextInputValue(QUEST_EDIT_DESC_INPUT);
+            const peopleRaw = interaction.fields.getTextInputValue(QUEST_EDIT_PLAYERS_INPUT);
 
             const people = parseInt(peopleRaw, 10);
             if (isNaN(people) || people < 1) {

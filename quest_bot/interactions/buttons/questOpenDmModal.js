@@ -3,12 +3,13 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, Messag
 const { canEditQuest } = require('../../../manager/permissionManager');
 const questDataManager = require('../../../manager/questDataManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { QUEST_OPEN_DM_MODAL, QUEST_DM_MODAL, QUEST_DM_MESSAGE_INPUT } = require('../../utils/customIds');
 
 module.exports = {
-    customId: 'quest_open_dmModal_', // Prefix match
+    customId: QUEST_OPEN_DM_MODAL,
     async handle(interaction) {
         try {
-            const questId = interaction.customId.replace('quest_open_dmModal_', '');
+            const questId = interaction.customId.replace(QUEST_OPEN_DM_MODAL, '');
             const quest = await questDataManager.getQuest(interaction.guildId, questId);
 
             if (!(await canEditQuest(interaction, quest))) {
@@ -16,11 +17,11 @@ module.exports = {
             }
 
             const modal = new ModalBuilder()
-                .setCustomId(`quest_submit_dmModal_${questId}`)
+                .setCustomId(`${QUEST_DM_MODAL}${questId}`)
                 .setTitle('参加者への一斉連絡');
 
             const messageInput = new TextInputBuilder()
-                .setCustomId('dm_message')
+                .setCustomId(QUEST_DM_MESSAGE_INPUT)
                 .setLabel('送信するメッセージ')
                 .setStyle(TextInputStyle.Paragraph)
                 .setPlaceholder('参加者全員に送信されるメッセージを入力してください。')

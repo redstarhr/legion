@@ -3,16 +3,17 @@ const { EmbedBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../../manager/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { QUEST_DM_MODAL, QUEST_DM_MESSAGE_INPUT } = require('../../utils/customIds');
 
 module.exports = {
-  customId: 'quest_submit_dmModal_', // Prefix match
+  customId: QUEST_DM_MODAL,
   async handle(interaction) {
     try {
       await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
-      const questId = interaction.customId.split('_')[3];
+      const questId = interaction.customId.replace(QUEST_DM_MODAL, '');
       const guildId = interaction.guildId;
-      const messageContent = interaction.fields.getTextInputValue('dm_message');
+      const messageContent = interaction.fields.getTextInputValue(QUEST_DM_MESSAGE_INPUT);
 
       const quest = await questDataManager.getQuest(guildId, questId);
       if (!quest) {
