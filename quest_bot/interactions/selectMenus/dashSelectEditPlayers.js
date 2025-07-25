@@ -1,5 +1,5 @@
 // quest_bot/interactions/selectMenus/dashSelectEditPlayers.js
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
@@ -29,7 +29,7 @@ module.exports = {
                 title: '📝 クエスト修正',
                 color: '#f1c40f',
                 details: {
-                    'クエスト名': quest.name,
+                    'クエスト名': updatedQuest.name,
                     '新しい募集人数': `${newPlayerCount}人`,
                     'クエストID': questId,
                 },

@@ -1,5 +1,5 @@
 const { MessageFlags } = require('discord.js');
-const questDataManager = require('../../utils/questDataManager');
+const questDataManager = require('../../../manager/questDataManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
