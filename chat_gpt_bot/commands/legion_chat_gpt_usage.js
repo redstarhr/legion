@@ -1,8 +1,10 @@
-// legion/chat_gpt_bot/commands/legion_chat_gpt_usage.js
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 const { isChatGptAdmin } = require('../../permissionManager');
 const { getChatGPTConfig } = require('../utils/configManager');
+
+/** YYYY-MM-DD フォーマット関数 */
+const formatDate = (date) => date.toISOString().split('T')[0];
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -30,20 +32,14 @@ module.exports = {
         });
       }
 
-      // 今月の開始日と来月の開始日を計算 (YYYY-MM-DD形式)
+      // 今月の期間を算出
       const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const startDate = new Date(year, month, 1);
-      const endDate = new Date(year, month + 1, 1);
-      const formatDate = (date) => date.toISOString().split('T')[0];
-      const startDateStr = formatDate(startDate);
-      const endDateStr = formatDate(endDate);
+      const startDateStr = formatDate(new Date(now.getFullYear(), now.getMonth(), 1));
+      const endDateStr = formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 1));
 
-      // OpenAI APIにリクエスト
       const url = `https://api.openai.com/v1/dashboard/billing/usage?start_date=${startDateStr}&end_date=${endDateStr}`;
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${apiKey}` },
+        headers: { Authorization: `Bearer ${apiKey}` },
       });
 
       if (!response.ok) {
@@ -55,20 +51,23 @@ module.exports = {
       }
 
       const usageData = await response.json();
-      const totalUsageDollars = usageData.total_usage / 100;
+      const totalUsageDollars = (usageData.total_usage || 0) / 100;
 
-      // 結果をEmbedに整形
       const embed = new EmbedBuilder()
-        .setTitle(`🤖 OpenAI API 使用状況 (${year}年${month + 1}月)`)
-        .setColor(0x10A37F) // OpenAI Green
-        .setDescription(`今月のAPI使用量 (USD) です。\n*データは数時間遅れることがあります。*`)
-        .addFields(
-          { name: '合計使用額', value: `**$${totalUsageDollars.toFixed(4)}**` }
-        )
+        .setTitle(`🤖 OpenAI API 使用状況 (${now.getFullYear()}年${now.getMonth() + 1}月)`)
+        .setColor(0x10A37F)
+        .setDescription('今月のAPI使用量 (USD)。\n※データ反映には数時間かかることがあります。')
+        .addFields({
+          name: '合計使用額',
+          value: `**$${totalUsageDollars.toFixed(4)}**${totalUsageDollars === 0 ? '（まだ使用されていない可能性あり）' : ''}`,
+        })
         .setTimestamp()
-        .setFooter({ text: 'Powered by OpenAI', iconURL: 'https://openai.com/favicon.ico' });
+        .setFooter({
+          text: 'Powered by OpenAI ・ JST時間基準',
+          iconURL: 'https://openai.com/favicon.ico',
+        });
 
-      // モデル別の内訳を計算して追加
+      // モデル別使用額の内訳を計算
       const modelUsage = {};
       usageData.daily_costs?.forEach(daily => {
         daily.line_items?.forEach(item => {
@@ -78,10 +77,11 @@ module.exports = {
 
       if (Object.keys(modelUsage).length > 0) {
         const breakdown = Object.entries(modelUsage)
-          .sort(([, costA], [, costB]) => costB - costA)
+          .sort(([, a], [, b]) => b - a)
           .map(([name, cost]) => `**${name}**: $${(cost / 100).toFixed(4)}`)
           .join('\n');
-        embed.addFields({ name: 'モデル別内訳', value: breakdown || 'データなし' });
+
+        embed.addFields({ name: 'モデル別内訳', value: breakdown });
       }
 
       await interaction.editReply({ embeds: [embed] });

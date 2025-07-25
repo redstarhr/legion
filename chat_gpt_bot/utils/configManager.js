@@ -1,37 +1,64 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/utils/configManager.js
+// utils/configManager.js
+
 const configDataManager = require('../../manager/configDataManager');
 
 const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
 
 /**
- * Retrieves the ChatGPT-specific configuration for a guild.
- * @param {string} guildId The ID of the guild.
- * @returns {Promise<object>} The ChatGPT configuration object.
+ * デフォルト設定（必要に応じて拡張可）
  */
-async function getChatGPTConfig(guildId) {
-    const fullConfig = await configDataManager.getLegionConfig(guildId);
-    return fullConfig[CHAT_GPT_CONFIG_KEY] || {};
+const defaultChatGptConfig = {
+  apiKey: '',
+  systemPrompt: '',
+  temperature: 1.0,
+  model: 'gpt-4o',
+  todayChannelId: '',
+};
+
+/**
+ * 無効なプロパティを除外
+ * @param {object} config 
+ * @returns {object}
+ */
+function sanitizeConfig(config) {
+  return Object.fromEntries(
+    Object.entries(config).filter(
+      ([, value]) => value !== null && value !== undefined
+    )
+  );
 }
 
 /**
- * Updates and saves the ChatGPT-specific configuration for a guild.
- * Handles resetting values if they are null or undefined.
- * @param {string} guildId The ID of the guild.
- * @param {object} updates The partial configuration updates. Values of `null` or `undefined` will be removed.
- * @returns {Promise<object>} The newly updated ChatGPT configuration object.
+ * 指定されたギルドの ChatGPT 設定を取得
+ * @param {string} guildId
+ * @returns {Promise<object>} ChatGPT設定オブジェクト
  */
-async function setChatGPTConfig(guildId, updates) {
-    const currentGptConfig = await getChatGPTConfig(guildId);
-    const newGptConfig = { ...currentGptConfig, ...updates };
-
-    for (const key in newGptConfig) {
-        if (newGptConfig[key] === null || newGptConfig[key] === undefined) {
-            delete newGptConfig[key];
-        }
-    }
-
-    await configDataManager.saveLegionConfig(guildId, { [CHAT_GPT_CONFIG_KEY]: newGptConfig });
-    return newGptConfig;
+async function getChatGPTConfig(guildId) {
+  const fullConfig = await configDataManager.getLegionConfig(guildId);
+  return fullConfig[CHAT_GPT_CONFIG_KEY] || { ...defaultChatGptConfig };
 }
 
-module.exports = { getChatGPTConfig, setChatGPTConfig };
+/**
+ * 指定されたギルドの ChatGPT 設定を更新・保存
+ * null/undefined の値は削除
+ * @param {string} guildId
+ * @param {object} updates
+ * @returns {Promise<object>} 更新後の設定
+ */
+async function setChatGPTConfig(guildId, updates) {
+  const currentGptConfig = await getChatGPTConfig(guildId);
+  const merged = { ...currentGptConfig, ...updates };
+  const sanitized = sanitizeConfig(merged);
+
+  await configDataManager.saveLegionConfig(guildId, {
+    [CHAT_GPT_CONFIG_KEY]: sanitized,
+  });
+
+  return sanitized;
+}
+
+module.exports = {
+  getChatGPTConfig,
+  setChatGPTConfig,
+  defaultChatGptConfig,
+};
