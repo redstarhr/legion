@@ -11,9 +11,14 @@ const RED = '\x1b[31m';
 const NC = '\x1b[0m'; // No Color
 
 // --- 環境変数チェック ---
-const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID, GCS_BUCKET_NAME } = process.env;
 if (!DISCORD_TOKEN || !CLIENT_ID) {
   console.error(`${RED}❌ エラー: .envファイルに DISCORD_TOKEN と CLIENT_ID を設定してください。${NC}`);
+  process.exit(1);
+}
+// GCSバケット名のチェックを追加
+if (!GCS_BUCKET_NAME) {
+  console.error(`${RED}❌ エラー: .envファイルに GCS_BUCKET_NAME を設定してください。${NC}`);
   process.exit(1);
 }
 
