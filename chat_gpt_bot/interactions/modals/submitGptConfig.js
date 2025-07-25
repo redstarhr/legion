@@ -1,4 +1,4 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/interactions/modals/submitGptConfig.js
+// legion/chat_gpt_bot/interactions/modals/submitGptConfig.js
 const { MessageFlags } = require('discord.js');
 const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
