@@ -2,6 +2,7 @@
 const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 const { canManageQuests } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { DASH_ADD_QUEST_MODAL, DASH_ADD_PRA_INPUT, DASH_ADD_KAMA_INPUT } = require('../utils/customIds');
 
 module.exports = {
     customId: 'dash_open_addQuestSelect',
@@ -17,11 +18,11 @@ module.exports = {
         try {
             // 2. UIの作成 (モーダル)
             const modal = new ModalBuilder()
-                .setCustomId(`dash_submit_addQuest_${interaction.id}`)
+                .setCustomId(`${DASH_ADD_QUEST_MODAL}${interaction.id}`) // Use interaction.id to make it unique
                 .setTitle('クエスト一括追加');
 
             const praInput = new TextInputBuilder()
-                .setCustomId('pra_count')
+                .setCustomId(DASH_ADD_PRA_INPUT)
                 .setLabel('プラの募集人数')
                 .setStyle(TextInputStyle.Short)
                 .setPlaceholder('0〜24の数字を入力')
@@ -29,7 +30,7 @@ module.exports = {
                 .setRequired(true);
 
             const kamaInput = new TextInputBuilder()
-                .setCustomId('kama_count')
+                .setCustomId(DASH_ADD_KAMA_INPUT)
                 .setLabel('カマの募集人数')
                 .setStyle(TextInputStyle.Short)
                 .setPlaceholder('0〜24の数字を入力')

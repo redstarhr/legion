@@ -1,5 +1,5 @@
 // e:/共有フォルダ/legion/admin_bot/interactions/selectMenus/configSelectLegionAdmin.js
-const { isLegionAdmin } = require('../../../permissionManager');
+const { isLegionAdmin } = require('../../../manager/permissionManager');
 const { setLegionAdminRole } = require('../../../manager/configDataManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 const { createLegionConfigPanel } = require('../../components/configPanel');
@@ -15,7 +15,7 @@ module.exports = {
 
             await interaction.deferUpdate();
 
-            const selectedRoleId = interaction.values[0] || null; // 選択がなければnull（設定解除）
+            const selectedRoleId = interaction.values[0] || null;
             await setLegionAdminRole(interaction.guildId, selectedRoleId);
 
             const updatedPanel = await createLegionConfigPanel(interaction);

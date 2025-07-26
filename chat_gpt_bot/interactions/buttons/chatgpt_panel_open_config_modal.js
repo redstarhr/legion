@@ -18,8 +18,8 @@ module.exports = {
       // 1回のGCSアクセスでコンフィグをまとめて取得
       const legionConfig = await getLegionConfig(interaction.guildId);
 
-      // 権限チェックは非同期対応で統一（必要ならawait外す）
-      if (!(await checkChatGptAdmin(interaction.member, legionConfig))) {
+      // 権限チェックは取得済みのコンフィグを渡して同期的に行う
+      if (!checkChatGptAdmin(interaction.member, legionConfig)) {
         return interaction.reply({ content: '🚫 この操作を実行する権限がありません。', flags: MessageFlags.Ephemeral });
       }
 

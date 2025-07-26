@@ -7,19 +7,20 @@ const { logAction } = require('../../utils/logger');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { sendAcceptanceNotification } = require('../../utils/notificationManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { QUEST_ACCEPT_MODAL, QUEST_ACCEPT_PEOPLE_INPUT, QUEST_ACCEPT_COMMENT_INPUT } = require('../../utils/customIds');
 
 module.exports = {
-  customId: 'quest_submit_acceptModal_', // Prefix match
+  customId: QUEST_ACCEPT_MODAL,
   async handle(interaction) {
     try {
       await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
-      const questId = interaction.customId.split('_')[3];
+      const questId = interaction.customId.replace(QUEST_ACCEPT_MODAL, '');
       const guildId = interaction.guildId;
 
       // 1. Get data from modal
-      const peopleStr = interaction.fields.getTextInputValue('accept_people');
-      const comment = interaction.fields.getTextInputValue('accept_comment');
+      const peopleStr = interaction.fields.getTextInputValue(QUEST_ACCEPT_PEOPLE_INPUT);
+      const comment = interaction.fields.getTextInputValue(QUEST_ACCEPT_COMMENT_INPUT);
 
       // 2. Validate input
       const peopleNum = parseInt(peopleStr, 10);

@@ -17,7 +17,6 @@ function initializeScheduler(client) {
         console.log('⏰ 毎日のクエスト掲示板更新タスクを開始します...');
         try {
             const guildIds = await getAllGuildIds();
-            
             for (const guildId of guildIds) {
                 await refreshQuestDashboard(client, guildId);
             }
@@ -41,7 +40,7 @@ function initializeScheduler(client) {
  */
 async function refreshQuestDashboard(client, guildId) {
     const dashboardConfig = await getDashboard(guildId);
-     if (!dashboardConfig || !dashboardConfig.channelId) {
+    if (!dashboardConfig || !dashboardConfig.channelId) {
         return; // ダッシュボードが設定されていなければスキップ
     }
 
@@ -54,22 +53,22 @@ async function refreshQuestDashboard(client, guildId) {
 
         // 1. 古いダッシュボードメッセージを削除
         if (dashboardConfig.messageId) {
-           await channel.messages.delete(dashboardConfig.messageId).catch(err => {
+            await channel.messages.delete(dashboardConfig.messageId).catch(err => {
                 // メッセージが手動で削除されていた場合のエラーは無視
                 if (err.code !== 10008) {
                     console.warn(`[Scheduler] Could not delete old dashboard message ${dashboardConfig.messageId} in guild ${guildId}:`, err.message);
                 }
             });
         }
-        
+
         // 2. 新しいダッシュボードを投稿
         const newDashboardPanel = await createQuestDashboardPanel(channel.guild);
         const newMessage = await channel.send(newDashboardPanel);
-        
+
         // 3. 新しいメッセージIDで設定を更新
         await setDashboard(guildId, newMessage.id, channel.id);
         console.log(`[Scheduler] Successfully refreshed quest dashboard for guild ${guildId} in channel ${channel.id}.`);
-        
+
     } catch (error) {
         await logError({ client, error, context: `Dashboard Refresh for Guild ${guildId}`, guildId });
     }

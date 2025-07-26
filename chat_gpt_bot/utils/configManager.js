@@ -9,7 +9,6 @@ const defaultChatGptConfig = {
   systemPrompt: '',
   temperature: 1.0,
   model: 'gpt-4o',
-  today_gpt_channel_id: '',
   allowedChannels: [],
 };
 

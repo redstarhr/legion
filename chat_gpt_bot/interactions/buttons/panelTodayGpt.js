@@ -2,13 +2,20 @@ const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getChatGPTConfig } = require('../../utils/configManager');
 const { generateOneOffReply } = require('../manager/gptManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+const { isChatGptAdmin } = require('../../../manager/permissionManager');
 
 module.exports = {
   customId: 'chatgpt_panel_today_gpt',
   async handle(interaction) {
     try {
-      // 処理中をユーザーに通知（Ephemeral）
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+      // 権限チェック
+      if (!(await isChatGptAdmin(interaction))) {
+        return interaction.editReply({
+          content: '🚫 この操作を実行する権限がありません。',
+        });
+      }
 
       const config = await getChatGPTConfig(interaction.guildId);
 
@@ -42,8 +49,9 @@ module.exports = {
       const reply = await generateOneOffReply(interaction.guildId, prompt);
 
       if (!reply) {
-        await targetChannel.send({ content: '🤖 情報の生成に失敗しました。' }).catch(() => {});
-        return;
+        return await interaction.editReply({
+          content: '❌ 情報の生成に失敗しました。OpenAIからの応答が空でした。',
+        });
       }
 
       // 埋め込みメッセージ作成
@@ -56,6 +64,11 @@ module.exports = {
 
       // 設定チャンネルへ投稿
       await targetChannel.send({ embeds: [embed] });
+
+      // 最終的な成功メッセージをユーザーに通知
+      await interaction.editReply({
+        content: `✅ 「今日のお知らせ」を <#${targetChannel.id}> に投稿しました。`,
+      });
 
     } catch (error) {
       // エラーは操作ユーザーにのみ通知

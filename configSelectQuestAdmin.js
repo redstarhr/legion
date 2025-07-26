@@ -1,5 +1,5 @@
 // e:/共有フォルダ/legion/admin_bot/interactions/selectMenus/configSelectQuestAdmin.js
-const { isLegionAdmin } = require('../../../permissionManager');
+const { isLegionAdmin } = require('../../../manager/permissionManager');
 const { setQuestAdminRole } = require('../../../manager/configDataManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 const { createLegionConfigPanel } = require('../../components/configPanel');

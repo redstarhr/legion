@@ -1,5 +1,5 @@
 // e:/共有フォルダ/legion/admin_bot/interactions/selectMenus/configSelectQuestCreator.js
-const { isLegionAdmin } = require('../../../permissionManager');
+const { isLegionAdmin } = require('../../../manager/permissionManager');
 const { setQuestCreatorRoleIds } = require('../../../manager/configDataManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 const { createLegionConfigPanel } = require('../../components/configPanel');
@@ -15,7 +15,7 @@ module.exports = {
 
             await interaction.deferUpdate();
 
-            const selectedRoleIds = interaction.values; // 複数選択なので配列
+            const selectedRoleIds = interaction.values;
             await setQuestCreatorRoleIds(interaction.guildId, selectedRoleIds);
 
             const updatedPanel = await createLegionConfigPanel(interaction);

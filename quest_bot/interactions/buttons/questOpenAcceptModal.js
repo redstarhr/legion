@@ -3,7 +3,7 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = req
 const questDataManager = require('../../../manager/questDataManager');
 const { calculateRemainingSlots } = require('../../utils/questUtils');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
-const { QUEST_ACCEPT_MODAL, QUEST_OPEN_ACCEPT_MODAL } = require('../../utils/customIds');
+const { QUEST_ACCEPT_MODAL, QUEST_OPEN_ACCEPT_MODAL, QUEST_ACCEPT_PEOPLE_INPUT, QUEST_ACCEPT_COMMENT_INPUT } = require('../../utils/customIds');
 
 module.exports = {
     customId: QUEST_OPEN_ACCEPT_MODAL, // Prefix match
@@ -32,14 +32,14 @@ module.exports = {
                 .setTitle(`クエスト受注: ${quest.title}`);
 
             const peopleInput = new TextInputBuilder()
-                .setCustomId('accept_people')
+                .setCustomId(QUEST_ACCEPT_PEOPLE_INPUT)
                 .setLabel(`参加人数 (残り: ${remainingPeople}人)`)
                 .setStyle(TextInputStyle.Short)
                 .setPlaceholder('あなたを含めた人数を入力')
                 .setRequired(true);
 
             const commentInput = new TextInputBuilder()
-                .setCustomId('accept_comment')
+                .setCustomId(QUEST_ACCEPT_COMMENT_INPUT)
                 .setLabel('コメント (任意)')
                 .setStyle(TextInputStyle.Paragraph)
                 .setPlaceholder('例: 20時頃から参加できます！')

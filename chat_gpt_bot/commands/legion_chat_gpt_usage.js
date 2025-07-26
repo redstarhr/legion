@@ -91,7 +91,6 @@ module.exports = {
       const systemPrompt = gptConfig.systemPrompt || '未設定';
       const temperature = gptConfig.temperature !== null && gptConfig.temperature !== undefined ? String(gptConfig.temperature) : 'デフォルト (1.0)';
       const model = gptConfig.model || 'デフォルト (gpt-4o)';
-      const todayChannel = gptConfig.today_gpt_channel_id ? `<#${gptConfig.today_gpt_channel_id}>` : '未設定';
       const autoChannels = gptConfig.allowedChannels?.length > 0 ? gptConfig.allowedChannels.map(id => `<#${id}>`).join(' ') : '未設定';
 
       embed.addFields(
@@ -99,7 +98,6 @@ module.exports = {
         { name: '🧠 システムプロンプト', value: `\`\`\`${systemPrompt.substring(0, 1000)}\`\`\``, inline: false },
         { name: '🌡️ Temperature', value: `\`${temperature}\``, inline: true },
         { name: '🤖 モデル', value: `\`${model}\``, inline: true },
-        { name: '☀️ 「今日のGPT」CH', value: todayChannel, inline: false },
         { name: '🗣️ 自動応答CH', value: autoChannels, inline: false },
         { name: '🔑 APIキー', value: apiKeyStatus, inline: false }
       );
