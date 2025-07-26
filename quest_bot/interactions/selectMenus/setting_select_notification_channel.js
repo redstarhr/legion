@@ -1,8 +1,8 @@
-const configDataManager = require('../../../manager/configDataManager');
+const { setNotificationChannel } = require('../../utils/configManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
-const { handleInteractionError } = require('../../../interactionErrorLogger');
+const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 module.exports = {
     customId: 'setting_select_notification_channel',
     async handle(interaction) {
@@ -15,7 +15,7 @@ module.exports = {
                 return interaction.editReply({ content: '⚠️ 選択されたチャンネルが見つかりませんでした。', components: [] });
             }
 
-            await configDataManager.setNotificationChannel(interaction.guildId, channelId);
+            await setNotificationChannel(interaction.guildId, channelId);
 
             let testMessageSuccess = false;
             try {

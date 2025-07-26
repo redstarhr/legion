@@ -1,5 +1,5 @@
 // e:/共有フォルダ/legion/chat_gpt_bot/interactions/selectMenus/handleUsageSelection.js
-const { isChatGptAdmin } = require('../../../permissionManager');
+const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { getOpenAIUsage } = require('../../utils/star_chat_gpt_usage/openaiUsage');
 const { getChatGPTConfig } = require('../../utils/configManager');
 const {

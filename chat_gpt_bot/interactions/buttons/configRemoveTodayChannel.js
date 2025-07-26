@@ -1,5 +1,5 @@
 const { MessageFlags } = require('discord.js');
-const { isChatGptAdmin } = require('../../../permissionManager');
+const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 

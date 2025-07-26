@@ -1,7 +1,7 @@
 // quest_bot/interactions/buttons/questDownloadCsv.js
 const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const questDataManager = require('../../../manager/questDataManager');
-const { canEditQuest } = require('../../../permissionManager');
+const { canEditQuest } = require('../../../manager/permissionManager');
 const { logAction } = require('../../utils/logger');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 

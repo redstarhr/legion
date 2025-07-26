@@ -13,7 +13,7 @@ async function handleGptChat(message, client) {
         if (message.author.bot || !message.guild) return;
 
         const gptConfig = await getChatGPTConfig(message.guild.id);
-        if (!gptConfig.allowedChannels?.includes(message.channel.id)) return;
+        if (!gptConfig.chat_gpt_channels?.includes(message.channel.id)) return;
 
         const isMentioned = message.mentions.has(client.user.id);
         const isReplyToBot = message.reference && (await message.fetchReference()).author.id === client.user.id;

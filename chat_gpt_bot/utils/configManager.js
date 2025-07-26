@@ -1,20 +1,16 @@
 // chat_gpt_bot/utils/configManager.js
-const path = require('path');
-const { ensureGuildJSON, readJSON, writeJSON } = require('../../utils/fileHelper');
 
-const CHAT_GPT_CONFIG_FILENAME = 'kyou_chat_gpt.json';
+const { getLegionConfig, saveLegionConfig } = require('../../manager/configDataManager');
+
+const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
 
 const defaultChatGptConfig = {
   apiKey: '',
   systemPrompt: '',
   temperature: 1.0,
   model: 'gpt-4o',
-  allowedChannels: [],
+  chat_gpt_channels: [],
 };
-
-function getConfigPath(guildId) {
-  return path.join(__dirname, '../../data-legion/chat_gpt', guildId, CHAT_GPT_CONFIG_FILENAME);
-}
 
 function sanitizeConfig(config) {
   return Object.fromEntries(
@@ -27,24 +23,28 @@ function sanitizeConfig(config) {
   );
 }
 
-function getChatGPTConfig(guildId) {
-  const configPath = getConfigPath(guildId);
-  ensureGuildJSON(configPath, defaultChatGptConfig);
-  const data = readJSON(configPath);
+async function getChatGPTConfig(guildId) {
+  const fullConfig = await getLegionConfig(guildId);
+  const rawConfig = fullConfig[CHAT_GPT_CONFIG_KEY] || {};
   return {
     ...defaultChatGptConfig,
-    ...data,
-    allowedChannels: Array.isArray(data.allowedChannels) ? data.allowedChannels : [],
+    ...rawConfig,
+    // Ensure chat_gpt_channels is always an array
+    chat_gpt_channels: Array.isArray(rawConfig.chat_gpt_channels)
+      ? rawConfig.chat_gpt_channels
+      : [],
   };
 }
 
-function setChatGPTConfig(guildId, updates) {
-  const configPath = getConfigPath(guildId);
-  ensureGuildJSON(configPath, defaultChatGptConfig);
-  const current = readJSON(configPath);
-  const merged = { ...current, ...updates };
+async function setChatGPTConfig(guildId, updates) {
+  const currentGptConfig = await getChatGPTConfig(guildId);
+  const merged = { ...currentGptConfig, ...updates };
   const sanitized = sanitizeConfig(merged);
-  writeJSON(configPath, sanitized);
+
+  await saveLegionConfig(guildId, {
+    [CHAT_GPT_CONFIG_KEY]: sanitized,
+  });
+
   return sanitized;
 }
 

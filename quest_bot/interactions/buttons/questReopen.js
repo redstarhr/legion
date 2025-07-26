@@ -4,7 +4,7 @@ const questDataManager = require('../../../manager/questDataManager');
 const { updateQuestMessage } = require('../../utils/questMessageManager');
 const { updateDashboard } = require('../../utils/dashboardManager');
 const { logAction } = require('../../utils/logger');
-const { canEditQuest } = require('../../../permissionManager');
+const { canEditQuest } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 module.exports = {

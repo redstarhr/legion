@@ -6,7 +6,7 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require('discord.js');
-const { isChatGptAdmin } = require('../../../permissionManager');
+const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 /**
