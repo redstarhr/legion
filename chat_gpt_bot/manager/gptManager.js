@@ -29,6 +29,9 @@ async function callOpenAI(apiKey, payload) {
 
     const data = await response.json();
     return data.choices[0]?.message?.content?.trim() || null;
+  } catch (error) {
+    console.error('Failed to call OpenAI API:', error);
+    throw new Error('APIへの接続中にエラーが発生しました。');
   }
 }
 

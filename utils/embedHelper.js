@@ -127,3 +127,44 @@ module.exports = {
   createEmbed,
   EmbedColors,
 };
+    , options);
+}
+
+/**
+ * Creates an error-themed embed.
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
+ */
+function createErrorEmbed(title, description, options) {
+  return createEmbed(title, description, EmbedColors.error, options);
+}
+
+/**
+ * Creates an info-themed embed.
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
+ */
+function createInfoEmbed(title, description, options) {
+  return createEmbed(title, description, EmbedColors.info, options);
+}
+
+/**
+ * Creates an admin-themed embed.
+ * @param {string} title
+ * @param {string} description
+ * @param {object} [options]
+ */
+function createAdminEmbed(title, description, options) {
+    return createEmbed(title, description, EmbedColors.admin, options);
+}
+
+module.exports = {
+  createSuccessEmbed,
+  createErrorEmbed,
+  createInfoEmbed,
+  createAdminEmbed,
+  createEmbed,
+  EmbedColors,
+};

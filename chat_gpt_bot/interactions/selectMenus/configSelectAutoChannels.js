@@ -16,7 +16,7 @@ module.exports = {
 
             const selectedChannelIds = interaction.values;
 
-            await setChatGPTConfig(interaction.guildId, { chat_gpt_channels: selectedChannelIds });
+            await setChatGPTConfig(interaction.guildId, { allowedChannels: selectedChannelIds });
 
             await interaction.update({
                 content: '✅ 自動応答チャンネルの設定を更新しました。\n再度 `/legion_chatgpt_使用率` を実行して確認してください。',
