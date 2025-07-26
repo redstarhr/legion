@@ -3,17 +3,18 @@ const { RESTJSONErrorCodes, MessageFlags } = require('discord.js');
 const questDataManager = require('../../../manager/questDataManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
-
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
+
 module.exports = {
   customId: 'config_confirm_deleteDashboard',
   async handle(interaction) {
     try {
       await interaction.deferUpdate();
 
-      const dashboard = await questDataManager.getDashboard(interaction.guildId);
+      // 複数チャネル対応のため配列で取得
+      const dashboards = await questDataManager.getDashboard(interaction.guildId);
 
-      if (!dashboard) {
+      if (!dashboards || dashboards.length === 0) {
         const newView = await createConfigPanel(interaction);
         return interaction.editReply({
           content: '✅ ダッシュボードは既に削除されているか、見つかりませんでした。',
@@ -21,32 +22,37 @@ module.exports = {
         });
       }
 
-      // 1. Discord上のメッセージを削除
-      try {
-        const channel = await interaction.client.channels.fetch(dashboard.channelId);
-        await channel.messages.delete(dashboard.messageId);
-      } catch (error) {
-        // メッセージが既に削除されている場合はエラーを無視して続行
-        if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
-          throw error; // その他のエラーは上位のcatchに投げる
+      // 複数のダッシュボードメッセージを削除
+      for (const dashboard of dashboards) {
+        try {
+          const channel = await interaction.client.channels.fetch(dashboard.channelId);
+          await channel.messages.delete(dashboard.messageId);
+        } catch (error) {
+          // メッセージが既に削除されている場合は無視
+          if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
+            throw error;
+          }
+          console.warn(`[DashboardDelete] ダッシュボードメッセージ (ID: ${dashboard.messageId}) は既に削除されていました。`);
         }
-        console.warn(`[DashboardDelete] ダッシュボードメッセージ (ID: ${dashboard.messageId}) は既に削除されていました。`);
       }
 
-      // 2. データベースからダッシュボード設定を削除
-      await questDataManager.setDashboard(interaction.guildId, null, null);
+      // ダッシュボード設定をクリア（全削除）
+      await questDataManager.setDashboard(interaction.guildId, null);
 
-      // 3. アクションをログに記録
-      await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
-        title: '🗑️ ダッシュボード削除',
-        color: '#e74c3c',
-        description: 'クエストダッシュボードが削除されました。',
-      });
+      // ログ記録
+      await logAction(
+        { client: interaction.client, guildId: interaction.guildId, user: interaction.user },
+        {
+          title: '🗑️ ダッシュボード削除',
+          color: '#e74c3c',
+          description: 'クエストダッシュボードがすべて削除されました。',
+        }
+      );
 
-      // 4. 設定パネルを更新して完了を通知
+      // 設定パネル更新
       const newView = await createConfigPanel(interaction);
       await interaction.editReply({
-        content: '✅ クエストダッシュボードを削除しました。',
+        content: '✅ すべてのクエストダッシュボードを削除しました。',
         ...newView,
       });
 
