@@ -1,8 +1,8 @@
 // chat_gpt_bot/utils/configManager.js
+const path = require('path');
+const { ensureGuildJSON, readJSON, writeJSON } = require('../../utils/fileHelper');
 
-const { getLegionConfig, saveLegionConfig } = require('../../manager/configDataManager');
-
-const CHAT_GPT_CONFIG_KEY = 'chatGptConfig';
+const CHAT_GPT_CONFIG_FILENAME = 'kyou_chat_gpt.json';
 
 const defaultChatGptConfig = {
   apiKey: '',
@@ -12,6 +12,10 @@ const defaultChatGptConfig = {
   today_gpt_channel_id: '',
   allowedChannels: [],
 };
+
+function getConfigPath(guildId) {
+  return path.join(__dirname, '../../data-legion/chat_gpt', guildId, CHAT_GPT_CONFIG_FILENAME);
+}
 
 function sanitizeConfig(config) {
   return Object.fromEntries(
@@ -24,28 +28,24 @@ function sanitizeConfig(config) {
   );
 }
 
-async function getChatGPTConfig(guildId) {
-  const fullConfig = await getLegionConfig(guildId);
-  const rawConfig = fullConfig[CHAT_GPT_CONFIG_KEY] || {};
+function getChatGPTConfig(guildId) {
+  const configPath = getConfigPath(guildId);
+  ensureGuildJSON(configPath, defaultChatGptConfig);
+  const data = readJSON(configPath);
   return {
     ...defaultChatGptConfig,
-    ...rawConfig,
-    // Ensure allowedChannels is always an array
-    allowedChannels: Array.isArray(rawConfig.allowedChannels)
-      ? rawConfig.allowedChannels
-      : [],
+    ...data,
+    allowedChannels: Array.isArray(data.allowedChannels) ? data.allowedChannels : [],
   };
 }
 
-async function setChatGPTConfig(guildId, updates) {
-  const currentGptConfig = await getChatGPTConfig(guildId);
-  const merged = { ...currentGptConfig, ...updates };
+function setChatGPTConfig(guildId, updates) {
+  const configPath = getConfigPath(guildId);
+  ensureGuildJSON(configPath, defaultChatGptConfig);
+  const current = readJSON(configPath);
+  const merged = { ...current, ...updates };
   const sanitized = sanitizeConfig(merged);
-
-  await saveLegionConfig(guildId, {
-    [CHAT_GPT_CONFIG_KEY]: sanitized,
-  });
-
+  writeJSON(configPath, sanitized);
   return sanitized;
 }
 
