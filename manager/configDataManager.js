@@ -88,15 +88,6 @@ async function getButtonOrder(guildId) {
   return config.buttonOrder || DEFAULT_BUTTON_ORDER;
 }
 
-async function setDashboard(guildId, messageId, channelId) {
-  const dashboardData = (messageId && channelId) ? { messageId, channelId } : null;
-  await saveLegionConfig(guildId, { dashboard: dashboardData });
-}
-async function getDashboard(guildId) {
-  const config = await getLegionConfig(guildId);
-  return config.dashboard || null;
-}
-
 /**
  * データが存在するすべてのギルドIDのリストを取得する
  * @returns {Promise<string[]>}
@@ -139,6 +130,4 @@ module.exports = {
   getEmbedColor,
   setButtonOrder,
   getButtonOrder,
-  setDashboard,
-  getDashboard,
 };

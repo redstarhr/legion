@@ -73,6 +73,10 @@ async function setDashboard(guildId, messageId, channelId) {
   return await saveQuestConfig(guildId, { dashboard: dashboardData });
 }
 
+async function setQuestAcceptanceRoleIds(guildId, roleIds) {
+  return await saveQuestConfig(guildId, { questAcceptanceRoleIds: roleIds });
+}
+
 module.exports = {
   getQuestConfig,
   saveQuestConfig,
@@ -86,4 +90,5 @@ module.exports = {
   setButtonOrder,
   getDashboard,
   setDashboard,
+  setQuestAcceptanceRoleIds,
 };

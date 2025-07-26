@@ -1,5 +1,5 @@
 const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
-const configDataManager = require('../../../manager/configDataManager');
+const { setButtonOrder } = require('../../utils/configManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
@@ -38,7 +38,7 @@ module.exports = {
                 });
             } else {
                 const successMessage = `✅ ボタンの表示順を **${selectedOrder.map(key => `\`${buttonNameMap[key]}\``).join(' > ')}** に設定しました。`;
-                await configDataManager.setButtonOrder(interaction.guildId, selectedOrder);
+                await setButtonOrder(interaction.guildId, selectedOrder);
                 await logAction({ client: interaction.client, guildId: interaction.guildId, user: interaction.user }, {
                     title: '⚙️ ボタン順設定',
                     description: successMessage,

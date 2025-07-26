@@ -1,4 +1,4 @@
-const configDataManager = require('../../../manager/configDataManager');
+const { setEmbedColor } = require('../../utils/configManager');
 const { logAction } = require('../../utils/logger');
 const { createConfigPanel } = require('../../components/configPanel');
 
@@ -25,7 +25,7 @@ module.exports = {
       const selectedColor = interaction.values[0];
       const selectedOption = colorOptions.find(opt => opt.value === selectedColor) || { label: 'カスタム', value: selectedColor };
 
-      await configDataManager.setEmbedColor(interaction.guildId, selectedColor);
+      await setEmbedColor(interaction.guildId, selectedColor);
 
       const replyMessage = `✅ Embedの色を **${selectedOption.label} (${selectedColor})** に設定しました。`;
 

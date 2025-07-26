@@ -1,27 +1,45 @@
-const { InteractionType, MessageFlags } = require('discord.js');
-const { saveQuestConfig } = require('../../utils/configManager');
+const { RESTJSONErrorCodes, MessageFlags } = require('discord.js');
+const { getDashboards, setDashboards } = require('../../utils/configManager');
+const { createQuestDashboardPanel } = require('../../components/dashboardPanel');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
+const { logAction } = require('../../utils/logger');
 
 module.exports = {
   customId: 'setting_select_dashboard_channels',
-
-  /**
-   * @param {import('discord.js').SelectMenuInteraction} interaction
-   */
   async handle(interaction) {
     try {
-      if (interaction.type !== InteractionType.MessageComponent) return;
+      await interaction.deferUpdate();
 
-      const selectedChannelIds = interaction.values; // 複数選択されたチャンネルIDの配列
+      const selectedChannelIds = interaction.values;
+      const oldDashboards = await getDashboards(interaction.guildId);
 
-      // ここで複数チャンネルの掲示板複製処理や設定保存を行う例
-      // 例として設定に保存する場合（key名や仕様は適宜調整）
-      await saveQuestConfig(interaction.guildId, { dashboardChannels: selectedChannelIds });
+      // 1. Delete old dashboards
+      for (const oldDb of oldDashboards) {
+        try {
+          const channel = await interaction.client.channels.fetch(oldDb.channelId);
+          await channel.messages.delete(oldDb.messageId);
+        } catch (error) {
+          if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
+            console.warn(`[DashboardSetup] Could not delete old dashboard message ${oldDb.messageId}:`, error.message);
+          }
+        }
+      }
 
-      await interaction.update({
-        content: `✅ クエスト掲示板を以下のチャンネルに複製します:\n${selectedChannelIds
-          .map(id => `<#${id}>`)
-          .join('\n')}`,
+      // 2. Create new dashboards
+      const newDashboards = [];
+      const failedChannels = [];
+      for (const channelId of selectedChannelIds) {
+        try {
+          const channel = await interaction.client.channels.fetch(channelId);
+          if (channel && channel.isTextBased()) {
+            const panel = await createQuestDashboardPanel(interaction.guild);
+            const newMessage = await channel.send(panel);
+            newDashboards.push({ channelId: channel.id, messageId: newMessage.id });
+          } else {
+            failedChannels.push(channelId);
+          }
+        } catch (error) {
+          console.error(`[Dashboard
         components: [],
         flags: MessageFlags.Ephemeral,
       });
