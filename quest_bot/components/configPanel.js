@@ -4,15 +4,12 @@ const configDataManager = require('../../manager/configDataManager');
 async function createConfigPanel(interaction) {
     const config = await configDataManager.getLegionConfig(interaction.guildId);
 
-    // ダッシュボードは複数チャネル対応のため配列想定。なければ空配列。
     const dashboards = config.dashboard ?? []; 
 
-    // 他の設定
     const logChannelId = config.logChannelId;
     const notificationChannelId = config.notificationChannelId;
-    const creatorRoleIds = config.questCreatorRoleIds || [];
+    const acceptanceRoleIds = config.questAcceptanceRoleIds || [];  // 受注ロール
 
-    // ボタンは一旦今まで通り
     const row1 = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
@@ -32,16 +29,11 @@ async function createConfigPanel(interaction) {
     const row2 = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
-                .setCustomId('setting_set_creator_roles')
-                .setLabel('クエスト作成者ロール設定')
-                .setStyle(ButtonStyle.Primary),
-            new ButtonBuilder()
-                .setCustomId('setting_set_button_order')
-                .setLabel('ボタン順序設定')
-                .setStyle(ButtonStyle.Secondary)
+                .setCustomId('setting_set_acceptance_roles')  // 受注ロール設定のカスタムIDに変更
+                .setLabel('クエスト受注ロール設定')
+                .setStyle(ButtonStyle.Primary)
         );
 
-    // ダッシュボードチャネルの表示を追加
     let dashboardDesc = '未設定';
     if (Array.isArray(dashboards) && dashboards.length > 0) {
         dashboardDesc = dashboards
@@ -52,7 +44,7 @@ async function createConfigPanel(interaction) {
     let description = '各種設定を行うボタンを選択してください。\n\n**現在の設定:**\n';
     description += `> **ログ:** ${logChannelId ? `<#${logChannelId}>` : '未設定'}\n`;
     description += `> **通知:** ${notificationChannelId ? `<#${notificationChannelId}>` : '未設定'}\n`;
-    description += `> **作成者ロール:** ${creatorRoleIds.length > 0 ? creatorRoleIds.map(id => `<@&${id}>`).join(', ') : '未設定'}\n`;
+    description += `> **受注ロール:** ${acceptanceRoleIds.length > 0 ? acceptanceRoleIds.map(id => `<@&${id}>`).join(', ') : '未設定'}\n`;
     description += `> **クエストダッシュボード:**\n${dashboardDesc}\n`;
 
     return {
