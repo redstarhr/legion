@@ -1,3 +1,5 @@
+// chat_gpt_bot/interactions/buttons/chatgpt_panel_open_config_modal.js
+
 const {
   ModalBuilder,
   TextInputBuilder,

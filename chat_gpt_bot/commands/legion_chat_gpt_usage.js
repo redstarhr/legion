@@ -1,3 +1,5 @@
+// chat_gpt_bot/commands/legion_chat_gpt_usage.js
+
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 const { isChatGptAdmin } = require('../../manager/permissionManager');
@@ -26,11 +28,12 @@ module.exports = {
 
       if (!apiKey) {
         return interaction.editReply({
-          content: '❌ OpenAI APIキーが設定されていません。\n`/legion_chatgpt_パネル設置`の「基本設定を編集」から設定してください。',
+          content:
+            '❌ OpenAI APIキーが設定されていません。\n`/legion_chatgpt_パネル設置`の「基本設定を編集」から設定してください。',
         });
       }
 
-      // 共通化された関数でAPI使用量を取得
+      // API使用量取得
       const usageResult = await getOpenAIUsage(apiKey);
       if (usageResult.error) {
         return interaction.editReply({
@@ -41,26 +44,27 @@ module.exports = {
       const usageData = usageResult.usageData;
       const totalUsageDollars = usageResult.usage;
 
-      // 現在時刻をJSTで取得
       const now = new Date();
 
       const embed = new EmbedBuilder()
         .setTitle(`🤖 ChatGPT 状況確認 (${now.getFullYear()}年${now.getMonth() + 1}月)`)
         .setColor(0x10A37F)
-        .setDescription('今月のAPI使用量 (USD) と現在のBot設定です。\n※使用量データの反映には数時間かかることがあります。')
+        .setDescription(
+          '今月のAPI使用量 (USD) と現在のBot設定です。\n※使用量データの反映には数時間かかることがあります。'
+        )
         .setTimestamp()
         .setFooter({
           text: 'Powered by OpenAI ・ JST時間基準',
           iconURL: 'https://openai.com/favicon.ico',
         });
 
-      // モデル別使用額の内訳を計算
       embed.addFields({
         name: '💰 合計使用額',
         value: `**$${totalUsageDollars.toFixed(4)}**`,
         inline: true,
       });
 
+      // モデル別使用額の集計
       const modelUsage = {};
       usageData.daily_costs?.forEach(daily => {
         daily.line_items?.forEach(item => {
@@ -77,16 +81,24 @@ module.exports = {
         embed.addFields({ name: '📊 モデル別内訳', value: breakdown, inline: true });
       }
 
-      // --- Config Section ---
+      // 設定情報
       const apiKeyStatus = `✅ 設定済み (\`${apiKey.slice(0, 5)}...${apiKey.slice(-4)}\`)`;
       const systemPrompt = gptConfig.systemPrompt || '未設定';
-      const temperature = gptConfig.temperature !== null && gptConfig.temperature !== undefined ? String(gptConfig.temperature) : 'デフォルト (1.0)';
+      const temperature =
+        gptConfig.temperature !== null && gptConfig.temperature !== undefined
+          ? String(gptConfig.temperature)
+          : 'デフォルト (1.0)';
       const model = gptConfig.model || 'デフォルト (gpt-4o)';
-      const todayChannel = gptConfig.today_gpt_channel_id ? `<#${gptConfig.today_gpt_channel_id}>` : '未設定';
-      const autoChannels = gptConfig.allowedChannels?.length > 0 ? gptConfig.allowedChannels.map(id => `<#${id}>`).join(' ') : '未設定';
+      const todayChannel = gptConfig.today_gpt_channel_id
+        ? `<#${gptConfig.today_gpt_channel_id}>`
+        : '未設定';
+      const autoChannels =
+        gptConfig.allowedChannels?.length > 0
+          ? gptConfig.allowedChannels.map(id => `<#${id}>`).join(' ')
+          : '未設定';
 
       embed.addFields(
-        { name: '\u200B', value: '**⚙️ 現在の設定**' }, // Separator and title
+        { name: '\u200B', value: '**⚙️ 現在の設定**' },
         { name: '🧠 システムプロンプト', value: `\`\`\`${systemPrompt.substring(0, 1000)}\`\`\``, inline: false },
         { name: '🌡️ Temperature', value: `\`${temperature}\``, inline: true },
         { name: '🤖 モデル', value: `\`${model}\``, inline: true },
@@ -96,7 +108,6 @@ module.exports = {
       );
 
       await interaction.editReply({ embeds: [embed] });
-
     } catch (error) {
       await handleInteractionError({ interaction, error, context: 'ChatGPT状況確認' });
     }

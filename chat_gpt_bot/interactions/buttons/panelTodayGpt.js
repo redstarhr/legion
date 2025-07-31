@@ -1,3 +1,5 @@
+// chat_gpt_bot/interactions/buttons/panelTodayGpt.js
+
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { getChatGPTConfig } = require('../../utils/configManager');
 const { generateOneOffReply } = require('../manager/gptManager');

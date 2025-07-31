@@ -1,5 +1,26 @@
-CLIENT_ID=
 DISCORD_TOKEN=
-GUILD_ID=
-GOOGLE_APPLICATION_CREDENTIALS=
-GOOGLE_SERVICE_ACCOUNT=
+CLIENT_ID=1396938937485885584
+GUILD_ID=1393484006259032196
+GOOGLE_APPLICATION_CREDENTIALS=data/legion-gclkey.json
+GCS_BUCKET_NAME=data-quest
+
+# 1. Discord Botのトークン
+echo 'MTQwMDI5MzA3NzQyNzY4NzQ4NQ.GxxDWJ.vC99M2ffcKm2DFRowgvaMO0cIdc6HVQtd6z1NQ' | gcloud secrets create DISCORD_TOKEN --data-file=- --replication-policy=automatic
+
+# 2. Discord BotのクライアントID
+echo '1396938937485885584' | gcloud secrets create CLIENT_ID --data-file=- --replication-policy=automatic
+
+# 3. Google Cloudのサービスアカウントキー
+echo '{
+  "type": "service_account",
+  "project_id": "legion-quest",
+    "private_key_id": "data/legion-gclkey.json",｝' | gcloud secrets create GOOGLE_APPLICATION_CREDENTIALS --data-file=- --replication-policy=automatic
+
+
+# 4. Discordサーバー（ギルド）のID
+echo '1393484006259032196' | gcloud secrets create GUILD_ID --data-file=- --replication-policy=automatic
+
+# 5. Google Cloud Storageのバケット名
+echo 'data-quest' | gcloud secrets create GCS_BUCKET_NAME --data-file=- --replication-policy=automatic
+
+

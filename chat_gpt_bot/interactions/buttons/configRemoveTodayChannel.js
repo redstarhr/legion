@@ -3,14 +3,16 @@ const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
+const CUSTOM_ID = 'chatgpt_config_remove_today_channel';
+
 /**
- * 権限チェック＋エラーメッセージ表示を共通化（必要に応じて外出し可）
+ * 管理者権限チェックとエラーメッセージ表示
  * @param {import('discord.js').Interaction} interaction
- * @returns {Promise<boolean>} trueなら権限あり、falseなら権限なしで処理終了済み
+ * @returns {Promise<boolean>} 権限ありならtrue、なしならfalse（処理済み）
  */
 async function checkAdminPermission(interaction) {
   if (!(await isChatGptAdmin(interaction))) {
-    await interaction.followUp({
+    await interaction.reply({
       content: '🚫 この操作を実行する権限がありません。',
       flags: MessageFlags.Ephemeral,
     });
@@ -20,29 +22,31 @@ async function checkAdminPermission(interaction) {
 }
 
 module.exports = {
-  customId: 'chatgpt_config_remove_today_channel',
+  customId: CUSTOM_ID,
+
   async handle(interaction) {
     try {
-      await interaction.deferUpdate();
-
-      // 権限チェック。なければここで終わる。
+      // 先に権限チェック（権限なければ処理終了）
       if (!(await checkAdminPermission(interaction))) return;
 
-      // 「今日のChatGPT」投稿チャンネル設定を解除（nullを明示的に設定）
+      // 更新の応答を遅延させる（UIの動作保証のため）
+      await interaction.deferUpdate();
+
+      // 「今日のChatGPT」投稿チャンネルの設定を解除
       await setChatGPTConfig(interaction.guildId, { today_gpt_channel_id: null });
 
-      // 設定解除の完了メッセージを更新
-      await interaction.update({
+      // 完了メッセージ更新
+      await interaction.editReply({
         content:
-          '✅ 「今日のChatGPT」投稿チャンネルの設定を解除しました。\n再度 `/legion_chatgpt_設定` を実行して確認してください。',
+          '✅ 「今日のChatGPT」投稿チャンネルの設定を解除しました。\n' +
+          '再度 `/legion_chatgpt_パネル設置` コマンドを実行して確認してください。',
         components: [],
       });
     } catch (error) {
-      // エラーは専用ハンドラーで処理（コンソールにも出力される想定）
       await handleInteractionError({
         interaction,
         error,
-        context: '「今日のChatGPT」チャンネル設定解除',
+        context: '「今日のChatGPT」投稿チャンネル設定解除',
       });
     }
   },

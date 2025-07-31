@@ -1,13 +1,13 @@
-# Node.js dependencies
-node_modules/
+# Dependencies
+/node_modules
 
-# Generated data and secret files
-data/
-.vscode
-
-# Configuration file with sensitive data
-config.json
-package-lock.json
-
-# Environment variables file
+# Environment variables
+# Never commit .env files with secrets
 .env
+
+# Log files
+*.log
+npm-debug.log*
+
+# IDE and system files
+.vscode/

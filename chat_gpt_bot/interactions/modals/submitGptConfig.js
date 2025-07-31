@@ -1,3 +1,5 @@
+// chat_gpt_bot/interactions/modals/submitGptConfig.js
+
 const { MessageFlags } = require('discord.js');
 const { isChatGptAdmin } = require('../../../manager/permissionManager');
 const { setChatGPTConfig } = require('../../utils/configManager');
@@ -14,14 +16,18 @@ module.exports = {
         return interaction.editReply({ content: '🚫 この操作を実行する権限がありません。' });
       }
 
-      const apiKey = interaction.fields.getTextInputValue(gptApiKeyInput);
+      const apiKeyRaw = interaction.fields.getTextInputValue(gptApiKeyInput);
+      const apiKey = apiKeyRaw?.trim();
+
       // 入力値取得＆trim
       const systemPromptRaw = interaction.fields.getTextInputValue(gptSystemPromptInput)?.trim();
       const temperatureRaw = interaction.fields.getTextInputValue(gptTemperatureInput)?.trim();
       const modelRaw = interaction.fields.getTextInputValue(gptModelInput)?.trim();
 
-      if (!apiKey || !apiKey.startsWith('sk-')) {
-        return interaction.editReply({ content: '⚠️ APIキーの形式が正しくありません。`sk-`で始まるキーを入力してください。' });
+      if (!apiKey || !apiKey.startsWith('sk-') || apiKey.length < 20) {
+        return interaction.editReply({
+          content: '⚠️ APIキーの形式が正しくありません。`sk-`で始まる有効なキーを入力してください。',
+        });
       }
 
       // 空文字はnullに統一
@@ -49,7 +55,7 @@ module.exports = {
       await setChatGPTConfig(interaction.guildId, updates);
 
       await interaction.editReply({
-        content: '✅ ChatGPTの基本設定を保存しました。\n再度 `/legion_chatgpt_使用率` を実行して確認してください。',
+        content: '✅ ChatGPTの基本設定を保存しました。\n再度 `/legion_chatgpt_パネル設置` コマンドを実行して設定を確認してください。',
       });
 
     } catch (error) {
