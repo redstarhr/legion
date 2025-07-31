@@ -2,11 +2,6 @@
 # Bot専用のサービスアカウントを作成し、最小権限を付与します。
 $ErrorActionPreference = "Stop"
 
-# --- Configuration ---
-$GCP_PROJECT_ID = "legion-bot-466619" # あなたのプロジェクトID
-$NEW_SA_NAME = "legion-bot-sa" # 新しいサービスアカウントの短い名前
-$NEW_SA_DISPLAY_NAME = "Legion Bot Service Account"
-
 # --- 色付け用 ---
 $GREEN = "`e[32m"
 $YELLOW = "`e[93m"
@@ -14,31 +9,31 @@ $RED = "`e[31m"
 $NC = "`e[0m"
 
 Write-Host "${GREEN}--- Bot専用サービスアカウント セットアップスクリプト ---${NC}"
-
-# --- 1. サービスアカウントの完全なメールアドレスを構築 ---
-$SERVICE_ACCOUNT_EMAIL = "${NEW_SA_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+# --- 1. 共通設定の読み込み ---
+. ".\scripts\config.ps1"
 
 # --- 2. サービスアカウントを作成 ---
-Write-Host "`n${YELLOW}1. サービスアカウント '$NEW_SA_NAME' を作成しています...${NC}"
+Write-Host "`n${YELLOW}1. サービスアカウント '$SERVICE_ACCOUNT_NAME' を作成しています...${NC}"
 
-# Check for existence without stopping on 'not found' error
-$saExists = $false
-try {
-    # If this command succeeds, the SA exists.
-    gcloud iam service-accounts describe $SERVICE_ACCOUNT_EMAIL --project $GCP_PROJECT_ID --quiet 2>$null
-    $saExists = $true
-} catch {
-    # Any error (like the expected NOT_FOUND) means the SA does not exist.
-    $saExists = $false
-}
+Write-Host "    -> サービスアカウントの存在を確認しています..."
+# Temporarily change the error preference to prevent the script from stopping on the expected 'not found' error.
+$oldErrorAction = $ErrorActionPreference
+$ErrorActionPreference = "SilentlyContinue"
+
+# Attempt to describe the service account.
+gcloud iam service-accounts describe $SERVICE_ACCOUNT_EMAIL --project $GCP_PROJECT_ID --quiet 2>$null
+$saExists = $? # $? is $true if the last command succeeded (SA exists), $false if it failed (SA does not exist).
+
+# Restore the original error preference.
+$ErrorActionPreference = $oldErrorAction
 
 if ($saExists) {
     Write-Host "✅ サービスアカウントは既に存在します: $SERVICE_ACCOUNT_EMAIL"
 } else {
     Write-Host "    -> サービスアカウントが見つからないため、新規作成します。"
-    gcloud iam service-accounts create $NEW_SA_NAME `
+    gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME `
         --project=$GCP_PROJECT_ID `
-        --display-name="$NEW_SA_DISPLAY_NAME"
+        --display-name="$SERVICE_ACCOUNT_DISPLAY_NAME"
     Write-Host "✅ 新しいサービスアカウントを作成しました: $SERVICE_ACCOUNT_EMAIL"
 }
 
@@ -59,7 +54,6 @@ foreach ($role in $rolesToGrant.GetEnumerator()) {
         --quiet
 }
 
-# --- 4. Cloud Buildサービスアカウントに権限を付与 ---
 Write-Host "`n${YELLOW}3. Cloud Buildサービスアカウントに権限を付与します...${NC}"
 $PROJECT_NUMBER = (gcloud projects describe $GCP_PROJECT_ID --format="value(projectNumber)")
 $CLOUDBUILD_SA_EMAIL = "${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"

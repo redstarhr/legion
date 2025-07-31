@@ -1,7 +1,7 @@
 // chat_gpt_bot/interactions/selectMenus/configSelectTodayChannel.js
 
 const { MessageFlags } = require('discord.js');
-const { isChatGptAdmin } = require('../../../manager/permissionManager');
+const { checkAdminAndReply } = require('../../utils/permissionChecker');
 const { setChatGPTConfig } = require('../../utils/configManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
@@ -11,13 +11,7 @@ module.exports = {
     try {
       await interaction.deferUpdate();
 
-      if (!(await isChatGptAdmin(interaction))) {
-        // Using followUp for ephemeral messages after deferUpdate is a good pattern.
-        return interaction.followUp({
-          content: '🚫 この操作を実行する権限がありません。',
-          flags: MessageFlags.Ephemeral,
-        });
-      }
+      if (!(await checkAdminAndReply(interaction))) return;
 
       // ChannelSelectMenu with maxValues: 1 returns a single ID in the values array.
       const selectedChannelId = interaction.values[0];

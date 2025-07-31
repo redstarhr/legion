@@ -5,6 +5,7 @@
 # Never commit .env files with secrets
 .env
 
+
 # Log files
 *.log
 npm-debug.log*

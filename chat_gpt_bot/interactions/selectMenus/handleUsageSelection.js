@@ -1,5 +1,5 @@
 // chat_gpt_bot/interactions/selectMenus/handleUsageSelection.js
-const { isChatGptAdmin } = require('../../../manager/permissionManager');
+const { checkAdminAndReply } = require('../../utils/permissionChecker');
 const { getOpenAIUsage } = require('../../utils/star_chat_gpt_usage/openaiUsage');
 const { getChatGPTConfig } = require('../../utils/configManager');
 const {
@@ -15,18 +15,7 @@ module.exports = {
     try {
       await interaction.deferUpdate();
 
-      const isAdmin = await isChatGptAdmin(interaction);
-      if (!isAdmin) {
-        return interaction.editReply({
-          embeds: [
-            createErrorEmbed(
-              '❌ 権限がありません',
-              'この操作は ChatGPT 設定管理者のみが実行できます。'
-            ),
-          ],
-          components: [],
-        });
-      }
+      if (!(await checkAdminAndReply(interaction))) return;
 
       const { apiKey } = await getChatGPTConfig(interaction.guildId);
 

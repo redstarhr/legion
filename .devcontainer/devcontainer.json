@@ -1,0 +1,43 @@
+{
+	"name": "Legion Bot Dev Container",
+	// 既存のDockerfileを開発コンテナのベースとして使用します
+	"build": {
+		"dockerfile": "../Dockerfile",
+		"target": "development"
+	},
+
+	// VS Codeに特化した設定
+	"customizations": {
+		"vscode": {
+			// コンテナ内で自動的にインストールするVS Code拡張機能
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"github.vscode-pull-request-github",
+				"eamodio.gitlens"
+			]
+		}
+	},
+
+	// Dev Containerに機能を追加します
+	"features": {
+		// Google Cloud CLIをコンテナ内にインストールします
+		"ghcr.io/devcontainers/features/google-cloud-cli:1": {}
+	},
+
+	// コンテナのポートをローカルにフォワードします
+	"forwardPorts": [8080],
+
+	// ローカルのディレクトリをコンテナにマウントして、設定や認証情報を共有します
+	"mounts": [
+		// gcloudの認証情報を永続化
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gcloud,target=/home/node/.config/gcloud,type=bind,consistency=cached",
+		// ローカルのGit設定を共有
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind",
+		// ローカルのSSHキーを共有（GitHubへのpushに必要）
+		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/node/.ssh,type=bind,consistency=cached"
+	],
+
+	// コンテナ内では一般ユーザー(node)として操作します
+	"remoteUser": "node"
+}
