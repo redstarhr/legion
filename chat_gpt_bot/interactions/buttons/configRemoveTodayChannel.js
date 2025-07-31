@@ -1,33 +1,16 @@
 const { MessageFlags } = require('discord.js');
-const { isChatGptAdmin } = require('../../../manager/permissionManager');
+const { checkAdminAndReply } = require('../../utils/permissionChecker');
 const { setChatGPTConfig } = require('../../utils/configManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 const CUSTOM_ID = 'chatgpt_config_remove_today_channel';
-
-/**
- * 管理者権限チェックとエラーメッセージ表示
- * @param {import('discord.js').Interaction} interaction
- * @returns {Promise<boolean>} 権限ありならtrue、なしならfalse（処理済み）
- */
-async function checkAdminPermission(interaction) {
-  if (!(await isChatGptAdmin(interaction))) {
-    await interaction.reply({
-      content: '🚫 この操作を実行する権限がありません。',
-      flags: MessageFlags.Ephemeral,
-    });
-    return false;
-  }
-  return true;
-}
 
 module.exports = {
   customId: CUSTOM_ID,
 
   async handle(interaction) {
     try {
-      // 先に権限チェック（権限なければ処理終了）
-      if (!(await checkAdminPermission(interaction))) return;
+      if (!(await checkAdminAndReply(interaction))) return;
 
       // 更新の応答を遅延させる（UIの動作保証のため）
       await interaction.deferUpdate();

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "legion-bot-466619",
+  "private_key_id": "6427c80b900980012d6d91139d3d121290d8e44a",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDMk4kTBWdqtFdU\ncfpvYS2HuL3kgo/vF34GwD3idGgSUrfDw4oHRnn0oX5a1lorFEKi9h3lTn/H0iks\nnT3MwRciA33/OR8X9aJa7Huto3FiNoUDFOC9rYvc3BkpkGAPfBMlzOV044gq+vIt\nfHyEgU+jh82JNMCDIRV4qRhZ2G/GT/95E8RoX8Y4zMzixZFHUtoLP740yPSBNFnO\ni/6hG5obj2lRtGeCzAXb5VJIqAIm88hS4lYNUUu7WXdCi8K3NiZezeVBdHPmAqDy\njr55y8szxVyweD/qsL9BWibNVtzxHzRTpuqAmNjLEA2efOFECh+8EP4RUvczceA7\nAUW5VzfbAgMBAAECggEAB44s8jgXrHsu/OSdiSuGBCZjuckqPUkZOgqZ8bK246ZZ\nnxZ238BPx/C6IYS1HWfI8wr/6g4butEdY2AGfkXLVh6m5c9bdJ95XySvIXSRC9cg\nbNxPVVhpeyV6nTko/9yabTtdMuBZKq0yvVDrQ45Uo9RKJP0YkKWe82JBwflNkRdZ\nhsZi22yMfJ3OhFeAXiN6O1DFTmfbEm7Qox9XgynuyKHfHsjyt5dd9xjGfftOFPdK\nobvS1NoPYAvAUPVtvEDSazacW+RI/PpVws++f+OmzGwxbxIsMl0GBGmIBH+0mne5\nGtWfw58XjjFkXlDAs5FNHHT2l31Od4E0nPwn2T2DsQKBgQDz1v+ZXrKSMWommJF8\ntDg9FpfoYxSrdZAGMe8/SwcxENMfJe3YsDi7T2RUwZBMqCgmxIXCCQiQkhcaQ/C+\nY+RghJssy+n0Kayq/EVVYXfLlVKq0bBy7MSlYFZAvHH/LEr/utsVQnrYTZh4WwGq\nahEXtd5z+ZFwG6gDzOel1eRIVwKBgQDWx0ajFT823fpepfcq82lD25ailnp26wj9\nJIwNuFVFyF78jX9oZJxD0LWJcRJ0x3Xqzt/BQZPNV40KCjmCpUs6kuLur5pQN9v+\n+qeIL+tikTpbY0kVfeYjSduI3EBChqU0ibM7SE6oUC7XFP6DLotXi3TvaaGBgdg7\npKMec1FqHQKBgBrbCRepOF2ll51cnFlxt+fyfxSXJQWlUxF7mnAMIWSkB7ycfs+o\nyPbITbKQBwaKVrG+X0T5nbnefTDlXrR5aAPBVx3d74x2so+6bSB0Na90aMBri9V8\ngkP8kkNa/esuw6vatppm0gTUtwA6dbqBKBTGcROw3vXL9ftFLBY1sojNAoGATYTj\nQ91ZUY5Q3XR9f20XYzyQY+J4FQ/D0MouGo2biXJGhlTz1VPq6rcbrp23EZskPjmo\nnPH0TLr61tLV6weJ3XxCl++dfLKMnr0NVqQlCxBrxaxSJoWoWLhBmmYUc25xlkLV\nA+KXMTyvi0WyjtpvxIs7C2ZOupWI3A4SKd1pVykCgYAuIufCpULApnKJN2DfsBVg\nFUAPJh92JXygsCD18Y72PoYkP2E1GzWh537ghA5ZUnAOEKQeLA7TI/gazZQ4qKIC\n9HjkEz4QnjdN/TBpSm3Z1blhQHXiaEGR3ejY6cQCeYWdunKdguplwrSTaJgvqp9i\nmVR7ExMRxKyWLnbVia7XAw==\n-----END PRIVATE KEY-----\n",
+  "client_email": "legion-bot-sa@legion-bot-466619.iam.gserviceaccount.com",
+  "client_id": "109438192266048122065",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/legion-bot-sa%40legion-bot-466619.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

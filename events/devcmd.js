@@ -1,4 +1,4 @@
-// devcmd.js - スラッシュコマンド登録用スクリプト
+// events/devcmd.js - スラッシュコマンド登録モジュール
 
 require('dotenv').config();
 const fs = require('fs');
@@ -17,19 +17,20 @@ if (!DISCORD_TOKEN || !CLIENT_ID) {
   process.exit(1);
 }
 
-async function main() {
+async function registerCommands() {
   const commands = [];
 
   // モジュールのcommandsフォルダからコマンド収集
-  const botModules = fs.readdirSync(__dirname, { withFileTypes: true })
+  const rootDir = path.join(__dirname, '..');
+  const botModules = fs.readdirSync(rootDir, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name)
-    .filter(name => fs.existsSync(path.join(__dirname, name, 'commands')));
+    .filter(name => fs.existsSync(path.join(rootDir, name, 'commands')));
 
-  console.log(`${YELLOW}🔍 ${botModules.length}個のモジュールからコマンドを読み込みます: [${botModules.join(', ')}]${NC}`);
+  console.log(`${YELLOW}🔄 ${botModules.length}個のモジュールを検出: [${botModules.join(', ')}]${NC}`);
 
   for (const moduleName of botModules) {
-    const commandsPath = path.join(__dirname, moduleName, 'commands');
+    const commandsPath = path.join(rootDir, moduleName, 'commands');
     if (!fs.existsSync(commandsPath)) continue;
 
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -83,11 +84,8 @@ async function main() {
 
   } catch (error) {
     console.error(`${RED}❌ Discord APIへのコマンド登録中にエラーが発生しました:${NC}`, error);
-    process.exit(1);
+    throw error;
   }
 }
 
-main().catch(error => {
-  console.error(`${RED}❌ コマンド登録処理で予期せぬエラーが発生しました:${NC}`, error);
-  process.exit(1);
-});
+module.exports = { registerCommands };

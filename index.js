@@ -2,19 +2,19 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const http = require('http');
-
 const { Storage } = require('@google-cloud/storage');
+
 const { loadCommands } = require('./handlers/commandLoader');
 const { loadInteractions } = require('./handlers/interactionLoader');
-
 const readyEvent = require('./events/ready');
 const interactionCreateEvent = require('./events/interactionCreate');
 const messageCreateEvent = require('./events/messageCreate');
 const guildDeleteEvent = require('./events/guildDelete');
-
+const { registerCommands } = require('./events/devcmd'); // コマンド登録
 const { handleInteractionError } = require('./utils/interactionErrorLogger');
 const { handleGptChat } = require('./chat_gpt_bot/utils/chatHandler');
 
+// Discord Client 初期化
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -23,69 +23,64 @@ const client = new Client({
   ]
 });
 
+// 各コレクションの初期化
 client.commands = new Collection();
 client.buttons = new Collection();
 client.selectMenus = new Collection();
 client.modals = new Collection();
 
+// コマンド & インタラクション ロード
 loadCommands(client);
 loadInteractions(client);
-
 console.log('✅ 全ハンドラの読み込みが完了しました');
 
 // イベント登録
 client.once(readyEvent.name, () => readyEvent.execute(client));
-client.on(interactionCreateEvent.name, async (interaction) => interactionCreateEvent.execute(interaction, client));
-client.on(messageCreateEvent.name, (message) => messageCreateEvent.execute(message, client));
-client.on(guildDeleteEvent.name, (guild) => guildDeleteEvent.execute(guild));
+client.on(interactionCreateEvent.name, async (interaction) =>
+  interactionCreateEvent.execute(interaction, client)
+);
+client.on(messageCreateEvent.name, (message) =>
+  messageCreateEvent.execute(message, client)
+);
+client.on(guildDeleteEvent.name, (guild) =>
+  guildDeleteEvent.execute(guild)
+);
 
+// HTTP サーバー（Cloud Run ヘルスチェック用）
 const port = process.env.PORT || 8080;
 http.createServer((req, res) => {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('Bot is running\n');
 }).listen(port, () => {
   console.log(`✅ HTTP server listening on port ${port} for Cloud Run health checks.`);
 });
 
-// GCS から設定を読み込み → ログイン
-async function loadConfigFromGCS(bucketName, filePath, envVarName) {
-  try {
-    const storage = new Storage();
-    const bucket = storage.bucket(bucketName);
-    const file = bucket.file(filePath);
-
-    const [exists] = await file.exists();
-    if (!exists) {
-      console.warn(`⚠️ GCSファイルが見つかりません: gs://${bucketName}/${filePath}`);
-      return;
-    }
-
-    const [data] = await file.download();
-    const configValue = data.toString().trim();
-
-    if (configValue) {
-      if (!process.env[envVarName]) {
-        process.env[envVarName] = configValue;
-        console.log(`✅ GCSから ${envVarName} を読み込みました。`);
-      } else {
-        console.log(`ℹ️ 環境変数 ${envVarName} は既に設定済みのため、GCSからの読み込みをスキップしました。`);
-      }
-    } else {
-      console.warn(`⚠️ GCSファイルは空です: gs://${bucketName}/${filePath}`);
-    }
-  } catch (error) {
-    console.error(`❌ GCSからの設定読み込みに失敗: gs://${bucketName}/${filePath}`, error);
-  }
-}
-
+// GCS認証とBot起動
 async function startBot() {
-  if (process.env.GCS_BUCKET_NAME) {
-    await loadConfigFromGCS(process.env.GCS_BUCKET_NAME, 'openai_api_key.txt', 'OPENAI_API_KEY');
-  } else {
-    console.log('ℹ️ GCS_BUCKET_NAMEが設定されていないため、GCSからの設定読み込みをスキップします。');
-  }
+  try {
+    // GCS 接続確認
+    if (process.env.GCS_BUCKET_NAME) {
+      console.log(`ℹ️ GCSバケット '${process.env.GCS_BUCKET_NAME}' への接続を確認しています...`);
+      const storage = new Storage(); // 認証は環境変数 GOOGLE_APPLICATION_CREDENTIALS に依存
+      const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
+      const [exists] = await bucket.exists();
+      if (!exists) {
+        throw new Error(`バケット '${process.env.GCS_BUCKET_NAME}' が見つかりません。`);
+      }
+      console.log('✅ GCSへの接続を確認しました。');
+    } else {
+      console.warn('⚠️ GCS_BUCKET_NAMEが設定されていないため、GCSへの接続確認をスキップします。');
+    }
 
-  await client.login(process.env.DISCORD_TOKEN);
+    // スラッシュコマンド登録（ギルド & グローバル）
+    await registerCommands();
+
+    // Discordにログイン
+    await client.login(process.env.DISCORD_TOKEN);
+  } catch (err) {
+    console.error('❌ GCSまたはDiscordの起動時エラー:', err);
+    process.exit(1);
+  }
 }
 
 startBot();

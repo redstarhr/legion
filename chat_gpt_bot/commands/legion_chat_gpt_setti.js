@@ -8,6 +8,7 @@ const {
 } = require('discord.js');
 const { handleInteractionError } = require('../../utils/interactionErrorLogger');
 const { isChatGptAdmin } = require('../../manager/permissionManager');
+const { getChatGPTConfig } = require('../utils/configManager');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,6 +26,9 @@ module.exports = {
         });
       }
 
+      const gptConfig = await getChatGPTConfig(interaction.guildId);
+      const systemPromptLength = gptConfig.systemPrompt?.length ?? 0;
+
       const embed = new EmbedBuilder()
         .setTitle('🤖 ChatGPT 操作パネル')
         .setDescription('以下のボタンから ChatGPT の各種操作や設定を行えます。\n一部の操作では応答に数秒かかることがあります。')
@@ -37,7 +41,9 @@ module.exports = {
           },
           {
             name: '基本設定',
-            value: 'システムプロンプトや応答の多様性(Temperature)などを編集します。',
+            value:
+              `システムプロンプトや応答の多様性(Temperature)などを編集します。\n` +
+              `**現在のプロンプト文字数:** ${systemPromptLength}文字`,
             inline: false,
           },
           {

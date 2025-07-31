@@ -1,43 +1,61 @@
 {
-	"name": "Legion Bot Dev Container",
-	// 既存のDockerfileを開発コンテナのベースとして使用します
-	"build": {
-		"dockerfile": "../Dockerfile",
-		"target": "development"
-	},
+  "name": "Legion Bot Dev Container",
 
-	// VS Codeに特化した設定
-	"customizations": {
-		"vscode": {
-			// コンテナ内で自動的にインストールするVS Code拡張機能
-			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode",
-				"github.vscode-pull-request-github",
-				"eamodio.gitlens"
-			]
-		}
-	},
+  // 使用する Dockerfile とターゲット（開発用ステージ）
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "target": "development"
+  },
 
-	// Dev Containerに機能を追加します
-	"features": {
-		// Google Cloud CLIをコンテナ内にインストールします
-		"ghcr.io/devcontainers/features/google-cloud-cli:1": {}
-	},
+  // コンテナ内にインストールする VS Code 拡張機能
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint", // ESLint サポート
+        "esbenp.prettier-vscode", // Prettier フォーマッタ
+        "github.vscode-pull-request-github", // GitHub 連携
+        "eamodio.gitlens" // GitLens 拡張
+      ],
+      // コンテナ内でのVS Code設定を統一し、開発体験を向上させます
+      "settings": {
+        "editor.formatOnSave": true,
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
+      ]
+    }
+  },
 
-	// コンテナのポートをローカルにフォワードします
-	"forwardPorts": [8080],
+  // Dev Container に追加するツール（Google Cloud CLI）
+  "features": {
+    "ghcr.io/devcontainers/features/google-cloud-cli:1": {}
+    // 例: Node.js も必要なら以下を追加
+    // "ghcr.io/devcontainers/features/node:1": {
+    //   "version": "20"
+    // }
+  },
 
-	// ローカルのディレクトリをコンテナにマウントして、設定や認証情報を共有します
-	"mounts": [
-		// gcloudの認証情報を永続化
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.config/gcloud,target=/home/node/.config/gcloud,type=bind,consistency=cached",
-		// ローカルのGit設定を共有
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind",
-		// ローカルのSSHキーを共有（GitHubへのpushに必要）
-		"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/node/.ssh,type=bind,consistency=cached"
-	],
+  // ローカルからアクセス可能なコンテナポート
+  "forwardPorts": [8080],
 
-	// コンテナ内では一般ユーザー(node)として操作します
-	"remoteUser": "node"
+  // Gitでブランチを切り替えるなどして package.json が変更された際に、
+  // 自動で依存関係をインストールします。
+  "updateContentCommand": "npm install",
+
+  // gcloud の認証情報をコンテナにマウント（ログインセッション維持）
+  // 注意: この設定はLinux/macOSを想定しています。Windowsの場合、gcloudの設定パスが
+  // `%APPDATA%/gcloud` となるため、このままでは動作しない可能性があります。
+  // その場合は、コンテナ起動後にターミナルで `gcloud auth login` を実行してください。
+  "mounts": [
+    "source=${localEnv:HOME}/.config/gcloud,target=/home/node/.config/gcloud,type=bind,consistency=cached"
+  ],
+
+  // コンテナ内で使用するユーザー
+  "remoteUser": "node"
 }

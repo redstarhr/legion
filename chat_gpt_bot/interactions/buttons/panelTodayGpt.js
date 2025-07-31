@@ -1,84 +1,126 @@
-// chat_gpt_bot/interactions/buttons/panelTodayGpt.js
+'use strict';
 
-const { EmbedBuilder, MessageFlags } = require('discord.js');
-const { getChatGPTConfig } = require('../../utils/configManager');
-const { generateOneOffReply } = require('../manager/gptManager');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 const { isChatGptAdmin } = require('../../../manager/permissionManager');
+const { getChatGPTConfig } = require('../../utils/configManager');
+// gptManager.js から、実際にGPT APIを呼び出す関数をインポートします。
+// 過去のログから `generateOneOffReply` という関数名だと推測されます。
+const { generateOneOffReply } = require('../../manager/gptManager');
+
+/**
+ * GPTからの応答テキストをセクションに分割する
+ * @param {string} text - GPTからの応答テキスト
+ * @returns {{weather?: string, news?: string, trivia?: string} | null} パースされたセクション、または失敗時にnull
+ */
+function parseGptResponse(text) {
+  const sections = {};
+  // 各セクションを見出しで検索し、次の見出しまたは文字列の終わりまでを内容として抽出します。
+  const weatherMatch = text.match(/【今日の天気】\s*([\s\S]*?)(?=\n【|$(?![\r\n]))/);
+  const newsMatch = text.match(/【主要なニュース】\s*([\s\S]*?)(?=\n【|$(?![\r\n]))/);
+  const triviaMatch = text.match(/【面白い豆知識】\s*([\s\S]*?)(?=\n【|$(?![\r\n]))/);
+
+  if (weatherMatch) sections.weather = weatherMatch[1].trim();
+  if (newsMatch) sections.news = newsMatch[1].trim();
+  if (triviaMatch) sections.trivia = triviaMatch[1].trim();
+
+  return Object.keys(sections).length > 0 ? sections : null;
+}
 
 module.exports = {
+  // legion_chat_gpt_setti.js で定義されたボタンのIDと一致させます
   customId: 'chatgpt_panel_today_gpt',
-  async handle(interaction) {
+
+  async handle(interaction, client) {
     try {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
-      // 権限チェック
+      // 管理者権限をチェック
       if (!(await isChatGptAdmin(interaction))) {
+        return interaction.reply({
+          content: '❌ この操作を実行する権限がありません。',
+          ephemeral: true,
+        });
+      }
+
+      // 再生成（ボット自身のメッセージのボタン）か、初回生成（パネルのボタン）かを判定
+      const isRegeneration = interaction.message.author.id === client.user.id;
+
+      if (isRegeneration) {
+        // ボタンを押した元のメッセージを更新する準備をします
+        await interaction.deferUpdate();
+      } else {
+        // パネル操作者への一時的な応答を保留します
+        await interaction.deferReply({ ephemeral: true });
+      }
+
+      const gptConfig = await getChatGPTConfig(interaction.guildId);
+      const channelId = gptConfig.today_gpt_channel_id;
+
+      if (!channelId) {
         return interaction.editReply({
-          content: '🚫 この操作を実行する権限がありません。',
+          content: '「今日のChatGPT」を投稿するチャンネルが設定されていません。`/chatgpt_設定` コマンドから設定してください。',
         });
       }
 
-      const config = await getChatGPTConfig(interaction.guildId);
-
-      if (!config.apiKey) {
-        return await interaction.editReply({
-          content: '⚠️ OpenAI APIキーが設定されていません。\n「基本設定を編集」から設定してください。',
-        });
-      }
-
-      if (!config.today_gpt_channel_id) {
-        return await interaction.editReply({
-          content: '⚠️ 「今日のChatGPT」を投稿するチャンネルが設定されていません。\n「「今日のGPT」CH設定」から設定してください。',
-        });
-      }
-
-      // チャンネル取得と検証
-      const targetChannel = await interaction.client.channels.fetch(config.today_gpt_channel_id).catch(() => null);
+      const targetChannel = await interaction.guild.channels.fetch(channelId).catch(() => null);
       if (!targetChannel || !targetChannel.isTextBased()) {
-        return await interaction.editReply({
-          content: '⚠️ 「今日のChatGPT」を投稿するチャンネルが見つからないか、テキストチャンネルではありません。設定を確認してください。',
+        return interaction.editReply({
+          content: `投稿先のチャンネル(ID: ${channelId})が見つからないか、テキストチャンネルではありません。`,
         });
       }
 
-      // 処理開始通知を更新
-      await interaction.editReply({
-        content: `✅ <#${targetChannel.id}> に「今日のChatGPT」を生成しています...`,
-      });
-
-      // ChatGPTへのプロンプト
-      const prompt = '日本の今日の天気、主要なニュース、そして面白い豆知識を、それぞれ項目を分けて簡潔に教えてください。';
-      const reply = await generateOneOffReply(interaction.guildId, prompt);
-
-      if (!reply) {
-        return await interaction.editReply({
-          content: '❌ 情報の生成に失敗しました。OpenAIからの応答が空でした。',
-        });
+      if (!isRegeneration) {
+        await interaction.editReply({ content: `⏳ ${targetChannel} に「今日のChatGPT」を生成しています...` });
       }
 
-      // 埋め込みメッセージ作成
-      const embed = new EmbedBuilder()
-        .setTitle('☀️ 今日のお知らせ')
-        .setDescription(reply)
-        .setColor(0x10A37F) // OpenAI Green
-        .setTimestamp()
-        .setFooter({ text: 'Powered by ChatGPT' });
+      // gptManagerを呼び出して返信を生成します
+      const replyContent = await generateOneOffReply(interaction.guild.id, 'today_gpt');
 
-      // 設定チャンネルへ投稿
-      await targetChannel.send({ embeds: [embed] });
+      if (!replyContent) {
+        return interaction.followUp({ content: '❌ ChatGPTからの応答がありませんでした。APIキーや設定を確認してください。', ephemeral: true });
+      }
 
-      // 最終的な成功メッセージをユーザーに通知
-      await interaction.editReply({
-        content: `✅ 「今日のお知らせ」を <#${targetChannel.id}> に投稿しました。`,
-      });
+      // 再生成ボタンを作成します。
+      const regenerateButton = new ButtonBuilder()
+        .setCustomId(this.customId) // 自分自身のcustomIdを再利用して、同じ処理を呼び出せるようにします
+        .setLabel('再生成する')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('🔄');
+
+      const row = new ActionRowBuilder().addComponents(regenerateButton);
+
+      // GPTの応答をパースしてEmbedを作成
+      const parsedData = parseGptResponse(replyContent);
+      const messagePayload = { components: [row] };
+
+      if (parsedData) {
+        const embed = new EmbedBuilder()
+          .setTitle('☀️ 今日のお知らせ')
+          .setColor(0x5865F2) // Discord Blue
+          .setTimestamp()
+          .setFooter({ text: 'Powered by ChatGPT' });
+
+        if (parsedData.weather) embed.addFields({ name: '【今日の天気】', value: parsedData.weather });
+        if (parsedData.news) embed.addFields({ name: '【主要なニュース】', value: parsedData.news });
+        if (parsedData.trivia) embed.addFields({ name: '【面白い豆知識】', value: parsedData.trivia });
+
+        messagePayload.embeds = [embed];
+      } else {
+        // パースに失敗した場合は、元のテキストをそのまま送信
+        messagePayload.content = replyContent;
+      }
+
+      if (isRegeneration) {
+        // 既存のメッセージを編集して更新します
+        await interaction.message.edit(messagePayload);
+        await interaction.followUp({ content: '✅ メッセージを再生成しました。', ephemeral: true });
+      } else {
+        // 新しいメッセージとしてチャンネルに投稿します
+        await targetChannel.send(messagePayload);
+        await interaction.editReply({ content: `✅ ${targetChannel} に「今日のChatGPT」を投稿しました。` });
+      }
 
     } catch (error) {
-      // エラーは操作ユーザーにのみ通知
-      await handleInteractionError({
-        interaction,
-        error,
-        context: '今日のChatGPTパネルボタン',
-      });
+      await handleInteractionError({ interaction, error, context: '今日のChatGPT生成ボタン' });
     }
   },
 };

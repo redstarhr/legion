@@ -8,8 +8,7 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require('discord.js');
-
-const { isChatGptAdmin } = require('../../../manager/permissionManager');
+const { checkAdminAndReply } = require('../../utils/permissionChecker');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
 
 // 定数ID（他のファイルと共有する場合は別ファイルに抽出してもよい）
@@ -23,16 +22,9 @@ module.exports = {
 
   async handle(interaction) {
     try {
-      // 管理者チェック
-      if (!(await isChatGptAdmin(interaction))) {
-        await interaction.reply({
-          content: '🚫 この操作を実行する権限がありません。',
-          flags: MessageFlags.Ephemeral,
-        });
+      if (!(await checkAdminAndReply(interaction))) {
         return;
       }
-
-      await interaction.deferUpdate();
 
       // チャンネル選択メニュー
       const selectMenu = new ChannelSelectMenuBuilder()
@@ -52,9 +44,10 @@ module.exports = {
       const row1 = new ActionRowBuilder().addComponents(selectMenu);
       const row2 = new ActionRowBuilder().addComponents(removeButton);
 
-      await interaction.editReply({
+      await interaction.reply({
         content: '📍 `/今日のchatgpt` の結果を投稿するチャンネルを以下から選択するか、設定を解除してください。',
         components: [row1, row2],
+        ephemeral: true,
       });
     } catch (error) {
       await handleInteractionError({

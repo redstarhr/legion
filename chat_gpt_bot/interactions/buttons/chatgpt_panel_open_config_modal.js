@@ -5,27 +5,22 @@ const {
   TextInputBuilder,
   TextInputStyle,
   ActionRowBuilder,
-  MessageFlags,
 } = require('discord.js');
-const { checkChatGptAdmin } = require('../../../manager/permissionManager');
-const { getLegionConfig } = require('../../../manager/configDataManager');
+const { checkAdminAndReply } = require('../../utils/permissionChecker');
+const { getChatGPTConfig } = require('../../utils/configManager');
 const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
-const { gptConfigModal, gptApiKeyInput, gptSystemPromptInput, gptTemperatureInput, gptModelInput } = require('../../utils/customIds');
+const { gptConfigModal, gptApiKeyInput, gptSystemPromptInput, gptTemperatureInput, gptModelInput, gptMaxTokensInput } = require('../../utils/customIds');
 
 module.exports = {
   customId: 'chatgpt_panel_open_config_modal',
 
   async handle(interaction) {
     try {
-      // 1回のGCSアクセスでコンフィグをまとめて取得
-      const legionConfig = await getLegionConfig(interaction.guildId);
-
-      // 権限チェックは取得済みのコンフィグを渡して同期的に行う
-      if (!checkChatGptAdmin(interaction.member, legionConfig)) {
-        return interaction.reply({ content: '🚫 この操作を実行する権限がありません。', flags: MessageFlags.Ephemeral });
+      if (!(await checkAdminAndReply(interaction))) {
+        return;
       }
 
-      const gptConfig = legionConfig.chatGptConfig || {};
+      const gptConfig = await getChatGPTConfig(interaction.guildId);
 
       const modal = new ModalBuilder()
         .setCustomId(gptConfigModal)
@@ -33,11 +28,11 @@ module.exports = {
 
       const apiKeyInput = new TextInputBuilder()
         .setCustomId(gptApiKeyInput)
-        .setLabel('OpenAI APIキー (sk-...)')
+        .setLabel('OpenAI APIキー (sk-...) (空欄で削除)')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('APIキーはGCSに保存されます。取扱いには注意してください。')
+        .setPlaceholder('APIキーは暗号化されGCSに保存されます。')
         .setValue(gptConfig.apiKey || '')
-        .setRequired(true);
+        .setRequired(false);
 
       const systemPromptInput = new TextInputBuilder()
         .setCustomId(gptSystemPromptInput)
@@ -58,16 +53,25 @@ module.exports = {
       const modelInput = new TextInputBuilder()
         .setCustomId(gptModelInput)
         .setLabel('使用モデル (空欄でリセット)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('例: gpt-4-turbo (デフォルトは gpt-4-turbo)')
+        .setStyle(TextInputStyle.Short) // モデルのデフォルト値を最新に
+        .setPlaceholder('例: gpt-4o (デフォルトは gpt-4o)')
         .setValue(gptConfig.model || '')
+        .setRequired(false);
+
+      const maxTokensInput = new TextInputBuilder()
+        .setCustomId(gptMaxTokensInput)
+        .setLabel('最大応答文字数 (空欄でリセット)')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('例: 1500 (デフォルトはAPIの最大値)')
+        .setValue(gptConfig.maxTokens !== undefined ? String(gptConfig.maxTokens) : '')
         .setRequired(false);
 
       modal.addComponents(
         new ActionRowBuilder().addComponents(apiKeyInput),
         new ActionRowBuilder().addComponents(systemPromptInput),
         new ActionRowBuilder().addComponents(temperatureInput),
-        new ActionRowBuilder().addComponents(modelInput)
+        new ActionRowBuilder().addComponents(modelInput),
+        new ActionRowBuilder().addComponents(maxTokensInput)
       );
 
       await interaction.showModal(modal);

@@ -1,79 +1,35 @@
-// chat_gpt_bot/interactions/buttons/configEditAutoChannels.js
+'use strict';
 
 const {
   ActionRowBuilder,
   ChannelSelectMenuBuilder,
   ChannelType,
-  MessageFlags,
 } = require('discord.js');
-const { isChatGptAdmin } = require('../../../permissionManager');
+const { checkAdminAndReply } = require('../../utils/permissionChecker');
 const { getChatGPTConfig } = require('../../utils/configManager');
-const { handleInteractionError } = require('../../../utils/interactionErrorLogger');
-
-// カスタムID定義
-const CUSTOM_ID = {
-  main: 'chatgpt_config_edit_auto_channels',
-  selectAutoChannels: 'chatgpt_config_select_auto_channels',
-};
-
-/**
- * 権限チェック（将来的に utils/permissions.js に切り出し可能）
- * @param {import('discord.js').Interaction} interaction
- * @returns {Promise<boolean>}
- */
-async function checkAdminPermission(interaction) {
-  const isAdmin = await isChatGptAdmin(interaction);
-  if (!isAdmin) {
-    await interaction.reply({
-      content: '🚫 この操作を実行する権限がありません。',
-      flags: MessageFlags.Ephemeral,
-    });
-    return false;
-  }
-  return true;
-}
 
 module.exports = {
-  customId: CUSTOM_ID.main,
-
-  /**
-   * 自動応答チャンネルの選択 UI を表示
-   * @param {import('discord.js').ButtonInteraction} interaction
-   */
+  customId: 'chatgpt_config_edit_auto_channels',
   async handle(interaction) {
-    try {
-      if (!(await checkAdminPermission(interaction))) return;
+    if (!(await checkAdminAndReply(interaction))) return;
 
-      await interaction.deferUpdate();
+    const config = await getChatGPTConfig(interaction.guildId);
+    const allowedChannels = config.allowedChannels || [];
 
-      // 設定データ取得
-      const config = await getChatGPTConfig(interaction.guildId);
-      const currentChannels = config.allowedChannels || [];
+    const selectMenu = new ChannelSelectMenuBuilder()
+      .setCustomId('chatgpt_config_set_auto_channels')
+      .setPlaceholder('自動応答を許可するチャンネルを選択してください')
+      .setMinValues(0)
+      .setMaxValues(25)
+      .setChannelTypes([ChannelType.GuildText, ChannelType.PublicThread])
+      .setDefaultChannels(allowedChannels.slice(0, 25)); // Can only default up to 25
 
-      // チャンネル選択メニュー作成
-      const selectMenu = new ChannelSelectMenuBuilder()
-        .setCustomId(CUSTOM_ID.selectAutoChannels)
-        .setPlaceholder('自動応答を有効にするチャンネルを選択してください（複数選択可）')
-        .addChannelTypes(ChannelType.GuildText)
-        .setMinValues(0)
-        .setMaxValues(25)
-        .setDefaultValues(currentChannels);
+    const row = new ActionRowBuilder().addComponents(selectMenu);
 
-      const row = new ActionRowBuilder().addComponents(selectMenu);
-
-      // 応答
-      await interaction.editReply({
-        content:
-          '💬 ChatGPT が自動で応答するチャンネルを選択してください。\n' +
-          '※ すべて選択を外すと、自動応答は無効になります。',
-        components: [row],
-      });
-    } catch (error) {
-      await handleInteractionError({
-        interaction,
-        error,
-        context: 'ChatGPT自動応答チャンネル設定UI',
-      });
-    }
+    await interaction.reply({
+      content: 'ChatGPTが自動で応答するテキストチャンネルを選択してください。\n選択をすべて解除すると、メンション時のみ応答するようになります。',
+      components: [row],
+      ephemeral: true,
+    });
   },
 };

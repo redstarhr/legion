@@ -1,4 +1,4 @@
-// e:/共有フォルダ/legion/chat_gpt_bot/manager/gptManager.js
+// chat_gpt_bot/manager/gptManager.js
 const { getChatGPTConfig } = require('../utils/configManager');
 
 const MAX_HISTORY_MESSAGES = 10; // 遡る会話の最大数

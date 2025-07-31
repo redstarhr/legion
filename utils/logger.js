@@ -36,7 +36,11 @@ async function logAction({ client, guildId, user }, logData) {
         }
 
         if (logData.details) {
-            const fields = Object.entries(logData.details).map(([name, value]) => ({ name, value: String(value), inline: true }));
+            const fields = Object.entries(logData.details).map(([name, value]) => ({
+                name,
+                value: String(value),
+                inline: true
+            }));
             embed.addFields(fields);
         }
 
@@ -46,4 +50,17 @@ async function logAction({ client, guildId, user }, logData) {
     }
 }
 
-module.exports = { logAction };
+// シンプルなログメソッドを追加
+function info(...args) {
+    console.log(...args);
+}
+
+function warn(...args) {
+    console.warn(...args);
+}
+
+function error(...args) {
+    console.error(...args);
+}
+
+module.exports = { logAction, info, warn, error };

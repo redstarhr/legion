@@ -13,7 +13,7 @@ module.exports = {
       } else if (interaction.isButton()) {
         for (const [key, handler] of client.buttons) {
           if (interaction.customId.startsWith(key)) {
-            await handler.handle(interaction);
+            await handler.handle(interaction, client);
             return;
           }
         }
@@ -21,7 +21,7 @@ module.exports = {
       } else if (interaction.isAnySelectMenu()) {
         for (const [key, handler] of client.selectMenus) {
           if (interaction.customId.startsWith(key)) {
-            await handler.handle(interaction);
+            await handler.handle(interaction, client);
             return;
           }
         }
@@ -29,7 +29,7 @@ module.exports = {
       } else if (interaction.isModalSubmit()) {
         for (const [key, handler] of client.modals) {
           if (interaction.customId.startsWith(key)) {
-            await handler.handle(interaction);
+            await handler.handle(interaction, client);
             return;
           }
         }

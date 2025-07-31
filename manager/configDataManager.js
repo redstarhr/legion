@@ -1,133 +1,106 @@
-// manager/configDataManager.js
+'use strict';
 
 const { Storage } = require('@google-cloud/storage');
 
-const GCS_BUCKET_NAME = process.env.GCS_BUCKET_NAME;
-if (!GCS_BUCKET_NAME) {
-  throw new Error("GCS_BUCKET_NAME is not configured.");
+const BUCKET_NAME = process.env.GCS_BUCKET_NAME;
+if (!BUCKET_NAME) {
+  // This is a warning, not an error, to allow local development without GCS.
+  console.warn('⚠️ GCS_BUCKET_NAME is not set. Configuration will not be persistent across restarts.');
 }
-const storage = new Storage();
-const bucket = storage.bucket(GCS_BUCKET_NAME);
 
-const DATA_DIR_BASE = 'data-legion/guilds';
+const storage = BUCKET_NAME ? new Storage() : null;
+const bucket = storage ? storage.bucket(BUCKET_NAME) : null;
 
-function getGuildConfigPath(guildId) {
-  // ファイル名をより具体的にし、パス構造を統一
+// In-memory cache for guild configurations to reduce GCS reads.
+const configCache = new Map();
+
+const DATA_DIR_BASE = 'data-legion/guilds'; // questDataManagerとパスを統一
+
+/**
+ * Gets the file path for a guild's configuration within the GCS bucket.
+ * @param {string} guildId The ID of the guild.
+ * @returns {string} The GCS file path.
+ */
+function getConfigPath(guildId) {
+  // Stores all config for a guild in a single JSON file.
   return `${DATA_DIR_BASE}/${guildId}/config.json`;
 }
 
+/**
+ * Retrieves the configuration for a specific guild.
+ * It first checks an in-memory cache, then falls back to GCS.
+ * @param {string} guildId The ID of the guild.
+ * @returns {Promise<object>} The guild's configuration object. Returns an empty object if not found.
+ */
 async function getLegionConfig(guildId) {
-  const filePath = getGuildConfigPath(guildId);
-  const file = bucket.file(filePath);
-  try {
-    const [exists] = await file.exists();
-    if (!exists) return {};
-    const [data] = await file.download();
-    return JSON.parse(data.toString('utf8'));
-  } catch (error) {
-    console.error(`Error reading GCS file gs://${GCS_BUCKET_NAME}/${filePath}:`, error);
-    throw error;
+  if (configCache.has(guildId)) {
+    return configCache.get(guildId);
   }
-}
 
-async function saveLegionConfig(guildId, updates) {
-  const filePath = getGuildConfigPath(guildId);
+  if (!bucket) {
+    // Return a default, non-persistent config if GCS is not available.
+    return {};
+  }
+
+  const filePath = getConfigPath(guildId);
   const file = bucket.file(filePath);
-  const currentConfig = await getLegionConfig(guildId).catch(() => ({}));
-  const newConfig = { ...currentConfig, ...updates };
-  await file.save(JSON.stringify(newConfig, null, 2), { contentType: 'application/json' });
-  console.log(`[GCS] Successfully saved config for guild ${guildId} to gs://${GCS_BUCKET_NAME}/${filePath}`);
-  return newConfig;
-}
 
-async function setLegionAdminRole(guildId, roleId) {
-  await saveLegionConfig(guildId, { legionAdminRoleId: roleId });
-}
-async function setQuestAdminRole(guildId, roleId) {
-  await saveLegionConfig(guildId, { questAdminRoleId: roleId });
-}
-async function setQuestCreatorRoleIds(guildId, roleIds) {
-  await saveLegionConfig(guildId, { questCreatorRoleIds: roleIds });
-}
-async function setChatGptAdminRole(guildId, roleId) {
-  await saveLegionConfig(guildId, { chatGptAdminRoleId: roleId });
-}
-
-// --- Quest Bot Config Functions ---
-
-async function setLogChannel(guildId, channelId) {
-  await saveLegionConfig(guildId, { logChannelId: channelId });
-}
-async function getLogChannel(guildId) {
-  const config = await getLegionConfig(guildId);
-  return config.logChannelId || null;
-}
-
-async function setNotificationChannel(guildId, channelId) {
-  await saveLegionConfig(guildId, { notificationChannelId: channelId });
-}
-async function getNotificationChannel(guildId) {
-  const config = await getLegionConfig(guildId);
-  return config.notificationChannelId || null;
-}
-
-async function setEmbedColor(guildId, color) {
-  await saveLegionConfig(guildId, { embedColor: color });
-}
-async function getEmbedColor(guildId) {
-  const config = await getLegionConfig(guildId);
-  return config.embedColor || '#00bfff'; // Default color
-}
-
-const DEFAULT_BUTTON_ORDER = ['accept', 'cancel', 'edit', 'dm'];
-async function setButtonOrder(guildId, order) {
-  await saveLegionConfig(guildId, { buttonOrder: order });
-}
-async function getButtonOrder(guildId) {
-  const config = await getLegionConfig(guildId);
-  return config.buttonOrder || DEFAULT_BUTTON_ORDER;
+  try {
+    const [data] = await file.download();
+    const config = JSON.parse(data.toString());
+    configCache.set(guildId, config);
+    return config;
+  } catch (error) {
+    if (error.code === 404) {
+      // File not found, which is normal for a new guild.
+      // Cache an empty object to avoid repeated GCS calls for this guild.
+      configCache.set(guildId, {});
+      return {};
+    }
+    console.error(`❌ Error fetching config for guild ${guildId} from GCS:`, error);
+    // In case of other errors, return a default config to prevent crashes.
+    return {};
+  }
 }
 
 /**
- * データが存在するすべてのギルドIDのリストを取得する
- * @returns {Promise<string[]>}
+ * Saves/updates the configuration for a specific guild to the cache and GCS.
+ * @param {string} guildId The ID of the guild.
+ * @param {object} updates An object containing the configuration keys and values to update.
+ * @returns {Promise<object>} The newly saved, complete configuration object.
  */
-async function getAllGuildIds() {
-  // GCSで 'data-legion/guilds/' プレフィックス以下の "ディレクトリ" (共通プレフィックス) を一覧する
-  try {
-    const query = {
-      prefix: `${DATA_DIR_BASE}/`,
-      delimiter: '/',
-    };
-    const [_, __, apiResponse] = await bucket.getFiles(query);
+async function saveLegionConfig(guildId, updates) {
+  const currentConfig = await getLegionConfig(guildId);
+  const newConfig = { ...currentConfig, ...updates };
 
-    if (apiResponse.prefixes) {
-      // apiResponse.prefixes は 'data-legion/guilds/guildId1/', 'data-legion/guilds/guildId2/' のような形式で返ってくる
-      return apiResponse.prefixes.map(p => p.replace(query.prefix, '').replace('/', ''));
-    }
-    return [];
-  } catch (error) {
-    console.error('Error listing guild directories in GCS:', error);
-    return []; // エラー時は空配列を返し、ボットのクラッシュを防ぐ
+  // Update the in-memory cache immediately for responsiveness.
+  configCache.set(guildId, newConfig);
+
+  if (!bucket) {
+    console.warn(`⚠️ GCS not configured. Config for guild ${guildId} is only saved in memory.`);
+    return newConfig;
   }
+
+  const filePath = getConfigPath(guildId);
+  const file = bucket.file(filePath);
+
+  try {
+    await file.save(JSON.stringify(newConfig, null, 2), {
+      contentType: 'application/json',
+    });
+  } catch (error) {
+    console.error(`❌ Error saving config for guild ${guildId} to GCS:`, error);
+  }
+
+  return newConfig;
 }
+
+const setLegionAdminRole = (guildId, roleId) => saveLegionConfig(guildId, { legionAdminRoleId: roleId });
+const setChatGptAdminRole = (guildId, roleId) => saveLegionConfig(guildId, { chatGptAdminRoleId: roleId });
 
 module.exports = {
   getLegionConfig,
   saveLegionConfig,
   setLegionAdminRole,
-  setQuestAdminRole,
-  setQuestCreatorRoleIds,
   setChatGptAdminRole,
-  getAllGuildIds,
-
-  // Quest Bot Configs
-  setLogChannel,
-  getLogChannel,
-  setNotificationChannel,
-  getNotificationChannel,
-  setEmbedColor,
-  getEmbedColor,
-  setButtonOrder,
-  getButtonOrder,
 };

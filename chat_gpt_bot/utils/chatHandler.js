@@ -13,12 +13,13 @@ async function handleGptChat(message, client) {
         if (message.author.bot || !message.guild) return;
 
         const gptConfig = await getChatGPTConfig(message.guild.id);
-        if (!gptConfig.allowedChannels?.includes(message.channel.id)) return;
 
+        // ボットが応答すべきか判断する
         const isMentioned = message.mentions.has(client.user.id);
-        const isReplyToBot = message.reference && (await message.fetchReference()).author.id === client.user.id;
+        const isInAutoChannel = gptConfig.allowedChannels?.includes(message.channel.id);
 
-        if (!isMentioned && !isReplyToBot) return;
+        // 自動応答チャンネルでなく、かつメンションもされていない場合は無視
+        if (!isInAutoChannel && !isMentioned) return;
 
         if (!gptConfig.apiKey) {
             return; // APIキーがなければ静かに無視

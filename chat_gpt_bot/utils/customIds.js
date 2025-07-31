@@ -7,4 +7,5 @@ module.exports = {
   gptSystemPromptInput: 'gpt_system_prompt_input',
   gptTemperatureInput: 'gpt_temperature_input',
   gptModelInput: 'gpt_model_input',
+  gptMaxTokensInput: 'gpt_max_tokens_input',
 };
